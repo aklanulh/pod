@@ -7,9 +7,9 @@
     <title>{{ config('app.name', 'Warehouse Management System') }}</title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/logopod.png') }}">
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/logopod.png">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -44,7 +44,7 @@
              x-init="sidebarOpen = window.innerWidth >= 1024"
              @resize.window="sidebarOpen = window.innerWidth >= 1024">
             <div class="p-4 flex items-center space-x-3">
-                <img src="{{ asset('images/logopod.png') }}" alt="POD Logo" class="w-10 h-10 object-contain">
+                <img src="/images/logopod.png" alt="POD Logo" class="w-10 h-10 object-contain">
                 <div>
                     <h1 class="text-xl font-bold">POD - MSA</h1>
                     <p class="text-sm text-blue-200">Platform Operating Digital</p>
