@@ -256,7 +256,7 @@
                     <!-- Right Column - Summary -->
                     <div class="space-y-6">
                         <!-- Customer Info Card -->
-                        <div class="bg-white rounded-2xl shadow-lg overflow-hidden sticky top-8">
+                        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
                             <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
                                 <h2 class="text-lg font-bold text-white flex items-center gap-2">
                                     <i class="fas fa-hospital"></i>
