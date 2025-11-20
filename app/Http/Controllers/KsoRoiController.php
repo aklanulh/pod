@@ -402,9 +402,12 @@ class KsoRoiController extends Controller
         $roiStatus = $customer->hasAchievedOverallROI() ? 'ROI' : 'Belum ROI';
 
         // Monthly sales data for trend chart (using same calculation as customer report)
+        $yearExpr = config('database.default') === 'sqlite' ? "strftime('%Y', transaction_date)" : "YEAR(transaction_date)";
+        $monthExpr = config('database.default') === 'sqlite' ? "CAST(strftime('%m', transaction_date) AS INTEGER)" : "MONTH(transaction_date)";
+
         $monthlySales = $customer->stockMovements()
             ->where('type', 'out')
-            ->selectRaw("strftime('%Y', transaction_date) as year, strftime('%m', transaction_date) as month, SUM(quantity * COALESCE(unit_price, 0)) as total")
+            ->selectRaw("$yearExpr as year, $monthExpr as month, SUM(quantity * COALESCE(unit_price, 0)) as total")
             ->groupBy('year', 'month')
             ->orderBy('year', 'desc')
             ->orderBy('month', 'desc')
@@ -415,9 +418,10 @@ class KsoRoiController extends Controller
         $chartData = $this->processChartData(StockMovement::getCustomerChartData($id, $selectedYear));
 
         // Get available years for dropdown
+        $yearExpr = config('database.default') === 'sqlite' ? "strftime('%Y', transaction_date)" : "YEAR(transaction_date)";
         $availableYears = StockMovement::where('customer_id', $id)
             ->where('type', 'out')
-            ->selectRaw("strftime('%Y', transaction_date) as year")
+            ->selectRaw("$yearExpr as year")
             ->distinct()
             ->orderBy('year', 'desc')
             ->pluck('year')
@@ -506,9 +510,12 @@ class KsoRoiController extends Controller
     public function analytics()
     {
         // Monthly ROI trend (using same calculation as customer report)
+        $yearExpr = config('database.default') === 'sqlite' ? "strftime('%Y', transaction_date)" : "YEAR(transaction_date)";
+        $monthExpr = config('database.default') === 'sqlite' ? "CAST(strftime('%m', transaction_date) AS INTEGER)" : "MONTH(transaction_date)";
+
         $monthlyData = DB::table('stock_movements')
             ->where('type', 'out')
-            ->selectRaw("strftime('%Y', transaction_date) as year, strftime('%m', transaction_date) as month, SUM(quantity * COALESCE(unit_price, 0)) as sales")
+            ->selectRaw("$yearExpr as year, $monthExpr as month, SUM(quantity * COALESCE(unit_price, 0)) as sales")
             ->groupBy('year', 'month')
             ->orderBy('year', 'desc')
             ->orderBy('month', 'desc')

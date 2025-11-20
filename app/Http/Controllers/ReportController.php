@@ -87,7 +87,7 @@ class ReportController extends Controller
             ->get();
 
         $filename = 'laporan_stok_' . date('Y-m-d_H-i-s') . '.csv';
-        
+
         $headers = [
             'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
@@ -95,31 +95,39 @@ class ReportController extends Controller
             'Expires' => '0',
         ];
 
-        $callback = function() use ($products, $request) {
+        $callback = function () use ($products, $request) {
             $file = fopen('php://output', 'w');
-            
+
             // Add BOM for UTF-8 to ensure proper encoding in Excel
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
             // Set delimiter and enclosure for better Excel compatibility
             $delimiter = ';';
             $enclosure = '"';
-            
+
             // Report Header Information
             fputcsv($file, ['LAPORAN STOK PRODUK'], $delimiter, $enclosure);
             fputcsv($file, ['PT. Mitrajaya Selaras Abadi'], $delimiter, $enclosure);
             fputcsv($file, ['Tanggal Export: ' . now()->format('d/m/Y H:i:s')], $delimiter, $enclosure);
             fputcsv($file, ['Filter: ' . ($request->low_stock ? 'Stok Menipis' : 'Semua Produk')], $delimiter, $enclosure);
             fputcsv($file, [''], $delimiter, $enclosure); // Empty row
-            
+
             // Summary Information
             $totalProducts = $products->count();
-            $totalStockValue = $products->sum(function($product) { return $product->current_stock * $product->price; });
-            $lowStockCount = $products->filter(function($product) { return $product->isLowStock(); })->count();
+            $totalStockValue = $products->sum(function ($product) {
+                return $product->current_stock * $product->price;
+            });
+            $lowStockCount = $products->filter(function ($product) {
+                return $product->isLowStock();
+            })->count();
             $outOfStockCount = $products->where('current_stock', 0)->count();
-            $expiredCount = $products->filter(function($product) { return $product->isExpired(); })->count();
-            $expiringSoonCount = $products->filter(function($product) { return $product->isExpiringSoon(); })->count();
-            
+            $expiredCount = $products->filter(function ($product) {
+                return $product->isExpired();
+            })->count();
+            $expiringSoonCount = $products->filter(function ($product) {
+                return $product->isExpiringSoon();
+            })->count();
+
             fputcsv($file, ['RINGKASAN LAPORAN'], $delimiter, $enclosure);
             fputcsv($file, ['Total Produk', $totalProducts], $delimiter, $enclosure);
             fputcsv($file, ['Total Nilai Stok', 'Rp ' . number_format($totalStockValue, 0, ',', '.')], $delimiter, $enclosure);
@@ -128,12 +136,12 @@ class ReportController extends Controller
             fputcsv($file, ['Produk Kedaluwarsa', $expiredCount], $delimiter, $enclosure);
             fputcsv($file, ['Produk Akan Kedaluwarsa (30 hari)', $expiringSoonCount], $delimiter, $enclosure);
             fputcsv($file, [''], $delimiter, $enclosure); // Empty row
-            
+
             // Column Headers
             fputcsv($file, [
                 'No',
                 'Kode Produk',
-                'Nama Produk', 
+                'Nama Produk',
                 'Kategori',
                 'Stok Saat Ini',
                 'Stok Minimum',
@@ -160,7 +168,7 @@ class ReportController extends Controller
                 } else {
                     $stockStatus = 'Stok Aman';
                 }
-                
+
                 // Expiry Status
                 if ($product->isExpired()) {
                     $expiryStatus = 'Kedaluwarsa';
@@ -171,10 +179,10 @@ class ReportController extends Controller
                 } else {
                     $expiryStatus = 'Tidak Ada Tanggal';
                 }
-                
+
                 $expiredDate = $product->expired_date ? $product->expired_date->format('d/m/Y') : '-';
                 $totalStockValue = $product->current_stock * $product->price;
-                
+
                 fputcsv($file, [
                     $no++,
                     $product->code,
@@ -195,7 +203,7 @@ class ReportController extends Controller
                     $product->updated_at->format('d/m/Y H:i')
                 ], $delimiter, $enclosure);
             }
-            
+
             fclose($file);
         };
 
@@ -216,7 +224,7 @@ class ReportController extends Controller
             ->get();
 
         $filename = 'laporan_pergerakan_stok_' . date('Y-m-d_H-i-s') . '.csv';
-        
+
         $headers = [
             'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
@@ -224,16 +232,16 @@ class ReportController extends Controller
             'Expires' => '0',
         ];
 
-        $callback = function() use ($movements, $startDate, $endDate, $request) {
+        $callback = function () use ($movements, $startDate, $endDate, $request) {
             $file = fopen('php://output', 'w');
-            
+
             // Add BOM for UTF-8 to ensure proper encoding in Excel
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
             // Set delimiter and enclosure for better Excel compatibility
             $delimiter = ';';
             $enclosure = '"';
-            
+
             // Report Header Information
             fputcsv($file, ['LAPORAN PERGERAKAN STOK'], $delimiter, $enclosure);
             fputcsv($file, ['PT. Mitrajaya Selaras Abadi'], $delimiter, $enclosure);
@@ -241,27 +249,27 @@ class ReportController extends Controller
             fputcsv($file, ['Periode: ' . $startDate->format('d/m/Y') . ' - ' . $endDate->format('d/m/Y')], $delimiter, $enclosure);
             fputcsv($file, ['Filter Jenis: ' . ($request->type ? ucfirst($request->type) : 'Semua Transaksi')], $delimiter, $enclosure);
             fputcsv($file, [''], $delimiter, $enclosure); // Empty row
-            
+
             // Summary Information
             $totalMovements = $movements->count();
             $stockInCount = $movements->where('type', 'in')->count();
             $stockOutCount = $movements->where('type', 'out')->count();
             $opnameCount = $movements->where('type', 'opname')->count();
-            
+
             $totalStockIn = $movements->where('type', 'in')->sum('quantity');
             $totalStockOut = $movements->where('type', 'out')->sum('quantity');
-            
-            $totalValueIn = $movements->where('type', 'in')->sum(function($movement) {
+
+            $totalValueIn = $movements->where('type', 'in')->sum(function ($movement) {
                 return $movement->final_amount ?? ($movement->quantity * ($movement->unit_price ?? $movement->product->price));
             });
-            $totalValueOut = $movements->where('type', 'out')->sum(function($movement) {
+            $totalValueOut = $movements->where('type', 'out')->sum(function ($movement) {
                 return $movement->final_amount ?? ($movement->quantity * ($movement->unit_price ?? $movement->product->price));
             });
-            
+
             // Calculate total tax
             $totalTaxIn = $movements->where('type', 'in')->where('include_tax', true)->sum('tax_amount');
             $totalTaxOut = $movements->where('type', 'out')->where('include_tax', true)->sum('tax_amount');
-            
+
             fputcsv($file, ['RINGKASAN PERGERAKAN STOK'], $delimiter, $enclosure);
             fputcsv($file, ['Total Transaksi', $totalMovements], $delimiter, $enclosure);
             fputcsv($file, ['Transaksi Masuk', $stockInCount . ' transaksi'], $delimiter, $enclosure);
@@ -274,7 +282,7 @@ class ReportController extends Controller
             fputcsv($file, ['Total PPN Masuk', 'Rp ' . number_format($totalTaxIn, 0, ',', '.')], $delimiter, $enclosure);
             fputcsv($file, ['Total PPN Keluar', 'Rp ' . number_format($totalTaxOut, 0, ',', '.')], $delimiter, $enclosure);
             fputcsv($file, [''], $delimiter, $enclosure); // Empty row
-            
+
             // Column Headers
             fputcsv($file, [
                 'No',
@@ -303,9 +311,8 @@ class ReportController extends Controller
 
             $no = 1;
             foreach ($movements as $movement) {
-                $type = $movement->type == 'in' ? 'Stok Masuk' : 
-                       ($movement->type == 'out' ? 'Stok Keluar' : 'Stock Opname');
-                
+                $type = $movement->type == 'in' ? 'Stok Masuk' : ($movement->type == 'out' ? 'Stok Keluar' : 'Stock Opname');
+
                 $partner = '';
                 $partnerContact = '';
                 if ($movement->supplier) {
@@ -318,16 +325,16 @@ class ReportController extends Controller
                     $partner = '-';
                     $partnerContact = '-';
                 }
-                
+
                 $unitPrice = $movement->unit_price ?? $movement->product->price ?? 0;
                 $subtotal = $movement->quantity * $unitPrice;
                 $taxAmount = $movement->tax_amount ?? 0;
                 $finalAmount = $movement->final_amount ?? $subtotal;
                 $stockDifference = $movement->stock_after - $movement->stock_before;
-                
+
                 // Format PPN display
                 $ppnDisplay = $movement->include_tax ? 'Rp ' . number_format($taxAmount, 0, ',', '.') : '-';
-                
+
                 fputcsv($file, [
                     $no++,
                     $movement->transaction_date->format('d/m/Y H:i:s'),
@@ -353,7 +360,7 @@ class ReportController extends Controller
                     $movement->created_at->format('d/m/Y H:i:s')
                 ], $delimiter, $enclosure);
             }
-            
+
             fclose($file);
         };
 
@@ -363,8 +370,8 @@ class ReportController extends Controller
     public function exportSupplierReport()
     {
         $suppliers = Supplier::withCount(['stockMovements' => function ($query) {
-                $query->where('type', 'in');
-            }])
+            $query->where('type', 'in');
+        }])
             ->with(['stockMovements' => function ($query) {
                 $query->where('type', 'in')->with('product');
             }])
@@ -372,7 +379,7 @@ class ReportController extends Controller
             ->get();
 
         $filename = 'laporan_distributor_' . date('Y-m-d_H-i-s') . '.csv';
-        
+
         $headers = [
             'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
@@ -380,41 +387,41 @@ class ReportController extends Controller
             'Expires' => '0',
         ];
 
-        $callback = function() use ($suppliers) {
+        $callback = function () use ($suppliers) {
             $file = fopen('php://output', 'w');
-            
+
             // Add BOM for UTF-8 to ensure proper encoding in Excel
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
             // Set delimiter and enclosure for better Excel compatibility
             $delimiter = ';';
             $enclosure = '"';
-            
+
             // Report Header Information
             fputcsv($file, ['LAPORAN DISTRIBUTOR'], $delimiter, $enclosure);
             fputcsv($file, ['PT. Mitrajaya Selaras Abadi'], $delimiter, $enclosure);
             fputcsv($file, ['Tanggal Export: ' . now()->format('d/m/Y H:i:s')], $delimiter, $enclosure);
             fputcsv($file, [''], $delimiter, $enclosure); // Empty row
-            
+
             // Summary Information
             $totalSuppliers = $suppliers->count();
-            $activeSuppliers = $suppliers->filter(function($supplier) {
+            $activeSuppliers = $suppliers->filter(function ($supplier) {
                 return $supplier->stock_movements_count > 0;
             })->count();
             $totalTransactions = $suppliers->sum('stock_movements_count');
-            $totalValue = $suppliers->sum(function($supplier) {
-                return $supplier->stockMovements->sum(function($movement) {
+            $totalValue = $suppliers->sum(function ($supplier) {
+                return $supplier->stockMovements->sum(function ($movement) {
                     return $movement->quantity * ($movement->unit_price ?? $movement->product->price ?? 0);
                 });
             });
-            
+
             fputcsv($file, ['RINGKASAN DISTRIBUTOR'], $delimiter, $enclosure);
             fputcsv($file, ['Total Distributor', $totalSuppliers], $delimiter, $enclosure);
             fputcsv($file, ['Distributor Aktif', $activeSuppliers], $delimiter, $enclosure);
             fputcsv($file, ['Total Transaksi Masuk', $totalTransactions], $delimiter, $enclosure);
             fputcsv($file, ['Total Nilai Pembelian', 'Rp ' . number_format($totalValue, 0, ',', '.')], $delimiter, $enclosure);
             fputcsv($file, [''], $delimiter, $enclosure); // Empty row
-            
+
             // Column Headers
             fputcsv($file, [
                 'No',
@@ -434,23 +441,23 @@ class ReportController extends Controller
             $no = 1;
             foreach ($suppliers as $supplier) {
                 $totalUnits = $supplier->stockMovements->sum('quantity');
-                $totalValue = $supplier->stockMovements->sum(function($movement) {
+                $totalValue = $supplier->stockMovements->sum(function ($movement) {
                     return $movement->quantity * ($movement->unit_price ?? $movement->product->price ?? 0);
                 });
-                
-                $avgValuePerTransaction = $supplier->stock_movements_count > 0 ? 
+
+                $avgValuePerTransaction = $supplier->stock_movements_count > 0 ?
                     $totalValue / $supplier->stock_movements_count : 0;
-                
+
                 $lastTransaction = $supplier->stockMovements->sortByDesc('transaction_date')->first();
-                $lastTransactionDate = $lastTransaction ? 
+                $lastTransactionDate = $lastTransaction ?
                     $lastTransaction->transaction_date->format('d/m/Y') : '-';
-                
+
                 // Determine distributor status
                 $status = 'Tidak Aktif';
                 if ($supplier->stock_movements_count > 0) {
-                    $daysSinceLastTransaction = $lastTransaction ? 
+                    $daysSinceLastTransaction = $lastTransaction ?
                         $lastTransaction->transaction_date->diffInDays(now()) : 999;
-                    
+
                     if ($daysSinceLastTransaction <= 30) {
                         $status = 'Sangat Aktif';
                     } elseif ($daysSinceLastTransaction <= 90) {
@@ -459,7 +466,7 @@ class ReportController extends Controller
                         $status = 'Kurang Aktif';
                     }
                 }
-                
+
                 fputcsv($file, [
                     $no++,
                     $supplier->name,
@@ -475,7 +482,7 @@ class ReportController extends Controller
                     $supplier->created_at->format('d/m/Y')
                 ], $delimiter, $enclosure);
             }
-            
+
             fclose($file);
         };
 
@@ -485,42 +492,42 @@ class ReportController extends Controller
     public function supplierDetail($id)
     {
         $supplier = Supplier::findOrFail($id);
-        
+
         $stockMovements = StockMovement::with(['product.category'])
             ->where('supplier_id', $id)
             ->where('type', 'in')
             ->orderBy('transaction_date', 'desc')
             ->paginate(20);
-            
+
         // Calculate statistics
         // OPTIMIZED: Using helper method from StockMovement model
         $totalStats = StockMovement::getSupplierStats($id);
-            
+
         $totalTransactions = $totalStats->total_transactions ?? 0;
         $totalQuantity = $totalStats->total_quantity ?? 0;
         $totalValue = $totalStats->total_value ?? 0;
-            
+
         return view('reports.supplier-detail', compact(
-            'supplier', 
-            'stockMovements', 
-            'totalTransactions', 
-            'totalQuantity', 
+            'supplier',
+            'stockMovements',
+            'totalTransactions',
+            'totalQuantity',
             'totalValue'
         ));
     }
-    
+
     public function exportSupplierDetail($id)
     {
         $supplier = Supplier::findOrFail($id);
-        
+
         $stockMovements = StockMovement::with(['product.category'])
             ->where('supplier_id', $id)
             ->where('type', 'in')
             ->orderBy('transaction_date', 'desc')
             ->get();
-            
+
         $filename = 'detail_distributor_' . str_replace(' ', '_', $supplier->name) . '_' . date('Y-m-d_H-i-s') . '.csv';
-        
+
         $headers = [
             'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
@@ -528,37 +535,37 @@ class ReportController extends Controller
             'Expires' => '0',
         ];
 
-        $callback = function() use ($supplier, $stockMovements) {
+        $callback = function () use ($supplier, $stockMovements) {
             $file = fopen('php://output', 'w');
-            
+
             // Add BOM for UTF-8 to ensure proper encoding in Excel
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
             $delimiter = ';';
             $enclosure = '"';
-            
+
             // Report Header
             fputcsv($file, ['DETAIL TRANSAKSI DISTRIBUTOR'], $delimiter, $enclosure);
             fputcsv($file, ['PT. Mitrajaya Selaras Abadi'], $delimiter, $enclosure);
             fputcsv($file, ['Tanggal Export: ' . now()->format('d/m/Y H:i:s')], $delimiter, $enclosure);
             fputcsv($file, ['Distributor: ' . $supplier->name], $delimiter, $enclosure);
             fputcsv($file, [''], $delimiter, $enclosure);
-            
+
             // Summary
             $totalTransactions = $stockMovements->count();
             $totalQuantity = $stockMovements->sum('quantity');
-            $totalValue = $stockMovements->sum(function($movement) {
+            $totalValue = $stockMovements->sum(function ($movement) {
                 return $movement->final_amount ?? ($movement->quantity * ($movement->unit_price ?? 0));
             });
             $totalTax = $stockMovements->where('include_tax', true)->sum('tax_amount');
-            
+
             fputcsv($file, ['RINGKASAN'], $delimiter, $enclosure);
             fputcsv($file, ['Total Transaksi', $totalTransactions], $delimiter, $enclosure);
             fputcsv($file, ['Total Quantity', number_format($totalQuantity)], $delimiter, $enclosure);
             fputcsv($file, ['Total Nilai', 'Rp ' . number_format($totalValue, 0, ',', '.')], $delimiter, $enclosure);
             fputcsv($file, ['Total PPN', 'Rp ' . number_format($totalTax, 0, ',', '.')], $delimiter, $enclosure);
             fputcsv($file, [''], $delimiter, $enclosure);
-            
+
             // Column Headers
             fputcsv($file, [
                 'No',
@@ -579,7 +586,7 @@ class ReportController extends Controller
             $no = 1;
             foreach ($stockMovements as $movement) {
                 $totalItemValue = $movement->quantity * ($movement->unit_price ?? 0);
-                
+
                 fputcsv($file, [
                     $no++,
                     $movement->transaction_date->format('d/m/Y H:i'),
@@ -596,7 +603,7 @@ class ReportController extends Controller
                     $movement->notes ?? '-'
                 ], $delimiter, $enclosure);
             }
-            
+
             fclose($file);
         };
 
@@ -606,10 +613,10 @@ class ReportController extends Controller
     public function customerDetail(Request $request, $id)
     {
         $customer = Customer::findOrFail($id);
-        
+
         // Get selected year from request, default to current year
         $selectedYear = $request->get('year', date('Y'));
-        
+
         // Get filter parameters
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
@@ -617,12 +624,12 @@ class ReportController extends Controller
         $sortBy = $request->get('sort_by', 'transaction_date');
         $sortOrder = $request->get('sort_order', 'desc');
         $perPage = $request->get('per_page', 20);
-        
+
         // Build query with filters
         $query = StockMovement::with(['product.category'])
             ->where('customer_id', $id)
             ->where('type', 'out');
-            
+
         // Apply date range filter
         if ($dateFrom) {
             $query->whereDate('transaction_date', '>=', $dateFrom);
@@ -630,42 +637,48 @@ class ReportController extends Controller
         if ($dateTo) {
             $query->whereDate('transaction_date', '<=', $dateTo);
         }
-        
+
         // Apply product filter
         if ($productId) {
             $query->where('product_id', $productId);
         }
-        
+
         // Apply sorting
         $validSortColumns = [
-            'transaction_date', 'reference_number', 'order_number', 
-            'invoice_number', 'quantity', 'unit_price', 'total_value', 'product_name'
+            'transaction_date',
+            'reference_number',
+            'order_number',
+            'invoice_number',
+            'quantity',
+            'unit_price',
+            'total_value',
+            'product_name'
         ];
-        
+
         if (in_array($sortBy, $validSortColumns)) {
             if ($sortBy === 'total_value') {
                 // For total value, we need to calculate it
                 $query->selectRaw('stock_movements.*, (quantity * unit_price) as total_value')
-                      ->orderBy('total_value', $sortOrder);
+                    ->orderBy('total_value', $sortOrder);
             } elseif ($sortBy === 'product_name') {
                 // For product name, we need to join with products table
                 $query->join('products', 'stock_movements.product_id', '=', 'products.id')
-                      ->select('stock_movements.*')
-                      ->orderBy('products.name', $sortOrder);
+                    ->select('stock_movements.*')
+                    ->orderBy('products.name', $sortOrder);
             } else {
                 $query->orderBy($sortBy, $sortOrder);
             }
         } else {
             $query->orderBy('transaction_date', 'desc');
         }
-        
+
         // Get paginated results
         $stockMovements = $query->paginate($perPage)->appends($request->query());
-            
+
         // Calculate statistics (for all transactions, not filtered)
         // OPTIMIZED: Using helper method from StockMovement model
         $totalStats = StockMovement::getCustomerStats($id);
-            
+
         $totalTransactions = $totalStats->total_transactions ?? 0;
         $totalQuantity = $totalStats->total_quantity ?? 0;
         $totalValue = $totalStats->total_value ?? 0;
@@ -676,14 +689,14 @@ class ReportController extends Controller
         if ($dateFrom) $filteredQuery->whereDate('transaction_date', '>=', $dateFrom);
         if ($dateTo) $filteredQuery->whereDate('transaction_date', '<=', $dateTo);
         if ($productId) $filteredQuery->where('product_id', $productId);
-        
+
         $filteredStats = $filteredQuery->selectRaw('
                 COUNT(*) as filtered_transactions,
                 SUM(quantity) as filtered_quantity,
                 SUM(quantity * COALESCE(unit_price, 0)) as filtered_value
             ')
             ->first();
-            
+
         $filteredTransactions = $filteredStats->filtered_transactions ?? 0;
         $filteredQuantity = $filteredStats->filtered_quantity ?? 0;
         $filteredValue = $filteredStats->filtered_value ?? 0;
@@ -691,15 +704,15 @@ class ReportController extends Controller
         // Generate chart data for selected year
         // OPTIMIZED: Using helper method from StockMovement model
         $chartData = $this->processChartData(StockMovement::getCustomerChartData($id, $selectedYear));
-        
+
         // Generate sales trend data (nilai penjualan bulanan)
         $salesTrendData = $this->generateSalesTrendData($id, $selectedYear);
-        
+
         // Get available years for dropdown
-        $yearExpression = config('database.default') === 'sqlite' 
+        $yearExpression = config('database.default') === 'sqlite'
             ? "strftime('%Y', transaction_date) as year"
             : 'YEAR(transaction_date) as year';
-            
+
         $availableYears = StockMovement::where('customer_id', $id)
             ->where('type', 'out')
             ->selectRaw("strftime('%Y', transaction_date) as year")
@@ -707,31 +720,31 @@ class ReportController extends Controller
             ->orderBy('year', 'desc')
             ->pluck('year')
             ->toArray();
-            
+
         if (empty($availableYears)) {
             $availableYears = [date('Y')];
         }
-        
+
         // Get products for filter dropdown
         // OPTIMIZED: Direct join without loading unnecessary data
-        $products = Product::whereIn('id', function($query) use ($id) {
-                $query->select('product_id')
-                    ->from('stock_movements')
-                    ->where('customer_id', $id)
-                    ->where('type', 'out')
-                    ->distinct();
-            })
+        $products = Product::whereIn('id', function ($query) use ($id) {
+            $query->select('product_id')
+                ->from('stock_movements')
+                ->where('customer_id', $id)
+                ->where('type', 'out')
+                ->distinct();
+        })
             ->orderBy('name')
             ->get();
-            
+
         return view('reports.customer-detail', compact(
-            'customer', 
-            'stockMovements', 
-            'totalTransactions', 
-            'totalQuantity', 
+            'customer',
+            'stockMovements',
+            'totalTransactions',
+            'totalQuantity',
             'totalValue',
             'filteredTransactions',
-            'filteredQuantity', 
+            'filteredQuantity',
             'filteredValue',
             'chartData',
             'salesTrendData',
@@ -763,9 +776,21 @@ class ReportController extends Controller
 
         // Generate colors
         $colors = [
-            '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
-            '#06B6D4', '#84CC16', '#F97316', '#EC4899', '#6366F1',
-            '#14B8A6', '#F472B6', '#A855F7', '#22D3EE', '#FDE047'
+            '#3B82F6',
+            '#EF4444',
+            '#10B981',
+            '#F59E0B',
+            '#8B5CF6',
+            '#06B6D4',
+            '#84CC16',
+            '#F97316',
+            '#EC4899',
+            '#6366F1',
+            '#14B8A6',
+            '#F472B6',
+            '#A855F7',
+            '#22D3EE',
+            '#FDE047'
         ];
 
         $datasets = [];
@@ -775,7 +800,7 @@ class ReportController extends Controller
         foreach ($chartData as $entityId => $entityData) {
             $monthlyData = array_fill(0, 12, 0); // Initialize 12 months with 0
             $entityName = '';
-            
+
             foreach ($entityData as $data) {
                 // Handle both product_name and customer_name
                 $entityName = $data->product_name ?? $data->customer_name ?? 'Unknown';
@@ -791,7 +816,7 @@ class ReportController extends Controller
                 'fill' => false,
                 'tension' => 0.1
             ];
-            
+
             $colorIndex++;
         }
 
@@ -811,13 +836,13 @@ class ReportController extends Controller
     private function generateSalesTrendData($customerId, $year)
     {
         // Get monthly sales data for the customer
+        $yearExpr = config('database.default') === 'sqlite' ? "strftime('%Y', transaction_date)" : "YEAR(transaction_date)";
+        $monthExpr = config('database.default') === 'sqlite' ? "CAST(strftime('%m', transaction_date) AS INTEGER)" : "MONTH(transaction_date)";
+
         $monthlySales = StockMovement::where('customer_id', $customerId)
             ->where('type', 'out')
-            ->whereRaw("strftime('%Y', transaction_date) = ?", [$year])
-            ->selectRaw('
-                CAST(strftime("%m", transaction_date) AS INTEGER) as month,
-                SUM(quantity * COALESCE(unit_price, 0)) as total_value
-            ')
+            ->whereRaw("$yearExpr = ?", [$year])
+            ->selectRaw("$monthExpr as month, SUM(quantity * COALESCE(unit_price, 0)) as total_value")
             ->groupBy('month')
             ->orderBy('month')
             ->get();
@@ -830,7 +855,7 @@ class ReportController extends Controller
 
         // Initialize monthly data with 0
         $monthlyData = array_fill(0, 12, 0);
-        
+
         // Fill actual data
         foreach ($monthlySales as $data) {
             $monthlyData[$data->month - 1] = (float) $data->total_value;
@@ -862,19 +887,19 @@ class ReportController extends Controller
         // OPTIMIZED: Using helper method from StockMovement model
         return $this->processChartData(StockMovement::getProductChartData($productId, $year));
     }
-    
+
     public function exportCustomerDetail($id)
     {
         $customer = Customer::findOrFail($id);
-        
+
         $stockMovements = StockMovement::with(['product.category'])
             ->where('customer_id', $id)
             ->where('type', 'out')
             ->orderBy('transaction_date', 'desc')
             ->get();
-            
+
         $filename = 'detail_customer_' . str_replace(' ', '_', $customer->name) . '_' . date('Y-m-d_H-i-s') . '.csv';
-        
+
         $headers = [
             'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
@@ -882,35 +907,35 @@ class ReportController extends Controller
             'Expires' => '0',
         ];
 
-        $callback = function() use ($customer, $stockMovements) {
+        $callback = function () use ($customer, $stockMovements) {
             $file = fopen('php://output', 'w');
-            
+
             // Add BOM for UTF-8 to ensure proper encoding in Excel
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
             $delimiter = ';';
             $enclosure = '"';
-            
+
             // Report Header
             fputcsv($file, ['DETAIL TRANSAKSI CUSTOMER'], $delimiter, $enclosure);
             fputcsv($file, ['PT. Mitrajaya Selaras Abadi'], $delimiter, $enclosure);
             fputcsv($file, ['Tanggal Export: ' . now()->format('d/m/Y H:i:s')], $delimiter, $enclosure);
             fputcsv($file, ['Customer: ' . $customer->name], $delimiter, $enclosure);
             fputcsv($file, [''], $delimiter, $enclosure);
-            
+
             // Summary
             $totalTransactions = $stockMovements->count();
             $totalQuantity = $stockMovements->sum('quantity');
-            $totalValue = $stockMovements->sum(function($movement) {
+            $totalValue = $stockMovements->sum(function ($movement) {
                 return $movement->quantity * ($movement->unit_price ?? 0);
             });
-            
+
             fputcsv($file, ['RINGKASAN'], $delimiter, $enclosure);
             fputcsv($file, ['Total Transaksi', $totalTransactions], $delimiter, $enclosure);
             fputcsv($file, ['Total Quantity', number_format($totalQuantity)], $delimiter, $enclosure);
             fputcsv($file, ['Total Nilai', 'Rp ' . number_format($totalValue, 0, ',', '.')], $delimiter, $enclosure);
             fputcsv($file, [''], $delimiter, $enclosure);
-            
+
             // Column Headers
             fputcsv($file, [
                 'No',
@@ -931,7 +956,7 @@ class ReportController extends Controller
             $no = 1;
             foreach ($stockMovements as $movement) {
                 $totalItemValue = $movement->quantity * ($movement->unit_price ?? 0);
-                
+
                 fputcsv($file, [
                     $no++,
                     $movement->transaction_date->format('d/m/Y H:i'),
@@ -948,7 +973,7 @@ class ReportController extends Controller
                     $movement->notes ?? '-'
                 ], $delimiter, $enclosure);
             }
-            
+
             fclose($file);
         };
 
@@ -958,70 +983,66 @@ class ReportController extends Controller
     public function stockDetail(Request $request, $id)
     {
         $product = Product::with('category')->findOrFail($id);
-        
+
         // Get selected year from request, default to current year
         $selectedYear = $request->get('year', date('Y'));
-        
+
         $stockMovements = StockMovement::with(['supplier', 'customer'])
             ->where('product_id', $id)
             ->orderBy('transaction_date', 'desc')
             ->paginate(20);
-            
+
         // Calculate statistics
         $totalStockIn = StockMovement::where('product_id', $id)
             ->where('type', 'in')
             ->sum('quantity');
-            
+
         $totalStockOut = StockMovement::where('product_id', $id)
             ->where('type', 'out')
             ->sum('quantity');
 
         // Generate chart data for selected year
         $chartData = $this->generateProductChartData($id, $selectedYear);
-        
+
         // Get available years for dropdown
-        $yearExpression = config('database.default') === 'sqlite' 
+        $yearExpression = config('database.default') === 'sqlite'
             ? "strftime('%Y', transaction_date) as year"
             : 'YEAR(transaction_date) as year';
-            
+
         $availableYears = StockMovement::where('product_id', $id)
             ->where('type', 'out')
-<<<<<<< HEAD
-            ->selectRaw("strftime('%Y', transaction_date) as year")
-=======
             ->selectRaw($yearExpression)
->>>>>>> 02534b615ffbca52225e1ae346d26c9e44758c19
             ->distinct()
             ->orderBy('year', 'desc')
             ->pluck('year')
             ->toArray();
-            
+
         if (empty($availableYears)) {
             $availableYears = [date('Y')];
         }
-            
+
         return view('reports.stock-detail', compact(
-            'product', 
-            'stockMovements', 
-            'totalStockIn', 
+            'product',
+            'stockMovements',
+            'totalStockIn',
             'totalStockOut',
             'chartData',
             'selectedYear',
             'availableYears'
         ));
     }
-    
+
     public function exportStockDetail($id)
     {
         $product = Product::with('category')->findOrFail($id);
-        
+
         $stockMovements = StockMovement::with(['supplier', 'customer'])
             ->where('product_id', $id)
             ->orderBy('transaction_date', 'desc')
             ->get();
-            
+
         $filename = 'detail_stok_' . str_replace(' ', '_', $product->name) . '_' . date('Y-m-d_H-i-s') . '.csv';
-        
+
         $headers = [
             'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
@@ -1029,22 +1050,22 @@ class ReportController extends Controller
             'Expires' => '0',
         ];
 
-        $callback = function() use ($product, $stockMovements) {
+        $callback = function () use ($product, $stockMovements) {
             $file = fopen('php://output', 'w');
-            
+
             // Add BOM for UTF-8 to ensure proper encoding in Excel
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
             $delimiter = ';';
             $enclosure = '"';
-            
+
             // Report Header
             fputcsv($file, ['DETAIL PERGERAKAN STOK PRODUK'], $delimiter, $enclosure);
             fputcsv($file, ['PT. Mitrajaya Selaras Abadi'], $delimiter, $enclosure);
             fputcsv($file, ['Tanggal Export: ' . now()->format('d/m/Y H:i:s')], $delimiter, $enclosure);
             fputcsv($file, ['Produk: ' . $product->name . ' (' . $product->code . ')'], $delimiter, $enclosure);
             fputcsv($file, [''], $delimiter, $enclosure);
-            
+
             // Product Info
             fputcsv($file, ['INFORMASI PRODUK'], $delimiter, $enclosure);
             fputcsv($file, ['Nama Produk', $product->name], $delimiter, $enclosure);
@@ -1056,19 +1077,19 @@ class ReportController extends Controller
             fputcsv($file, ['Minimum Stok', number_format($product->minimum_stock)], $delimiter, $enclosure);
             fputcsv($file, ['Status Stok', $product->current_stock <= $product->minimum_stock ? 'Stok Menipis' : 'Stok Aman'], $delimiter, $enclosure);
             fputcsv($file, [''], $delimiter, $enclosure);
-            
+
             // Summary
             $totalStockIn = $stockMovements->where('type', 'in')->sum('quantity');
             $totalStockOut = $stockMovements->where('type', 'out')->sum('quantity');
             $totalMovements = $stockMovements->count();
-            
+
             fputcsv($file, ['RINGKASAN PERGERAKAN'], $delimiter, $enclosure);
             fputcsv($file, ['Total Pergerakan', $totalMovements], $delimiter, $enclosure);
             fputcsv($file, ['Total Stok Masuk', number_format($totalStockIn)], $delimiter, $enclosure);
             fputcsv($file, ['Total Stok Keluar', number_format($totalStockOut)], $delimiter, $enclosure);
             fputcsv($file, ['Nilai Stok Saat Ini', 'Rp ' . number_format($product->current_stock * $product->price, 0, ',', '.')], $delimiter, $enclosure);
             fputcsv($file, [''], $delimiter, $enclosure);
-            
+
             // Column Headers
             fputcsv($file, [
                 'No',
@@ -1088,9 +1109,8 @@ class ReportController extends Controller
 
             $no = 1;
             foreach ($stockMovements as $movement) {
-                $type = $movement->type == 'in' ? 'Stok Masuk' : 
-                       ($movement->type == 'out' ? 'Stok Keluar' : 'Stock Opname');
-                
+                $type = $movement->type == 'in' ? 'Stok Masuk' : ($movement->type == 'out' ? 'Stok Keluar' : 'Stock Opname');
+
                 $partner = '';
                 if ($movement->supplier) {
                     $partner = $movement->supplier->name;
@@ -1099,9 +1119,9 @@ class ReportController extends Controller
                 } else {
                     $partner = '-';
                 }
-                
+
                 $stockDifference = $movement->stock_after - $movement->stock_before;
-                
+
                 fputcsv($file, [
                     $no++,
                     $movement->transaction_date->format('d/m/Y H:i'),
@@ -1118,7 +1138,7 @@ class ReportController extends Controller
                     $movement->notes ?? '-'
                 ], $delimiter, $enclosure);
             }
-            
+
             fclose($file);
         };
 
@@ -1128,8 +1148,8 @@ class ReportController extends Controller
     public function exportCustomerReport()
     {
         $customers = Customer::withCount(['stockMovements' => function ($query) {
-                $query->where('type', 'out');
-            }])
+            $query->where('type', 'out');
+        }])
             ->with(['stockMovements' => function ($query) {
                 $query->where('type', 'out')->with('product');
             }])
@@ -1137,7 +1157,7 @@ class ReportController extends Controller
             ->get();
 
         $filename = 'laporan_customer_' . date('Y-m-d_H-i-s') . '.csv';
-        
+
         $headers = [
             'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
@@ -1145,41 +1165,41 @@ class ReportController extends Controller
             'Expires' => '0',
         ];
 
-        $callback = function() use ($customers) {
+        $callback = function () use ($customers) {
             $file = fopen('php://output', 'w');
-            
+
             // Add BOM for UTF-8 to ensure proper encoding in Excel
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
             // Set delimiter and enclosure for better Excel compatibility
             $delimiter = ';';
             $enclosure = '"';
-            
+
             // Report Header Information
             fputcsv($file, ['LAPORAN CUSTOMER'], $delimiter, $enclosure);
             fputcsv($file, ['PT. Mitrajaya Selaras Abadi'], $delimiter, $enclosure);
             fputcsv($file, ['Tanggal Export: ' . now()->format('d/m/Y H:i:s')], $delimiter, $enclosure);
             fputcsv($file, [''], $delimiter, $enclosure); // Empty row
-            
+
             // Summary Information
             $totalCustomers = $customers->count();
-            $activeCustomers = $customers->filter(function($customer) {
+            $activeCustomers = $customers->filter(function ($customer) {
                 return $customer->stock_movements_count > 0;
             })->count();
             $totalTransactions = $customers->sum('stock_movements_count');
-            $totalValue = $customers->sum(function($customer) {
-                return $customer->stockMovements->sum(function($movement) {
+            $totalValue = $customers->sum(function ($customer) {
+                return $customer->stockMovements->sum(function ($movement) {
                     return $movement->quantity * ($movement->unit_price ?? $movement->product->price ?? 0);
                 });
             });
-            
+
             fputcsv($file, ['RINGKASAN CUSTOMER'], $delimiter, $enclosure);
             fputcsv($file, ['Total Customer', $totalCustomers], $delimiter, $enclosure);
             fputcsv($file, ['Customer Aktif', $activeCustomers], $delimiter, $enclosure);
             fputcsv($file, ['Total Transaksi Keluar', $totalTransactions], $delimiter, $enclosure);
             fputcsv($file, ['Total Nilai Penjualan', 'Rp ' . number_format($totalValue, 0, ',', '.')], $delimiter, $enclosure);
             fputcsv($file, [''], $delimiter, $enclosure); // Empty row
-            
+
             // Column Headers
             fputcsv($file, [
                 'No',
@@ -1199,23 +1219,23 @@ class ReportController extends Controller
             $no = 1;
             foreach ($customers as $customer) {
                 $totalUnits = $customer->stockMovements->sum('quantity');
-                $totalValue = $customer->stockMovements->sum(function($movement) {
+                $totalValue = $customer->stockMovements->sum(function ($movement) {
                     return $movement->quantity * ($movement->unit_price ?? $movement->product->price ?? 0);
                 });
-                
-                $avgValuePerTransaction = $customer->stock_movements_count > 0 ? 
+
+                $avgValuePerTransaction = $customer->stock_movements_count > 0 ?
                     $totalValue / $customer->stock_movements_count : 0;
-                
+
                 $lastTransaction = $customer->stockMovements->sortByDesc('transaction_date')->first();
-                $lastTransactionDate = $lastTransaction ? 
+                $lastTransactionDate = $lastTransaction ?
                     $lastTransaction->transaction_date->format('d/m/Y') : '-';
-                
+
                 // Determine customer status
                 $status = 'Tidak Aktif';
                 if ($customer->stock_movements_count > 0) {
-                    $daysSinceLastTransaction = $lastTransaction ? 
+                    $daysSinceLastTransaction = $lastTransaction ?
                         $lastTransaction->transaction_date->diffInDays(now()) : 999;
-                    
+
                     if ($daysSinceLastTransaction <= 30) {
                         $status = 'Sangat Aktif';
                     } elseif ($daysSinceLastTransaction <= 90) {
@@ -1224,7 +1244,7 @@ class ReportController extends Controller
                         $status = 'Kurang Aktif';
                     }
                 }
-                
+
                 fputcsv($file, [
                     $no++,
                     $customer->name,
@@ -1240,7 +1260,7 @@ class ReportController extends Controller
                     $customer->created_at->format('d/m/Y')
                 ], $delimiter, $enclosure);
             }
-            
+
             fclose($file);
         };
 

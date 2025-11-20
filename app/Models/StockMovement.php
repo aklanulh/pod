@@ -118,16 +118,20 @@ class StockMovement extends Model
      */
     public static function getCustomerChartData($customerId, $year)
     {
+        $monthExpr = config('database.default') === 'sqlite'
+            ? "CAST(strftime('%m', stock_movements.transaction_date) AS INTEGER)"
+            : "MONTH(stock_movements.transaction_date)";
+
         return self::join('products', 'stock_movements.product_id', '=', 'products.id')
             ->where('stock_movements.customer_id', $customerId)
             ->where('stock_movements.type', 'out')
             ->whereYear('stock_movements.transaction_date', $year)
-            ->selectRaw('
+            ->selectRaw("
                 products.id as product_id,
                 products.name as product_name,
-                CAST(strftime(\'%m\', stock_movements.transaction_date) AS INTEGER) as month,
+                $monthExpr as month,
                 SUM(stock_movements.quantity) as total_quantity
-            ')
+            ")
             ->groupBy('products.id', 'products.name', 'month')
             ->orderBy('products.name')
             ->get()
@@ -143,16 +147,20 @@ class StockMovement extends Model
      */
     public static function getProductChartData($productId, $year)
     {
+        $monthExpr = config('database.default') === 'sqlite'
+            ? "CAST(strftime('%m', stock_movements.transaction_date) AS INTEGER)"
+            : "MONTH(stock_movements.transaction_date)";
+
         return self::join('customers', 'stock_movements.customer_id', '=', 'customers.id')
             ->where('stock_movements.product_id', $productId)
             ->where('stock_movements.type', 'out')
             ->whereYear('stock_movements.transaction_date', $year)
-            ->selectRaw('
+            ->selectRaw("
                 customers.id as customer_id,
                 customers.name as customer_name,
-                CAST(strftime(\'%m\', stock_movements.transaction_date) AS INTEGER) as month,
+                $monthExpr as month,
                 SUM(stock_movements.quantity) as total_quantity
-            ')
+            ")
             ->groupBy('customers.id', 'customers.name', 'month')
             ->orderBy('customers.name')
             ->get()
