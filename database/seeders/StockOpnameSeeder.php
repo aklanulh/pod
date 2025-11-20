@@ -31,17 +31,17 @@ class StockOpnameSeeder extends Seeder
 
     private function createStockOpnameTransactions($products)
     {
-        // Stock Opname 1 - August 2025
+        // Stock Opname 1 - September 2025
         $opname1 = StockOpname::create([
-            'opname_number' => 'OP-20250815-001',
-            'opname_date' => Carbon::parse('2025-08-15'),
-            'notes' => 'Stock opname bulanan Agustus 2025',
+            'opname_number' => 'OP-20250915-001',
+            'opname_date' => Carbon::parse('2025-09-15'),
+            'notes' => 'Stock opname bulanan September 2025',
             'status' => 'completed',
-            'created_at' => Carbon::parse('2025-08-15'),
-            'updated_at' => Carbon::parse('2025-08-15'),
+            'created_at' => Carbon::parse('2025-09-15'),
+            'updated_at' => Carbon::parse('2025-09-15'),
         ]);
 
-        // Stock Opname details for August
+        // Stock Opname details for September
         $opnameDetails1 = [
             [
                 'product_name' => 'DS Diluent',
@@ -115,17 +115,17 @@ class StockOpnameSeeder extends Seeder
             }
         }
 
-        // Stock Opname 2 - September 2025
+        // Stock Opname 2 - October 2025
         $opname2 = StockOpname::create([
-            'opname_number' => 'OP-20250915-001',
-            'opname_date' => Carbon::parse('2025-09-15'),
-            'notes' => 'Stock opname bulanan September 2025',
+            'opname_number' => 'OP-20251015-001',
+            'opname_date' => Carbon::parse('2025-10-15'),
+            'notes' => 'Stock opname bulanan Oktober 2025',
             'status' => 'completed',
-            'created_at' => Carbon::parse('2025-09-15'),
-            'updated_at' => Carbon::parse('2025-09-15'),
+            'created_at' => Carbon::parse('2025-10-15'),
+            'updated_at' => Carbon::parse('2025-10-15'),
         ]);
 
-        // Stock Opname details for September
+        // Stock Opname details for October
         $opnameDetails2 = [
             [
                 'product_name' => 'DS Diluent',
@@ -205,17 +205,17 @@ class StockOpnameSeeder extends Seeder
             }
         }
 
-        // Stock Opname 3 - Draft for October (in progress)
+        // Stock Opname 3 - Draft for November (in progress)
         $opname3 = StockOpname::create([
-            'opname_number' => 'OP-20251010-001',
-            'opname_date' => Carbon::parse('2025-10-10'),
-            'notes' => 'Stock opname bulanan Oktober 2025 (dalam proses)',
+            'opname_number' => 'OP-20251119-001',
+            'opname_date' => Carbon::parse('2025-11-19'),
+            'notes' => 'Stock opname bulanan November 2025 (dalam proses)',
             'status' => 'draft',
-            'created_at' => Carbon::parse('2025-10-10'),
-            'updated_at' => Carbon::parse('2025-10-10'),
+            'created_at' => Carbon::parse('2025-11-19'),
+            'updated_at' => Carbon::parse('2025-11-19'),
         ]);
 
-        // Some draft details for October (not completed yet)
+        // Some draft details for November (not completed yet)
         $opnameDetails3 = [
             [
                 'product_name' => 'DS Diluent',

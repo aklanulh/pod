@@ -26,3 +26,5 @@ database_config.txt
 Homestead.json
 Homestead.yaml
 Thumbs.db
+database/database.sqlite
+*.sqlite

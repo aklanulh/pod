@@ -11,6 +11,7 @@ use Database\Seeders\UserSeeder;
 use Database\Seeders\StockMovementSeeder;
 use Database\Seeders\StockOpnameSeeder;
 use Database\Seeders\CustomerScheduleSeeder;
+use Database\Seeders\KsoRoiSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -28,6 +29,7 @@ class DatabaseSeeder extends Seeder
             StockMovementSeeder::class,
             StockOpnameSeeder::class,
             CustomerScheduleSeeder::class,
+            KsoRoiSeeder::class,
         ]);
     }
 }

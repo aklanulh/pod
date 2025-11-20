@@ -176,7 +176,7 @@
         }
         
         .totals-section {
-            margin-top: -15px;
+            margin-top: -35px;
             display: flex;
             justify-content: flex-end;
         }
@@ -214,7 +214,7 @@
         }
         
         .footer-section {
-            margin-top: 25px;
+            margin-top: 10px;
             display: flex;
             justify-content: space-between;
             font-size: 10px;
@@ -363,8 +363,16 @@
         </table>
         
         <!-- PO Number Section -->
-        <div style="margin: 8px 10px 0 10px; padding: 4px; font-size: 10px;">
-            <strong>PO No: {{ $orderNumber ?: '00535/PO/PMC/06/2025' }}</strong>
+        <div style="margin: 0px 10px 0 10px; padding: 4px; font-size: 10px;">
+            <strong>PO No : {{ $orderNumber ?: '00535/PO/PMC/06/2025' }}</strong>
+        </div>
+        
+        <!-- Terbilang -->
+        <div style="margin: -2px 10px; font-size: 10px; display: flex; align-items: center;">
+            <strong>Terbilang :</strong>
+            <div style="margin-left: 10px; padding: 2px 5px; background: repeating-linear-gradient(45deg, #f0f0f0, #f0f0f0 2px, transparent 2px, transparent 4px); width: 400px; height: 18px; border: 1px solid #ccc; display: flex; align-items: center;">
+                <strong style="color: #000; font-size: 9px; line-height: 1;">{{ ucwords(trim($terbilang)) }} rupiah</strong>
+            </div>
         </div>
         
         <!-- Totals Section -->
@@ -385,14 +393,6 @@
                     <td class="amount"><span class="currency-rp">Rp</span><span class="currency-amount">{{ number_format($finalAmount, 0, ',', '.') }}</span></td>
                 </tr>
             </table>
-        </div>
-        
-        <!-- Terbilang -->
-        <div style="margin: 10px 10px; font-size: 10px; display: flex; align-items: center;">
-            <strong>Terbilang :</strong>
-            <div style="margin-left: 10px; padding: 2px 5px; background: repeating-linear-gradient(45deg, #f0f0f0, #f0f0f0 2px, transparent 2px, transparent 4px); width: 400px; height: 18px; border: 1px solid #ccc; display: flex; align-items: center;">
-                <strong style="color: #000; font-size: 9px; line-height: 1;">{{ ucwords(trim($terbilang)) }} rupiah</strong>
-            </div>
         </div>
         
         <!-- Footer -->

@@ -123,4 +123,16 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | QR Code Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Password untuk mengakses detail KSO Item melalui QR Code
+    | Ubah password ini di file .env dengan key QR_PASSWORD
+    |
+    */
+
+    'qr_password' => env('QR_PASSWORD', 'MSA2008'),
+
 ];

@@ -44,49 +44,49 @@
              x-init="sidebarOpen = window.innerWidth >= 1024"
              @resize.window="sidebarOpen = window.innerWidth >= 1024">
             <div class="p-4 flex items-center space-x-3">
-                <img src="{{ url('public/images/logowms.png') }}" alt="WMS Logo" class="w-10 h-10 object-contain">
+                <img src="{{ url('public/images/logopod.png') }}" alt="POD Logo" class="w-10 h-10 object-contain">
                 <div>
-                    <h1 class="text-xl font-bold">WMS - MSA</h1>
-                    <p class="text-sm text-blue-200">Warehouse Management</p>
+                    <h1 class="text-xl font-bold">POD - MSA</h1>
+                    <p class="text-sm text-blue-200">Platform Operating Digital</p>
                 </div>
             </div>
             
             <nav class="mt-8">
                 @if(Auth::user()->isSuperAdmin())
-                    <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-3 text-white hover:bg-blue-700 {{ request()->routeIs('dashboard') ? 'bg-blue-700' : '' }}">
+                    <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-2 text-white hover:bg-blue-700 {{ request()->routeIs('dashboard') ? 'bg-blue-700' : '' }}">
                         <i class="fas fa-tachometer-alt mr-3"></i>
                         Dashboard Super Admin
                     </a>
                     
-                    <div class="mt-4">
-                        <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase tracking-wider">Inventory</p>
-                        <a href="{{ route('products.index') }}" class="flex items-center px-4 py-3 text-white hover:bg-blue-700 {{ request()->routeIs('products.*') ? 'bg-blue-700' : '' }}">
+                    <div class="mt-2">
+                        <p class="px-4 py-1 text-xs font-semibold text-blue-300 uppercase tracking-wider">Inventory</p>
+                        <a href="{{ route('products.index') }}" class="flex items-center px-4 py-2 text-white hover:bg-blue-700 {{ request()->routeIs('products.*') ? 'bg-blue-700' : '' }}">
                             <i class="fas fa-boxes mr-3"></i>
                             Produk
                         </a>
                     </div>
                 @else
-                    <a href="{{ route('admin.dashboard') }}" class="flex items-center px-4 py-3 text-white hover:bg-blue-700 {{ request()->routeIs('admin.dashboard') ? 'bg-blue-700' : '' }}">
+                    <a href="{{ route('admin.dashboard') }}" class="flex items-center px-4 py-2 text-white hover:bg-blue-700 {{ request()->routeIs('admin.dashboard') ? 'bg-blue-700' : '' }}">
                         <i class="fas fa-tachometer-alt mr-3"></i>
                         Dashboard Admin
                     </a>
                     
-                    <div class="mt-4">
-                        <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase tracking-wider">Inventory</p>
-                        <a href="{{ route('admin.products.index') }}" class="flex items-center px-4 py-3 text-white hover:bg-blue-700 {{ request()->routeIs('admin.products.*') ? 'bg-blue-700' : '' }}">
+                    <div class="mt-2">
+                        <p class="px-4 py-1 text-xs font-semibold text-blue-300 uppercase tracking-wider">Inventory</p>
+                        <a href="{{ route('admin.products.index') }}" class="flex items-center px-4 py-2 text-white hover:bg-blue-700 {{ request()->routeIs('admin.products.*') ? 'bg-blue-700' : '' }}">
                             <i class="fas fa-boxes mr-3"></i>
                             Produk
                         </a>
                     </div>
                 @endif
 
-                <div class="mt-4">
-                    <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase tracking-wider">Stock Movement</p>
-                    <a href="{{ route('stock.in.index') }}" class="flex items-center px-4 py-3 text-white hover:bg-blue-700 {{ request()->routeIs('stock.in.*') ? 'bg-blue-700' : '' }}">
+                <div class="mt-2">
+                    <p class="px-4 py-1 text-xs font-semibold text-blue-300 uppercase tracking-wider">Stock Movement</p>
+                    <a href="{{ route('stock.in.index') }}" class="flex items-center px-4 py-2 text-white hover:bg-blue-700 {{ request()->routeIs('stock.in.*') ? 'bg-blue-700' : '' }}">
                         <i class="fas fa-arrow-down mr-3"></i>
                         Stok Masuk
                     </a>
-                    <a href="{{ route('stock.out.index') }}" class="flex items-center justify-between px-4 py-3 text-white hover:bg-blue-700 {{ request()->routeIs('stock.out.*') ? 'bg-blue-700' : '' }}">
+                    <a href="{{ route('stock.out.index') }}" class="flex items-center justify-between px-4 py-2 text-white hover:bg-blue-700 {{ request()->routeIs('stock.out.*') ? 'bg-blue-700' : '' }}">
                         <div class="flex items-center">
                             <i class="fas fa-arrow-up mr-3"></i>
                             Stok Keluar
@@ -97,7 +97,7 @@
                             </span>
                         @endif
                     </a>
-                    <a href="{{ route('stock.opname.index') }}" class="flex items-center justify-between px-4 py-3 text-white hover:bg-blue-700 {{ request()->routeIs('stock.opname.*') ? 'bg-blue-700' : '' }}">
+                    <a href="{{ route('stock.opname.index') }}" class="flex items-center justify-between px-4 py-2 text-white hover:bg-blue-700 {{ request()->routeIs('stock.opname.*') ? 'bg-blue-700' : '' }}">
                         <div class="flex items-center">
                             <i class="fas fa-clipboard-check mr-3"></i>
                             Stok Opname
@@ -110,13 +110,13 @@
                     </a>
                 </div>
 
-                <div class="mt-4">
-                    <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase tracking-wider">Master Data</p>
-                    <a href="{{ route('suppliers.index') }}" class="flex items-center px-4 py-3 text-white hover:bg-blue-700 {{ request()->routeIs('suppliers.*') ? 'bg-blue-700' : '' }}">
+                <div class="mt-2">
+                    <p class="px-4 py-1 text-xs font-semibold text-blue-300 uppercase tracking-wider">Master Data</p>
+                    <a href="{{ route('suppliers.index') }}" class="flex items-center px-4 py-2 text-white hover:bg-blue-700 {{ request()->routeIs('suppliers.*') ? 'bg-blue-700' : '' }}">
                         <i class="fas fa-truck mr-3"></i>
-                        Distributor
+                        Supplier
                     </a>
-                    <a href="{{ route('customers.index') }}" class="flex items-center px-4 py-3 text-white hover:bg-blue-700 {{ request()->routeIs('customers.*') ? 'bg-blue-700' : '' }}">
+                    <a href="{{ route('customers.index') }}" class="flex items-center px-4 py-2 text-white hover:bg-blue-700 {{ request()->routeIs('customers.*') ? 'bg-blue-700' : '' }}">
                         <i class="fas fa-users mr-3"></i>
                         Customer
                     </a>
@@ -124,19 +124,27 @@
 
 
                 @if(Auth::user()->isSuperAdmin())
-                    <div class="mt-4">
-                        <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase tracking-wider">Reports</p>
-                        <a href="{{ route('reports.index') }}" class="flex items-center px-4 py-3 text-white hover:bg-blue-700 {{ request()->routeIs('reports.*') ? 'bg-blue-700' : '' }}">
-                            <i class="fas fa-chart-bar mr-3"></i>
-                            Laporan
+                    <div class="mt-2">
+                        <p class="px-4 py-1 text-xs font-semibold text-blue-300 uppercase tracking-wider">KSO Management</p>
+                        <a href="{{ route('kso-roi.index') }}" class="flex items-center px-4 py-2 text-white hover:bg-blue-700 {{ request()->routeIs('kso-roi.*') ? 'bg-blue-700' : '' }}">
+                            <i class="fas fa-handshake mr-3"></i>
+                            KSO Management
                         </a>
                     </div>
 
-                    <div class="mt-4">
-                        <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase tracking-wider">Administration</p>
-                        <a href="{{ route('admin.history.index') }}" class="flex items-center px-4 py-3 text-white hover:bg-blue-700 {{ request()->routeIs('admin.history.*') ? 'bg-blue-700' : '' }}">
+                    <div class="mt-2">
+                        <p class="px-4 py-1 text-xs font-semibold text-blue-300 uppercase tracking-wider">Reports</p>
+                        <a href="{{ route('reports.index') }}" class="flex items-center px-4 py-2 text-white hover:bg-blue-700 {{ request()->routeIs('reports.*') ? 'bg-blue-700' : '' }}">
+                            <i class="fas fa-chart-bar mr-3"></i>
+                            Laporan Gudang
+                        </a>
+                    </div>
+
+                    <div class="mt-2">
+                        <p class="px-4 py-1 text-xs font-semibold text-blue-300 uppercase tracking-wider">Administration</p>
+                        <a href="{{ route('admin.history.index') }}" class="flex items-center px-4 py-2 text-white hover:bg-blue-700 {{ request()->routeIs('admin.history.*') ? 'bg-blue-700' : '' }}">
                             <i class="fas fa-history mr-3"></i>
-                            History Admin
+                            Log Aktivitas
                         </a>
                     </div>
                 @endif

@@ -145,6 +145,28 @@
     </div>
 </div>
 
+<!-- Sales Trend Chart -->
+<div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Trend Penjualan Bulanan</h3>
+            <p class="text-sm text-gray-600">Nilai penjualan dalam rupiah setiap bulan dalam tahun {{ $selectedYear }}</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <label for="salesYearSelect" class="text-sm font-medium text-gray-700">Tahun:</label>
+            <select id="salesYearSelect" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                @foreach($availableYears as $year)
+                    <option value="{{ $year }}" {{ $year == $selectedYear ? 'selected' : '' }}>{{ $year }}</option>
+                @endforeach
+            </select>
+        </div>
+    </div>
+    
+    <div class="relative" style="height: 400px;">
+        <canvas id="salesTrendChart"></canvas>
+    </div>
+</div>
+
 <!-- Transaction History -->
 <div class="bg-white rounded-lg shadow overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-200">
@@ -379,7 +401,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Chart configuration
+    // Product Chart configuration
     const ctx = document.getElementById('customerProductChart').getContext('2d');
     const chartData = @json($chartData);
     
@@ -438,8 +460,76 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Year selection change handler
+    // Sales Trend Chart configuration
+    const salesCtx = document.getElementById('salesTrendChart').getContext('2d');
+    const salesTrendData = @json($salesTrendData);
+    
+    const salesChart = new Chart(salesCtx, {
+        type: 'line',
+        data: salesTrendData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Trend Penjualan Bulanan - {{ $customer->name }} ({{ $selectedYear }})',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    }
+                },
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Nilai Penjualan: Rp ' + new Intl.NumberFormat('id-ID').format(context.parsed.y);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Nilai Penjualan (Rp)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return 'Rp ' + new Intl.NumberFormat('id-ID', {
+                                notation: 'compact',
+                                compactDisplay: 'short'
+                            }).format(value);
+                        }
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Bulan'
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+
+    // Year selection change handler for product chart
     document.getElementById('yearSelect').addEventListener('change', function() {
+        const selectedYear = this.value;
+        const currentUrl = new URL(window.location);
+        currentUrl.searchParams.set('year', selectedYear);
+        window.location.href = currentUrl.toString();
+    });
+
+    // Year selection change handler for sales trend chart
+    document.getElementById('salesYearSelect').addEventListener('change', function() {
         const selectedYear = this.value;
         const currentUrl = new URL(window.location);
         currentUrl.searchParams.set('year', selectedYear);

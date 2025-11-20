@@ -493,20 +493,12 @@ class ReportController extends Controller
             ->paginate(20);
             
         // Calculate statistics
-        $totalTransactions = StockMovement::where('supplier_id', $id)
-            ->where('type', 'in')
-            ->count();
+        // OPTIMIZED: Using helper method from StockMovement model
+        $totalStats = StockMovement::getSupplierStats($id);
             
-        $totalQuantity = StockMovement::where('supplier_id', $id)
-            ->where('type', 'in')
-            ->sum('quantity');
-            
-        $totalValue = StockMovement::where('supplier_id', $id)
-            ->where('type', 'in')
-            ->get()
-            ->sum(function($movement) {
-                return $movement->quantity * ($movement->unit_price ?? 0);
-            });
+        $totalTransactions = $totalStats->total_transactions ?? 0;
+        $totalQuantity = $totalStats->total_quantity ?? 0;
+        $totalValue = $totalStats->total_value ?? 0;
             
         return view('reports.supplier-detail', compact(
             'supplier', 
@@ -671,40 +663,42 @@ class ReportController extends Controller
         $stockMovements = $query->paginate($perPage)->appends($request->query());
             
         // Calculate statistics (for all transactions, not filtered)
-        $totalTransactions = StockMovement::where('customer_id', $id)
-            ->where('type', 'out')
-            ->count();
+        // OPTIMIZED: Using helper method from StockMovement model
+        $totalStats = StockMovement::getCustomerStats($id);
             
-        $totalQuantity = StockMovement::where('customer_id', $id)
-            ->where('type', 'out')
-            ->sum('quantity');
-            
-        $totalValue = StockMovement::where('customer_id', $id)
-            ->where('type', 'out')
-            ->get()
-            ->sum(function($movement) {
-                return $movement->quantity * ($movement->unit_price ?? 0);
-            });
+        $totalTransactions = $totalStats->total_transactions ?? 0;
+        $totalQuantity = $totalStats->total_quantity ?? 0;
+        $totalValue = $totalStats->total_value ?? 0;
 
         // Calculate filtered statistics
+        // OPTIMIZED: Single query with database calculation
         $filteredQuery = StockMovement::where('customer_id', $id)->where('type', 'out');
         if ($dateFrom) $filteredQuery->whereDate('transaction_date', '>=', $dateFrom);
         if ($dateTo) $filteredQuery->whereDate('transaction_date', '<=', $dateTo);
         if ($productId) $filteredQuery->where('product_id', $productId);
         
-        $filteredTransactions = $filteredQuery->count();
-        $filteredQuantity = $filteredQuery->sum('quantity');
-        $filteredValue = $filteredQuery->get()->sum(function($movement) {
-            return $movement->quantity * ($movement->unit_price ?? 0);
-        });
+        $filteredStats = $filteredQuery->selectRaw('
+                COUNT(*) as filtered_transactions,
+                SUM(quantity) as filtered_quantity,
+                SUM(quantity * COALESCE(unit_price, 0)) as filtered_value
+            ')
+            ->first();
+            
+        $filteredTransactions = $filteredStats->filtered_transactions ?? 0;
+        $filteredQuantity = $filteredStats->filtered_quantity ?? 0;
+        $filteredValue = $filteredStats->filtered_value ?? 0;
 
         // Generate chart data for selected year
-        $chartData = $this->generateCustomerChartData($id, $selectedYear);
+        // OPTIMIZED: Using helper method from StockMovement model
+        $chartData = $this->processChartData(StockMovement::getCustomerChartData($id, $selectedYear));
+        
+        // Generate sales trend data (nilai penjualan bulanan)
+        $salesTrendData = $this->generateSalesTrendData($id, $selectedYear);
         
         // Get available years for dropdown
         $availableYears = StockMovement::where('customer_id', $id)
             ->where('type', 'out')
-            ->selectRaw('YEAR(transaction_date) as year')
+            ->selectRaw("strftime('%Y', transaction_date) as year")
             ->distinct()
             ->orderBy('year', 'desc')
             ->pluck('year')
@@ -715,15 +709,16 @@ class ReportController extends Controller
         }
         
         // Get products for filter dropdown
-        $products = StockMovement::with('product')
-            ->where('customer_id', $id)
-            ->where('type', 'out')
-            ->select('product_id')
-            ->distinct()
-            ->get()
-            ->pluck('product')
-            ->filter()
-            ->sortBy('name');
+        // OPTIMIZED: Direct join without loading unnecessary data
+        $products = Product::whereIn('id', function($query) use ($id) {
+                $query->select('product_id')
+                    ->from('stock_movements')
+                    ->where('customer_id', $id)
+                    ->where('type', 'out')
+                    ->distinct();
+            })
+            ->orderBy('name')
+            ->get();
             
         return view('reports.customer-detail', compact(
             'customer', 
@@ -735,6 +730,7 @@ class ReportController extends Controller
             'filteredQuantity', 
             'filteredValue',
             'chartData',
+            'salesTrendData',
             'selectedYear',
             'availableYears',
             'products',
@@ -747,26 +743,21 @@ class ReportController extends Controller
         ));
     }
 
-    private function generateCustomerChartData($customerId, $year)
+    /**
+     * Process chart data from StockMovement helper methods
+     * 
+     * @param \Illuminate\Support\Collection $chartData
+     * @return array
+     */
+    private function processChartData($chartData)
     {
-        // Get all products purchased by this customer in the selected year
-        $products = StockMovement::with('product')
-            ->where('customer_id', $customerId)
-            ->where('type', 'out')
-            ->whereYear('transaction_date', $year)
-            ->select('product_id')
-            ->distinct()
-            ->get()
-            ->pluck('product')
-            ->unique('id');
-
         // Generate months array
         $months = [];
         for ($i = 1; $i <= 12; $i++) {
             $months[] = date('M', mktime(0, 0, 0, $i, 1));
         }
 
-        // Generate colors for products
+        // Generate colors
         $colors = [
             '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
             '#06B6D4', '#84CC16', '#F97316', '#EC4899', '#6366F1',
@@ -776,22 +767,19 @@ class ReportController extends Controller
         $datasets = [];
         $colorIndex = 0;
 
-        foreach ($products as $product) {
-            $monthlyData = [];
+        // Process grouped data
+        foreach ($chartData as $entityId => $entityData) {
+            $monthlyData = array_fill(0, 12, 0); // Initialize 12 months with 0
+            $entityName = '';
             
-            for ($month = 1; $month <= 12; $month++) {
-                $quantity = StockMovement::where('customer_id', $customerId)
-                    ->where('product_id', $product->id)
-                    ->where('type', 'out')
-                    ->whereYear('transaction_date', $year)
-                    ->whereMonth('transaction_date', $month)
-                    ->sum('quantity');
-                    
-                $monthlyData[] = $quantity;
+            foreach ($entityData as $data) {
+                // Handle both product_name and customer_name
+                $entityName = $data->product_name ?? $data->customer_name ?? 'Unknown';
+                $monthlyData[$data->month - 1] = (int) $data->total_quantity;
             }
 
             $datasets[] = [
-                'label' => $product->name,
+                'label' => $entityName,
                 'data' => $monthlyData,
                 'backgroundColor' => $colors[$colorIndex % count($colors)],
                 'borderColor' => $colors[$colorIndex % count($colors)],
@@ -809,19 +797,26 @@ class ReportController extends Controller
         ];
     }
 
-    private function generateProductChartData($productId, $year)
+    /**
+     * Generate sales trend data for monthly sales value chart
+     * 
+     * @param int $customerId
+     * @param int $year
+     * @return array
+     */
+    private function generateSalesTrendData($customerId, $year)
     {
-        // Get all customers who purchased this product in the selected year
-        $customers = StockMovement::with('customer')
-            ->where('product_id', $productId)
+        // Get monthly sales data for the customer
+        $monthlySales = StockMovement::where('customer_id', $customerId)
             ->where('type', 'out')
-            ->whereYear('transaction_date', $year)
-            ->select('customer_id')
-            ->distinct()
-            ->get()
-            ->pluck('customer')
-            ->filter()
-            ->unique('id');
+            ->whereRaw("strftime('%Y', transaction_date) = ?", [$year])
+            ->selectRaw('
+                CAST(strftime("%m", transaction_date) AS INTEGER) as month,
+                SUM(quantity * COALESCE(unit_price, 0)) as total_value
+            ')
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
 
         // Generate months array
         $months = [];
@@ -829,47 +824,39 @@ class ReportController extends Controller
             $months[] = date('M', mktime(0, 0, 0, $i, 1));
         }
 
-        // Generate colors for customers
-        $colors = [
-            '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
-            '#06B6D4', '#84CC16', '#F97316', '#EC4899', '#6366F1',
-            '#14B8A6', '#F472B6', '#A855F7', '#22D3EE', '#FDE047'
-        ];
-
-        $datasets = [];
-        $colorIndex = 0;
-
-        foreach ($customers as $customer) {
-            $monthlyData = [];
-            
-            for ($month = 1; $month <= 12; $month++) {
-                $quantity = StockMovement::where('product_id', $productId)
-                    ->where('customer_id', $customer->id)
-                    ->where('type', 'out')
-                    ->whereYear('transaction_date', $year)
-                    ->whereMonth('transaction_date', $month)
-                    ->sum('quantity');
-                    
-                $monthlyData[] = $quantity;
-            }
-
-            $datasets[] = [
-                'label' => $customer->name,
-                'data' => $monthlyData,
-                'backgroundColor' => $colors[$colorIndex % count($colors)],
-                'borderColor' => $colors[$colorIndex % count($colors)],
-                'borderWidth' => 2,
-                'fill' => false,
-                'tension' => 0.1
-            ];
-            
-            $colorIndex++;
+        // Initialize monthly data with 0
+        $monthlyData = array_fill(0, 12, 0);
+        
+        // Fill actual data
+        foreach ($monthlySales as $data) {
+            $monthlyData[$data->month - 1] = (float) $data->total_value;
         }
 
         return [
             'labels' => $months,
-            'datasets' => $datasets
+            'datasets' => [
+                [
+                    'label' => 'Nilai Penjualan (Rp)',
+                    'data' => $monthlyData,
+                    'backgroundColor' => 'rgba(34, 197, 94, 0.1)',
+                    'borderColor' => 'rgb(34, 197, 94)',
+                    'borderWidth' => 3,
+                    'fill' => true,
+                    'tension' => 0.4,
+                    'pointBackgroundColor' => 'rgb(34, 197, 94)',
+                    'pointBorderColor' => 'rgb(255, 255, 255)',
+                    'pointBorderWidth' => 2,
+                    'pointRadius' => 5,
+                    'pointHoverRadius' => 7
+                ]
+            ]
         ];
+    }
+
+    private function generateProductChartData($productId, $year)
+    {
+        // OPTIMIZED: Using helper method from StockMovement model
+        return $this->processChartData(StockMovement::getProductChartData($productId, $year));
     }
     
     public function exportCustomerDetail($id)
@@ -991,7 +978,7 @@ class ReportController extends Controller
         // Get available years for dropdown
         $availableYears = StockMovement::where('product_id', $id)
             ->where('type', 'out')
-            ->selectRaw('YEAR(transaction_date) as year')
+            ->selectRaw("strftime('%Y', transaction_date) as year")
             ->distinct()
             ->orderBy('year', 'desc')
             ->pluck('year')

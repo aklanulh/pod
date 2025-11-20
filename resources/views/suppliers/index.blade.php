@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Data Distributor')
+@section('title', 'Data Supplier')
 
 @section('content')
 <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold text-gray-900">Daftar Distributor</h1>
+    <h1 class="text-2xl font-bold text-gray-900">Daftar Supplier</h1>
     <a href="{{ route('suppliers.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
         <i class="fas fa-plus mr-2"></i>
-        Tambah Distributor
+        Tambah Supplier
     </a>
 </div>
 
@@ -16,7 +16,7 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Distributor</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Supplier</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kontak</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telepon</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
@@ -86,7 +86,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">Belum ada data distributor</td>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">Belum ada data supplier</td>
                     </tr>
                 @endforelse
             </tbody>

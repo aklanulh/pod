@@ -1,6 +1,6 @@
-# WMS Application
+# POD Application
 
-Warehouse Management System built with Laravel.
+Platform Operating Digital built with Laravel.
 
 ## Requirements
 

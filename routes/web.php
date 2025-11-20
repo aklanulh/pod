@@ -15,18 +15,27 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminHistoryController;
 use App\Http\Controllers\CustomerScheduleController;
 use App\Http\Controllers\ProductCategoryController;
+use App\Http\Controllers\KsoRoiController;
 
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// QR Routes - Tanpa Login (Public)
+Route::prefix('qr')->name('qr.')->group(function () {
+    Route::get('kso/{uniqueId}', [KsoRoiController::class, 'qrVerify'])->name('verify');
+    Route::post('kso/{uniqueId}/search', [KsoRoiController::class, 'qrSearch'])->name('search');
+    Route::post('kso/{uniqueId}/password', [KsoRoiController::class, 'verifyQrPassword'])->name('password');
+    Route::get('kso/{uniqueId}/detail', [KsoRoiController::class, 'qrDetail'])->name('detail');
+});
+
 // Root route - redirect based on authentication and role
 Route::get('/', function () {
     if (!Auth::check()) {
         return redirect()->route('login');
     }
-    
+
     if (Auth::user()->isSuperAdmin()) {
         return redirect()->route('dashboard');
     } else {
@@ -37,7 +46,7 @@ Route::get('/', function () {
 // Protected Routes - Super Admin Only (Dashboard, Products, Reports)
 Route::middleware(['auth', 'super_admin'])->group(function () {
     // Dashboard - Super Admin Only (with fallback)
-    Route::get('/dashboard', function() {
+    Route::get('/dashboard', function () {
         try {
             return app(DashboardController::class)->index(request());
         } catch (\Exception $e) {
@@ -60,7 +69,7 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
         Route::get('supplier/{id}', [ReportController::class, 'supplierDetail'])->name('supplier.detail');
         Route::get('customer', [ReportController::class, 'customerReport'])->name('customer');
         Route::get('customer/{id}', [ReportController::class, 'customerDetail'])->name('customer.detail');
-        
+
         // Export routes
         Route::get('export/stock', [ReportController::class, 'exportStockReport'])->name('export.stock');
         Route::get('export/stock/{id}', [ReportController::class, 'exportStockDetail'])->name('export.stock.detail');
@@ -84,14 +93,14 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
         Route::get('in', [StockMovementController::class, 'stockInIndex'])->name('stock.in.index');
         Route::get('in/create', [StockMovementController::class, 'stockInCreate'])->name('stock.in.create');
         Route::post('in', [StockMovementController::class, 'stockInStore'])->name('stock.in.store');
-        
+
         Route::get('out', [StockMovementController::class, 'stockOutIndex'])->name('stock.out.index');
         Route::get('out/create', [StockMovementController::class, 'stockOutCreate'])->name('stock.out.create');
         Route::post('out', [StockMovementController::class, 'stockOutStore'])->name('stock.out.store');
         Route::post('out/export-invoice', [StockMovementController::class, 'exportStockOutExcel'])->name('stock.out.export.invoice');
         Route::post('out/export-xlsx', [StockMovementController::class, 'exportStockOutToExcel'])->name('stock.out.export.xlsx');
         Route::post('out/export-delivery-note', [StockMovementController::class, 'exportDeliveryNote'])->name('stock.out.export.delivery');
-        
+
         // Draft routes
         Route::get('out/drafts', [StockMovementController::class, 'draftIndex'])->name('stock.out.draft.index');
         Route::post('out/draft/save', [StockMovementController::class, 'saveDraft'])->name('stock.out.draft.save');
@@ -99,7 +108,7 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
         Route::post('out/draft/{id}/update', [StockMovementController::class, 'updateDraft'])->name('stock.out.draft.update');
         Route::delete('out/draft/{id}', [StockMovementController::class, 'deleteDraft'])->name('stock.out.draft.delete');
         Route::post('out/draft/{id}/process', [StockMovementController::class, 'processDraft'])->name('stock.out.draft.process');
-        
+
         Route::resource('opname', StockOpnameController::class)->names([
             'index' => 'stock.opname.index',
             'create' => 'stock.opname.create',
@@ -128,6 +137,19 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
     Route::get('customers/{customer}/last-purchases', [CustomerScheduleController::class, 'getCustomerLastPurchases'])->name('customers.last-purchases');
     Route::post('customer-schedules/{customerSchedule}/notify', [CustomerScheduleController::class, 'markAsNotified'])->name('customer-schedules.notify');
     Route::post('customer-schedules/{customerSchedule}/complete', [CustomerScheduleController::class, 'markAsCompleted'])->name('customer-schedules.complete');
+
+    // KSO ROI Routes - Super Admin Only
+    Route::prefix('kso-roi')->name('kso-roi.')->group(function () {
+        Route::get('/', [KsoRoiController::class, 'index'])->name('index');
+        Route::get('/kso-items', [KsoRoiController::class, 'ksoItems'])->name('kso-items');
+        Route::get('/kso-items/create', [KsoRoiController::class, 'createKsoItem'])->name('create-kso-item');
+        Route::post('/kso-items', [KsoRoiController::class, 'storeKsoItem'])->name('store-kso-item');
+        Route::get('/kso-items/{ksoItem}/edit', [KsoRoiController::class, 'editKsoItem'])->name('edit-kso-item');
+        Route::put('/kso-items/{ksoItem}', [KsoRoiController::class, 'updateKsoItem'])->name('update-kso-item');
+        Route::delete('/kso-items/{ksoItem}', [KsoRoiController::class, 'destroyKsoItem'])->name('destroy-kso-item');
+        Route::get('/customer/{customer}', [KsoRoiController::class, 'customerDetail'])->name('customer-detail');
+        Route::get('/analytics', [KsoRoiController::class, 'analytics'])->name('analytics');
+    });
 });
 
 // Protected Routes - Regular Admin Only (Dashboard, Products, Stock, Suppliers, Customers)
@@ -144,15 +166,15 @@ Route::middleware('auth')->group(function () {
     // Admin Stock Routes
     Route::prefix('admin/stock')->name('admin.stock.')->group(function () {
         Route::get('movements', [StockMovementController::class, 'adminMovements'])->name('movements');
-        
+
         Route::get('in', [StockMovementController::class, 'stockInIndex'])->name('in.index');
         Route::get('in/create', [StockMovementController::class, 'stockInCreate'])->name('in.create');
         Route::post('in', [StockMovementController::class, 'stockInStore'])->name('in.store');
-        
+
         Route::get('out', [StockMovementController::class, 'stockOutIndex'])->name('out.index');
         Route::get('out/create', [StockMovementController::class, 'stockOutCreate'])->name('out.create');
         Route::post('out', [StockMovementController::class, 'stockOutStore'])->name('out.store');
-        
+
         Route::resource('opname', StockOpnameController::class)->names([
             'index' => 'opname.index',
             'create' => 'opname.create',
@@ -173,13 +195,13 @@ Route::middleware('auth')->group(function () {
         Route::get('in', [StockMovementController::class, 'stockInIndex'])->name('stock.in.index');
         Route::get('in/create', [StockMovementController::class, 'stockInCreate'])->name('stock.in.create');
         Route::post('in', [StockMovementController::class, 'stockInStore'])->name('stock.in.store');
-        
+
         Route::get('out', [StockMovementController::class, 'stockOutIndex'])->name('stock.out.index');
         Route::get('out/create', [StockMovementController::class, 'stockOutCreate'])->name('stock.out.create');
         Route::post('out', [StockMovementController::class, 'stockOutStore'])->name('stock.out.store');
         Route::post('out/export-invoice', [StockMovementController::class, 'exportStockOutExcel'])->name('stock.out.export.invoice');
         Route::post('out/export-xlsx', [StockMovementController::class, 'exportStockOutToExcel'])->name('stock.out.export.xlsx');
-        
+
         Route::resource('opname', StockOpnameController::class)->names([
             'index' => 'stock.opname.index',
             'create' => 'stock.opname.create',
@@ -202,7 +224,7 @@ Route::middleware('auth')->group(function () {
     // Customers - Available to regular admins
     Route::resource('customers', CustomerController::class);
     Route::post('customers/ajax', [CustomerController::class, 'store'])->name('customers.ajax.store');
-    
+
     // Product Categories - Available to all authenticated users
     Route::prefix('product-categories')->name('product-categories.')->group(function () {
         Route::get('/', [ProductCategoryController::class, 'index'])->name('index');

@@ -26,10 +26,10 @@ class StockMovementSeeder extends Seeder
             return;
         }
 
-        // Create Stock In transactions (last 6 months: April - September 2025)
+        // Create Stock In transactions (last 6 months: May - November 2025)
         $this->createStockInTransactions($products, $suppliers);
 
-        // Create Stock Out transactions (last 5 months: May - September 2025)
+        // Create Stock Out transactions (last 5 months: June - November 2025)
         $this->createStockOutTransactions($products, $customers);
 
         // Create Multi-Product Stock In transactions (1 supplier, multiple products in same day)
@@ -49,9 +49,9 @@ class StockMovementSeeder extends Seeder
                 'product_name' => 'DS Diluent',
                 'supplier_name' => 'PT. Kimia Farma',
                 'transactions' => [
-                    // April 2025
-                    ['quantity' => 100, 'unit_price' => 115000, 'date' => '2025-04-05'],
-                    ['quantity' => 75, 'unit_price' => 118000, 'date' => '2025-04-18'],
+                    // May 2025
+                    ['quantity' => 100, 'unit_price' => 115000, 'date' => '2025-05-05'],
+                    ['quantity' => 75, 'unit_price' => 118000, 'date' => '2025-05-18'],
                     // May 2025
                     ['quantity' => 80, 'unit_price' => 120000, 'date' => '2025-05-03'],
                     ['quantity' => 60, 'unit_price' => 122000, 'date' => '2025-05-20'],
@@ -64,10 +64,13 @@ class StockMovementSeeder extends Seeder
                     // August 2025
                     ['quantity' => 95, 'unit_price' => 125000, 'date' => '2025-08-12'],
                     ['quantity' => 55, 'unit_price' => 126000, 'date' => '2025-08-30'],
-                    // September 2025
-                    ['quantity' => 50, 'unit_price' => 125000, 'date' => '2025-09-01'],
-                    ['quantity' => 30, 'unit_price' => 125000, 'date' => '2025-09-10'],
-                    ['quantity' => 40, 'unit_price' => 128000, 'date' => '2025-09-15'],
+                    // October 2025
+                    ['quantity' => 50, 'unit_price' => 125000, 'date' => '2025-10-01'],
+                    ['quantity' => 30, 'unit_price' => 125000, 'date' => '2025-10-10'],
+                    ['quantity' => 40, 'unit_price' => 128000, 'date' => '2025-10-15'],
+                    // November 2025
+                    ['quantity' => 45, 'unit_price' => 130000, 'date' => '2025-11-05'],
+                    ['quantity' => 35, 'unit_price' => 132000, 'date' => '2025-11-19'],
                 ]
             ],
             // SC Cal Plus transactions (6 months history)
@@ -75,9 +78,9 @@ class StockMovementSeeder extends Seeder
                 'product_name' => 'SC Cal Plus',
                 'supplier_name' => 'PT. Kimia Farma',
                 'transactions' => [
-                    // April 2025
-                    ['quantity' => 40, 'unit_price' => 170000, 'date' => '2025-04-08'],
-                    ['quantity' => 35, 'unit_price' => 172000, 'date' => '2025-04-22'],
+                    // May 2025
+                    ['quantity' => 40, 'unit_price' => 170000, 'date' => '2025-05-08'],
+                    ['quantity' => 35, 'unit_price' => 172000, 'date' => '2025-05-22'],
                     // May 2025
                     ['quantity' => 30, 'unit_price' => 175000, 'date' => '2025-05-15'],
                     ['quantity' => 25, 'unit_price' => 176000, 'date' => '2025-05-28'],
@@ -88,9 +91,12 @@ class StockMovementSeeder extends Seeder
                     ['quantity' => 32, 'unit_price' => 180000, 'date' => '2025-07-25'],
                     // August 2025
                     ['quantity' => 30, 'unit_price' => 182000, 'date' => '2025-08-08'],
-                    // September 2025
-                    ['quantity' => 25, 'unit_price' => 180000, 'date' => '2025-09-02'],
-                    ['quantity' => 20, 'unit_price' => 185000, 'date' => '2025-09-12'],
+                    // October 2025
+                    ['quantity' => 25, 'unit_price' => 180000, 'date' => '2025-10-02'],
+                    ['quantity' => 20, 'unit_price' => 185000, 'date' => '2025-10-12'],
+                    // November 2025
+                    ['quantity' => 28, 'unit_price' => 188000, 'date' => '2025-11-08'],
+                    ['quantity' => 22, 'unit_price' => 190000, 'date' => '2025-11-18'],
                 ]
             ],
             // Vicom Glucose Kit transactions (6 months history)
@@ -98,8 +104,8 @@ class StockMovementSeeder extends Seeder
                 'product_name' => 'Vicom Glucose Kit',
                 'supplier_name' => 'CV. Medika Jaya',
                 'transactions' => [
-                    // April 2025
-                    ['quantity' => 20, 'unit_price' => 420000, 'date' => '2025-04-12'],
+                    // May 2025
+                    ['quantity' => 20, 'unit_price' => 420000, 'date' => '2025-05-12'],
                     // May 2025
                     ['quantity' => 18, 'unit_price' => 430000, 'date' => '2025-05-10'],
                     ['quantity' => 22, 'unit_price' => 435000, 'date' => '2025-05-25'],
@@ -109,9 +115,12 @@ class StockMovementSeeder extends Seeder
                     ['quantity' => 20, 'unit_price' => 445000, 'date' => '2025-07-15'],
                     // August 2025
                     ['quantity' => 12, 'unit_price' => 450000, 'date' => '2025-08-20'],
-                    // September 2025
-                    ['quantity' => 15, 'unit_price' => 450000, 'date' => '2025-09-03'],
-                    ['quantity' => 10, 'unit_price' => 465000, 'date' => '2025-09-13'],
+                    // October 2025
+                    ['quantity' => 15, 'unit_price' => 450000, 'date' => '2025-10-03'],
+                    ['quantity' => 10, 'unit_price' => 465000, 'date' => '2025-10-13'],
+                    // November 2025
+                    ['quantity' => 18, 'unit_price' => 470000, 'date' => '2025-11-06'],
+                    ['quantity' => 12, 'unit_price' => 475000, 'date' => '2025-11-16'],
                 ]
             ],
             // Vicom Cholesterol Kit transactions
@@ -119,8 +128,8 @@ class StockMovementSeeder extends Seeder
                 'product_name' => 'Vicom Cholesterol Kit',
                 'supplier_name' => 'CV. Medika Jaya',
                 'transactions' => [
-                    // April 2025
-                    ['quantity' => 15, 'unit_price' => 480000, 'date' => '2025-04-15'],
+                    // May 2025
+                    ['quantity' => 15, 'unit_price' => 480000, 'date' => '2025-05-15'],
                     // May 2025
                     ['quantity' => 12, 'unit_price' => 485000, 'date' => '2025-05-08'],
                     // June 2025
@@ -129,8 +138,11 @@ class StockMovementSeeder extends Seeder
                     ['quantity' => 14, 'unit_price' => 495000, 'date' => '2025-07-18'],
                     // August 2025
                     ['quantity' => 16, 'unit_price' => 500000, 'date' => '2025-08-25'],
-                    // September 2025
-                    ['quantity' => 10, 'unit_price' => 505000, 'date' => '2025-09-08'],
+                    // October 2025
+                    ['quantity' => 10, 'unit_price' => 505000, 'date' => '2025-10-08'],
+                    // November 2025
+                    ['quantity' => 14, 'unit_price' => 510000, 'date' => '2025-11-10'],
+                    ['quantity' => 12, 'unit_price' => 515000, 'date' => '2025-11-19'],
                 ]
             ],
             // Vicom Triglyceride Kit transactions
@@ -138,16 +150,19 @@ class StockMovementSeeder extends Seeder
                 'product_name' => 'Vicom Triglyceride Kit',
                 'supplier_name' => 'CV. Medika Jaya',
                 'transactions' => [
-                    // May 2025
-                    ['quantity' => 12, 'unit_price' => 520000, 'date' => '2025-05-12'],
                     // June 2025
-                    ['quantity' => 15, 'unit_price' => 525000, 'date' => '2025-06-05'],
+                    ['quantity' => 12, 'unit_price' => 520000, 'date' => '2025-06-12'],
                     // July 2025
-                    ['quantity' => 10, 'unit_price' => 530000, 'date' => '2025-07-22'],
+                    ['quantity' => 15, 'unit_price' => 525000, 'date' => '2025-07-05'],
                     // August 2025
-                    ['quantity' => 14, 'unit_price' => 535000, 'date' => '2025-08-15'],
+                    ['quantity' => 10, 'unit_price' => 530000, 'date' => '2025-08-22'],
                     // September 2025
-                    ['quantity' => 8, 'unit_price' => 540000, 'date' => '2025-09-20'],
+                    ['quantity' => 14, 'unit_price' => 535000, 'date' => '2025-09-15'],
+                    // October 2025
+                    ['quantity' => 8, 'unit_price' => 540000, 'date' => '2025-10-20'],
+                    // November 2025
+                    ['quantity' => 10, 'unit_price' => 545000, 'date' => '2025-11-12'],
+                    ['quantity' => 6, 'unit_price' => 550000, 'date' => '2025-11-19'],
                 ]
             ],
             // Terumo Syringe 3ml transactions (6 months history)
@@ -155,9 +170,9 @@ class StockMovementSeeder extends Seeder
                 'product_name' => 'Terumo Syringe 3ml',
                 'supplier_name' => 'PT. Alkes Indonesia',
                 'transactions' => [
-                    // April 2025
-                    ['quantity' => 1000, 'unit_price' => 2300, 'date' => '2025-04-02'],
-                    ['quantity' => 800, 'unit_price' => 2350, 'date' => '2025-04-20'],
+                    // May 2025
+                    ['quantity' => 1000, 'unit_price' => 2300, 'date' => '2025-05-02'],
+                    ['quantity' => 800, 'unit_price' => 2350, 'date' => '2025-05-20'],
                     // May 2025
                     ['quantity' => 1200, 'unit_price' => 2400, 'date' => '2025-05-05'],
                     ['quantity' => 600, 'unit_price' => 2420, 'date' => '2025-05-22'],
@@ -170,10 +185,13 @@ class StockMovementSeeder extends Seeder
                     // August 2025
                     ['quantity' => 800, 'unit_price' => 2500, 'date' => '2025-08-05'],
                     ['quantity' => 600, 'unit_price' => 2520, 'date' => '2025-08-22'],
-                    // September 2025
-                    ['quantity' => 500, 'unit_price' => 2500, 'date' => '2025-09-04'],
-                    ['quantity' => 300, 'unit_price' => 2600, 'date' => '2025-09-14'],
-                    ['quantity' => 400, 'unit_price' => 2550, 'date' => '2025-09-18'],
+                    // October 2025
+                    ['quantity' => 500, 'unit_price' => 2500, 'date' => '2025-10-04'],
+                    ['quantity' => 300, 'unit_price' => 2600, 'date' => '2025-10-14'],
+                    ['quantity' => 400, 'unit_price' => 2550, 'date' => '2025-10-18'],
+                    // November 2025
+                    ['quantity' => 600, 'unit_price' => 2580, 'date' => '2025-11-07'],
+                    ['quantity' => 450, 'unit_price' => 2620, 'date' => '2025-11-17'],
                 ]
             ],
             // Terumo Syringe 5ml transactions
@@ -181,8 +199,8 @@ class StockMovementSeeder extends Seeder
                 'product_name' => 'Terumo Syringe 5ml',
                 'supplier_name' => 'PT. Alkes Indonesia',
                 'transactions' => [
-                    // April 2025
-                    ['quantity' => 600, 'unit_price' => 3200, 'date' => '2025-04-10'],
+                    // May 2025
+                    ['quantity' => 600, 'unit_price' => 3200, 'date' => '2025-05-10'],
                     // May 2025
                     ['quantity' => 500, 'unit_price' => 3250, 'date' => '2025-05-18'],
                     ['quantity' => 400, 'unit_price' => 3280, 'date' => '2025-05-30'],
@@ -192,8 +210,11 @@ class StockMovementSeeder extends Seeder
                     ['quantity' => 450, 'unit_price' => 3350, 'date' => '2025-07-12'],
                     // August 2025
                     ['quantity' => 500, 'unit_price' => 3400, 'date' => '2025-08-18'],
-                    // September 2025
-                    ['quantity' => 300, 'unit_price' => 3450, 'date' => '2025-09-25'],
+                    // October 2025
+                    ['quantity' => 300, 'unit_price' => 3450, 'date' => '2025-10-25'],
+                    // November 2025
+                    ['quantity' => 400, 'unit_price' => 3480, 'date' => '2025-11-08'],
+                    ['quantity' => 350, 'unit_price' => 3520, 'date' => '2025-11-18'],
                 ]
             ],
             // Ansell Latex Gloves transactions (6 months history)
@@ -201,9 +222,9 @@ class StockMovementSeeder extends Seeder
                 'product_name' => 'Ansell Latex Gloves',
                 'supplier_name' => 'PT. Alkes Indonesia',
                 'transactions' => [
-                    // April 2025
-                    ['quantity' => 200, 'unit_price' => 78000, 'date' => '2025-04-06'],
-                    ['quantity' => 150, 'unit_price' => 80000, 'date' => '2025-04-25'],
+                    // May 2025
+                    ['quantity' => 200, 'unit_price' => 78000, 'date' => '2025-05-06'],
+                    ['quantity' => 150, 'unit_price' => 80000, 'date' => '2025-05-25'],
                     // May 2025
                     ['quantity' => 180, 'unit_price' => 82000, 'date' => '2025-05-14'],
                     ['quantity' => 120, 'unit_price' => 83000, 'date' => '2025-05-28'],
@@ -214,9 +235,12 @@ class StockMovementSeeder extends Seeder
                     ['quantity' => 110, 'unit_price' => 86000, 'date' => '2025-07-31'],
                     // August 2025
                     ['quantity' => 130, 'unit_price' => 86500, 'date' => '2025-08-10'],
-                    // September 2025
-                    ['quantity' => 100, 'unit_price' => 85000, 'date' => '2025-09-05'],
-                    ['quantity' => 80, 'unit_price' => 87000, 'date' => '2025-09-16'],
+                    // October 2025
+                    ['quantity' => 100, 'unit_price' => 85000, 'date' => '2025-10-05'],
+                    ['quantity' => 80, 'unit_price' => 87000, 'date' => '2025-10-16'],
+                    // November 2025
+                    ['quantity' => 120, 'unit_price' => 88000, 'date' => '2025-11-06'],
+                    ['quantity' => 90, 'unit_price' => 89000, 'date' => '2025-11-17'],
                 ]
             ],
             // Eppendorf Pipette Tips 10μl transactions (6 months history)
@@ -224,8 +248,8 @@ class StockMovementSeeder extends Seeder
                 'product_name' => 'Eppendorf Pipette Tips 10μl',
                 'supplier_name' => 'CV. Medika Jaya',
                 'transactions' => [
-                    // April 2025
-                    ['quantity' => 80, 'unit_price' => 300000, 'date' => '2025-04-14'],
+                    // May 2025
+                    ['quantity' => 80, 'unit_price' => 300000, 'date' => '2025-05-14'],
                     // May 2025
                     ['quantity' => 70, 'unit_price' => 305000, 'date' => '2025-05-06'],
                     ['quantity' => 60, 'unit_price' => 310000, 'date' => '2025-05-24'],
@@ -235,9 +259,12 @@ class StockMovementSeeder extends Seeder
                     ['quantity' => 55, 'unit_price' => 315000, 'date' => '2025-07-16'],
                     // August 2025
                     ['quantity' => 65, 'unit_price' => 318000, 'date' => '2025-08-28'],
-                    // September 2025
-                    ['quantity' => 50, 'unit_price' => 320000, 'date' => '2025-09-06'],
-                    ['quantity' => 30, 'unit_price' => 325000, 'date' => '2025-09-17'],
+                    // October 2025
+                    ['quantity' => 50, 'unit_price' => 320000, 'date' => '2025-10-06'],
+                    ['quantity' => 30, 'unit_price' => 325000, 'date' => '2025-10-17'],
+                    // November 2025
+                    ['quantity' => 45, 'unit_price' => 330000, 'date' => '2025-11-09'],
+                    ['quantity' => 35, 'unit_price' => 335000, 'date' => '2025-11-19'],
                 ]
             ],
             // Eppendorf Pipette Tips 200μl transactions
@@ -245,8 +272,8 @@ class StockMovementSeeder extends Seeder
                 'product_name' => 'Eppendorf Pipette Tips 200μl',
                 'supplier_name' => 'CV. Medika Jaya',
                 'transactions' => [
-                    // April 2025
-                    ['quantity' => 60, 'unit_price' => 350000, 'date' => '2025-04-16'],
+                    // May 2025
+                    ['quantity' => 60, 'unit_price' => 350000, 'date' => '2025-05-16'],
                     // May 2025
                     ['quantity' => 50, 'unit_price' => 355000, 'date' => '2025-05-11'],
                     // June 2025
@@ -255,8 +282,11 @@ class StockMovementSeeder extends Seeder
                     ['quantity' => 45, 'unit_price' => 365000, 'date' => '2025-07-14'],
                     // August 2025
                     ['quantity' => 40, 'unit_price' => 370000, 'date' => '2025-08-12'],
-                    // September 2025
-                    ['quantity' => 35, 'unit_price' => 375000, 'date' => '2025-09-22'],
+                    // October 2025
+                    ['quantity' => 35, 'unit_price' => 375000, 'date' => '2025-10-22'],
+                    // November 2025
+                    ['quantity' => 40, 'unit_price' => 380000, 'date' => '2025-11-11'],
+                    ['quantity' => 30, 'unit_price' => 385000, 'date' => '2025-11-19'],
                 ]
             ],
             // Falcon Centrifuge Tubes 15ml transactions
@@ -264,16 +294,19 @@ class StockMovementSeeder extends Seeder
                 'product_name' => 'Falcon Centrifuge Tubes 15ml',
                 'supplier_name' => 'CV. Medika Jaya',
                 'transactions' => [
-                    // May 2025
-                    ['quantity' => 100, 'unit_price' => 180000, 'date' => '2025-05-02'],
                     // June 2025
-                    ['quantity' => 80, 'unit_price' => 185000, 'date' => '2025-06-14'],
+                    ['quantity' => 100, 'unit_price' => 180000, 'date' => '2025-06-02'],
                     // July 2025
-                    ['quantity' => 90, 'unit_price' => 188000, 'date' => '2025-07-26'],
+                    ['quantity' => 80, 'unit_price' => 185000, 'date' => '2025-07-14'],
                     // August 2025
-                    ['quantity' => 70, 'unit_price' => 190000, 'date' => '2025-08-16'],
+                    ['quantity' => 90, 'unit_price' => 188000, 'date' => '2025-08-26'],
                     // September 2025
-                    ['quantity' => 60, 'unit_price' => 195000, 'date' => '2025-09-12'],
+                    ['quantity' => 70, 'unit_price' => 190000, 'date' => '2025-09-16'],
+                    // October 2025
+                    ['quantity' => 60, 'unit_price' => 195000, 'date' => '2025-10-12'],
+                    // November 2025
+                    ['quantity' => 75, 'unit_price' => 200000, 'date' => '2025-11-07'],
+                    ['quantity' => 55, 'unit_price' => 205000, 'date' => '2025-11-17'],
                 ]
             ],
             // Falcon Centrifuge Tubes 50ml transactions
@@ -281,16 +314,19 @@ class StockMovementSeeder extends Seeder
                 'product_name' => 'Falcon Centrifuge Tubes 50ml',
                 'supplier_name' => 'CV. Medika Jaya',
                 'transactions' => [
-                    // May 2025
-                    ['quantity' => 60, 'unit_price' => 280000, 'date' => '2025-05-16'],
                     // June 2025
-                    ['quantity' => 50, 'unit_price' => 285000, 'date' => '2025-06-30'],
+                    ['quantity' => 60, 'unit_price' => 280000, 'date' => '2025-06-16'],
                     // July 2025
-                    ['quantity' => 55, 'unit_price' => 290000, 'date' => '2025-07-08'],
+                    ['quantity' => 50, 'unit_price' => 285000, 'date' => '2025-07-30'],
                     // August 2025
-                    ['quantity' => 45, 'unit_price' => 295000, 'date' => '2025-08-24'],
+                    ['quantity' => 55, 'unit_price' => 290000, 'date' => '2025-08-08'],
                     // September 2025
-                    ['quantity' => 40, 'unit_price' => 300000, 'date' => '2025-09-28'],
+                    ['quantity' => 45, 'unit_price' => 295000, 'date' => '2025-09-24'],
+                    // October 2025
+                    ['quantity' => 40, 'unit_price' => 300000, 'date' => '2025-10-28'],
+                    // November 2025
+                    ['quantity' => 50, 'unit_price' => 310000, 'date' => '2025-11-10'],
+                    ['quantity' => 35, 'unit_price' => 315000, 'date' => '2025-11-19'],
                 ]
             ],
             // Eppendorf Pipette 10-100μl transactions
@@ -298,14 +334,16 @@ class StockMovementSeeder extends Seeder
                 'product_name' => 'Eppendorf Pipette 10-100μl',
                 'supplier_name' => 'PT. Alkes Indonesia',
                 'transactions' => [
-                    // April 2025
-                    ['quantity' => 5, 'unit_price' => 2800000, 'date' => '2025-04-28'],
-                    // June 2025
-                    ['quantity' => 3, 'unit_price' => 2850000, 'date' => '2025-06-16'],
-                    // August 2025
-                    ['quantity' => 4, 'unit_price' => 2900000, 'date' => '2025-08-06'],
+                    // May 2025
+                    ['quantity' => 5, 'unit_price' => 2800000, 'date' => '2025-05-28'],
+                    // July 2025
+                    ['quantity' => 3, 'unit_price' => 2850000, 'date' => '2025-07-16'],
                     // September 2025
-                    ['quantity' => 2, 'unit_price' => 2950000, 'date' => '2025-09-18'],
+                    ['quantity' => 4, 'unit_price' => 2900000, 'date' => '2025-09-06'],
+                    // October 2025
+                    ['quantity' => 2, 'unit_price' => 2950000, 'date' => '2025-10-18'],
+                    // November 2025
+                    ['quantity' => 3, 'unit_price' => 3000000, 'date' => '2025-11-14'],
                 ]
             ],
             // Eppendorf Pipette 100-1000μl transactions
@@ -313,14 +351,16 @@ class StockMovementSeeder extends Seeder
                 'product_name' => 'Eppendorf Pipette 100-1000μl',
                 'supplier_name' => 'PT. Alkes Indonesia',
                 'transactions' => [
-                    // April 2025
-                    ['quantity' => 4, 'unit_price' => 3200000, 'date' => '2025-04-30'],
-                    // June 2025
-                    ['quantity' => 3, 'unit_price' => 3250000, 'date' => '2025-06-18'],
-                    // August 2025
-                    ['quantity' => 2, 'unit_price' => 3300000, 'date' => '2025-08-14'],
+                    // May 2025
+                    ['quantity' => 4, 'unit_price' => 3200000, 'date' => '2025-05-30'],
+                    // July 2025
+                    ['quantity' => 3, 'unit_price' => 3250000, 'date' => '2025-07-18'],
                     // September 2025
-                    ['quantity' => 3, 'unit_price' => 3350000, 'date' => '2025-09-26'],
+                    ['quantity' => 2, 'unit_price' => 3300000, 'date' => '2025-09-14'],
+                    // October 2025
+                    ['quantity' => 3, 'unit_price' => 3350000, 'date' => '2025-10-26'],
+                    // November 2025
+                    ['quantity' => 2, 'unit_price' => 3400000, 'date' => '2025-11-15'],
                 ]
             ],
             // Eppendorf Microcentrifuge transactions
@@ -328,16 +368,18 @@ class StockMovementSeeder extends Seeder
                 'product_name' => 'Eppendorf Microcentrifuge',
                 'supplier_name' => 'PT. Alkes Indonesia',
                 'transactions' => [
-                    // May 2025
-                    ['quantity' => 2, 'unit_price' => 15000000, 'date' => '2025-05-20'],
-                    // August 2025
-                    ['quantity' => 1, 'unit_price' => 15500000, 'date' => '2025-08-02'],
+                    // June 2025
+                    ['quantity' => 2, 'unit_price' => 15000000, 'date' => '2025-06-20'],
+                    // September 2025
+                    ['quantity' => 1, 'unit_price' => 15500000, 'date' => '2025-09-02'],
+                    // November 2025
+                    ['quantity' => 1, 'unit_price' => 16000000, 'date' => '2025-11-12'],
                 ]
             ],
         ];
 
         $stockInCounter = 1;
-        
+
         foreach ($stockInData as $data) {
             $product = $products->where('name', $data['product_name'])->first();
             $supplier = $suppliers->where('name', $data['supplier_name'])->first();
@@ -651,7 +693,7 @@ class StockMovementSeeder extends Seeder
         ];
 
         $stockOutCounter = 1;
-        
+
         foreach ($stockOutData as $data) {
             $product = $products->where('name', $data['product_name'])->first();
             $customer = $customers->where('name', $data['customer_name'])->first();
@@ -740,13 +782,13 @@ class StockMovementSeeder extends Seeder
         ];
 
         $stockInCounter = 1000; // Start from 1000 to avoid conflicts
-        
+
         foreach ($multiProductStockInData as $dayTransaction) {
             $supplier = $suppliers->where('name', $dayTransaction['supplier_name'])->first();
             if (!$supplier) continue;
 
             $batchNumber = 'BATCH-' . date('Ymd', strtotime($dayTransaction['date']));
-            
+
             foreach ($dayTransaction['products'] as $productData) {
                 $product = $products->where('name', $productData['product_name'])->first();
                 if (!$product) continue;
@@ -830,13 +872,13 @@ class StockMovementSeeder extends Seeder
         ];
 
         $stockOutCounter = 1000; // Start from 1000 to avoid conflicts
-        
+
         foreach ($multiProductStockOutData as $dayTransaction) {
             $customer = $customers->where('name', $dayTransaction['customer_name'])->first();
             if (!$customer) continue;
 
             $batchNumber = 'BATCH-OUT-' . date('Ymd', strtotime($dayTransaction['date']));
-            
+
             foreach ($dayTransaction['products'] as $productData) {
                 $product = $products->where('name', $productData['product_name'])->first();
                 if (!$product) continue;

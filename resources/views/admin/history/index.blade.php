@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'History Admin - Super Admin')
+@section('title', 'Log Aktivitas')
 
 @section('content')
 <!-- Page Header -->
 <div class="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg shadow-lg p-6 mb-8 text-white">
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-3xl font-bold mb-2">History Admin Keseluruhan</h1>
+            <h1 class="text-3xl font-bold mb-2">Log Aktivitas Admin</h1>
             <p class="text-blue-100">Monitor dan tracking aktivitas semua admin di sistem</p>
         </div>
         <div class="flex space-x-3">
