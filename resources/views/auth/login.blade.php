@@ -8,7 +8,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ url('public/favicon.ico') }}">
     <link rel="shortcut icon" type="image/x-icon" href="{{ url('public/favicon.ico') }}">
-    <link rel="apple-touch-icon" href="{{ url('public/images/logowms.png') }}">
+    <link rel="apple-touch-icon" href="{{ url('public/images/logopod.png') }}">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -18,10 +18,10 @@
         <!-- Logo and Company Info -->
         <div class="text-center mb-8">
             <div class="bg-white rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center shadow-lg p-2">
-                <img src="{{ url('public/images/logowms.png') }}" alt="WMS Logo" class="w-full h-full object-contain">
+                <img src="{{ url('public/images/logopod.png') }}" alt="POD Logo" class="w-full h-full object-contain">
             </div>
             <h1 class="text-2xl font-bold text-gray-800">PT. Mitrajaya Selaras Abadi</h1>
-            <p class="text-gray-600 mt-1">Warehouse Management System</p>
+            <p class="text-gray-600 mt-1">Platform Operating Digital</p>
         </div>
 
         <!-- Login Form -->
