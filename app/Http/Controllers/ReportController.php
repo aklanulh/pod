@@ -696,6 +696,10 @@ class ReportController extends Controller
         $salesTrendData = $this->generateSalesTrendData($id, $selectedYear);
         
         // Get available years for dropdown
+        $yearExpression = config('database.default') === 'sqlite' 
+            ? "strftime('%Y', transaction_date) as year"
+            : 'YEAR(transaction_date) as year';
+            
         $availableYears = StockMovement::where('customer_id', $id)
             ->where('type', 'out')
             ->selectRaw("strftime('%Y', transaction_date) as year")
@@ -976,9 +980,17 @@ class ReportController extends Controller
         $chartData = $this->generateProductChartData($id, $selectedYear);
         
         // Get available years for dropdown
+        $yearExpression = config('database.default') === 'sqlite' 
+            ? "strftime('%Y', transaction_date) as year"
+            : 'YEAR(transaction_date) as year';
+            
         $availableYears = StockMovement::where('product_id', $id)
             ->where('type', 'out')
+<<<<<<< HEAD
             ->selectRaw("strftime('%Y', transaction_date) as year")
+=======
+            ->selectRaw($yearExpression)
+>>>>>>> 02534b615ffbca52225e1ae346d26c9e44758c19
             ->distinct()
             ->orderBy('year', 'desc')
             ->pluck('year')

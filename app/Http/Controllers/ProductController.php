@@ -15,7 +15,7 @@ class ProductController extends Controller
         $products = Product::with('category')
             ->orderBy('name')
             ->get();
-            
+
         $categories = ProductCategory::withCount('products')
             ->orderBy('name')
             ->get();
@@ -44,7 +44,7 @@ class ProductController extends Controller
         ]);
 
         $data = $request->all();
-        
+
         // Map form field names to database column names
         if (isset($data['lot'])) {
             $data['lot_number'] = $data['lot'];
@@ -54,7 +54,7 @@ class ProductController extends Controller
             $data['expired_date'] = $data['exp'];
             unset($data['exp']);
         }
-        
+
         $product = Product::create($data);
 
         // Handle AJAX request
@@ -75,14 +75,18 @@ class ProductController extends Controller
     {
         try {
             $product->load('category', 'stockMovements.supplier', 'stockMovements.customer');
-            
+
             // Get selected year from request, default to current year
             $selectedYear = $request->get('year', date('Y'));
-            
+
             // Generate chart data for selected year
             $chartData = $this->generateProductChartData($product->id, $selectedYear);
-            
+
             // Get available years for dropdown
+            $yearExpression = config('database.default') === 'sqlite'
+                ? "strftime('%Y', transaction_date) as year"
+                : 'YEAR(transaction_date) as year';
+
             $availableYears = StockMovement::where('product_id', $product->id)
                 ->where('type', 'out')
                 ->selectRaw("strftime('%Y', transaction_date) as year")
@@ -90,16 +94,15 @@ class ProductController extends Controller
                 ->orderBy('year', 'desc')
                 ->pluck('year')
                 ->toArray();
-                
+
             if (empty($availableYears)) {
                 $availableYears = [date('Y')];
             }
-            
+
             return view('products.show', compact('product', 'chartData', 'selectedYear', 'availableYears'));
-            
         } catch (\Exception $e) {
             Log::error('Product show error: ' . $e->getMessage() . ' for product ID: ' . $product->id);
-            
+
             // Return simplified view without chart data
             return view('products.show-simple', compact('product'));
         }
@@ -166,9 +169,21 @@ class ProductController extends Controller
 
         // Generate colors for customers
         $colors = [
-            '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
-            '#06B6D4', '#84CC16', '#F97316', '#EC4899', '#6366F1',
-            '#14B8A6', '#F472B6', '#A855F7', '#22D3EE', '#FDE047'
+            '#3B82F6',
+            '#EF4444',
+            '#10B981',
+            '#F59E0B',
+            '#8B5CF6',
+            '#06B6D4',
+            '#84CC16',
+            '#F97316',
+            '#EC4899',
+            '#6366F1',
+            '#14B8A6',
+            '#F472B6',
+            '#A855F7',
+            '#22D3EE',
+            '#FDE047'
         ];
 
         $datasets = [];
@@ -176,7 +191,7 @@ class ProductController extends Controller
 
         foreach ($customers as $customer) {
             $monthlyData = [];
-            
+
             for ($month = 1; $month <= 12; $month++) {
                 $quantity = StockMovement::where('product_id', $productId)
                     ->where('customer_id', $customer->id)
@@ -184,7 +199,7 @@ class ProductController extends Controller
                     ->whereYear('transaction_date', $year)
                     ->whereMonth('transaction_date', $month)
                     ->sum('quantity');
-                    
+
                 $monthlyData[] = $quantity;
             }
 
@@ -197,7 +212,7 @@ class ProductController extends Controller
                 'fill' => false,
                 'tension' => 0.1
             ];
-            
+
             $colorIndex++;
         }
 
