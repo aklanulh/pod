@@ -6,8 +6,8 @@
     <title>Login - PT. Mitrajaya Selaras Abadi</title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico">
     <link rel="apple-touch-icon" href="/images/logopod.png">
     
     <script src="https://cdn.tailwindcss.com"></script>
