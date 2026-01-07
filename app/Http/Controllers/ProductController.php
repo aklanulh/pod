@@ -10,11 +10,52 @@ use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with('category')
-            ->orderBy('name')
-            ->get();
+        $query = Product::with('category')
+            ->where('is_active', true);
+
+        // Handle search
+        $search = $request->get('search');
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('code', 'LIKE', '%' . $search . '%')
+                    ->orWhere('name', 'LIKE', '%' . $search . '%')
+                    ->orWhere('description', 'LIKE', '%' . $search . '%')
+                    ->orWhere('lot_number', 'LIKE', '%' . $search . '%')
+                    ->orWhere('distribution_permit', 'LIKE', '%' . $search . '%')
+                    ->orWhereHas('category', function ($categoryQuery) use ($search) {
+                        $categoryQuery->where('name', 'LIKE', '%' . $search . '%');
+                    });
+            });
+        }
+
+        // Handle sorting
+        $sortField = $request->get('sort', 'name');
+        $direction = $request->get('direction', 'asc');
+
+        // Validate sort field to prevent SQL injection
+        $allowedSortFields = ['code', 'name', 'category', 'current_stock', 'price', 'expired_date'];
+        if (!in_array($sortField, $allowedSortFields)) {
+            $sortField = 'name';
+        }
+
+        // Apply sorting
+        switch ($sortField) {
+            case 'category':
+                $query->join('product_categories', 'products.category_id', '=', 'product_categories.id')
+                    ->orderBy('product_categories.name', $direction)
+                    ->select('products.*', 'product_categories.name as category_name');
+                break;
+            case 'expired_date':
+                $query->orderByRaw("CASE WHEN expired_date IS NULL THEN 1 ELSE 0 END, expired_date {$direction}");
+                break;
+            default:
+                $query->orderBy($sortField, $direction);
+                break;
+        }
+
+        $products = $query->get();
 
         $categories = ProductCategory::withCount('products')
             ->orderBy('name')

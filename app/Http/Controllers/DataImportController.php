@@ -293,6 +293,32 @@ class DataImportController extends Controller
     }
 
     /**
+     * Format boolean value for preview display
+     */
+    private function formatBooleanPreview($value)
+    {
+        if (is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+
+        if (is_numeric($value)) {
+            return (int)$value === 1 ? 'true' : 'false';
+        }
+
+        if (is_string($value)) {
+            $value = strtolower(trim($value));
+            if (in_array($value, ['false', '0', 'no', 'tidak', 'inactive', 'tidak aktif'])) {
+                return 'false';
+            }
+            if (in_array($value, ['true', '1', 'yes', 'ya', 'active', 'aktif'])) {
+                return 'true';
+            }
+        }
+
+        return 'true'; // Default
+    }
+
+    /**
      * Preview Excel data before import
      */
     public function previewData(Request $request)
@@ -309,6 +335,16 @@ class DataImportController extends Controller
             // Get first 10 rows for preview
             $preview = array_slice($rows, 0, 10);
             $totalRows = count($rows);
+
+            // Process preview data to show boolean values properly
+            if ($request->type === 'products') {
+                $preview = array_map(function ($row) {
+                    if (isset($row['is_active'])) {
+                        $row['is_active'] = $this->formatBooleanPreview($row['is_active']);
+                    }
+                    return $row;
+                }, $preview);
+            }
 
             return response()->json([
                 'success' => true,

@@ -6,6 +6,16 @@
 <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold text-gray-900">Daftar Produk</h1>
     <div class="flex space-x-3">
+        <div class="relative">
+            <input type="text" 
+                   id="searchInput" 
+                   placeholder="Cari produk..." 
+                   class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 w-64"
+                   value="{{ request('search', '') }}">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="fas fa-search text-gray-400"></i>
+            </div>
+        </div>
         <button onclick="openCategoryModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center">
             <i class="fas fa-tags mr-2"></i>
             Kelola Kategori
@@ -22,12 +32,30 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Produk</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stok</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exp/Lot/NIE</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortProducts('code')">
+                        Kode
+                        <i class="fas fa-sort ml-1 text-gray-400"></i>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortProducts('name')">
+                        Nama Produk
+                        <i class="fas fa-sort ml-1 text-gray-400"></i>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortProducts('category')">
+                        Kategori
+                        <i class="fas fa-sort ml-1 text-gray-400"></i>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortProducts('current_stock')">
+                        Stok
+                        <i class="fas fa-sort ml-1 text-gray-400"></i>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortProducts('price')">
+                        Harga
+                        <i class="fas fa-sort ml-1 text-gray-400"></i>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortProducts('expired_date')">
+                        Exp/Lot/NIE
+                        <i class="fas fa-sort ml-1 text-gray-400"></i>
+                    </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                 </tr>
             </thead>
@@ -625,5 +653,97 @@ document.addEventListener('keydown', function(e) {
         closeEditCategoryModal();
     }
 });
+
+// Sorting functionality
+let currentSort = { field: null, direction: 'asc' };
+
+function sortProducts(field) {
+    // Toggle direction if same field, otherwise default to asc
+    if (currentSort.field === field) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSort.field = field;
+        currentSort.direction = 'asc';
+    }
+    
+    // Update sort icons
+    updateSortIcons();
+    
+    // Get current URL and build new URL with sort parameters
+    const url = new URL(window.location);
+    url.searchParams.set('sort', field);
+    url.searchParams.set('direction', currentSort.direction);
+    
+    // Reload page with new sort parameters
+    window.location.href = url.toString();
+}
+
+function updateSortIcons() {
+    // Remove all sort icons first
+    document.querySelectorAll('th i.fas').forEach(icon => {
+        icon.className = 'fas fa-sort ml-1 text-gray-400';
+    });
+    
+    // Add appropriate icon to current sort field
+    if (currentSort.field) {
+        const th = document.querySelector(`th[onclick="sortProducts('${currentSort.field}')"]`);
+        if (th) {
+            const icon = th.querySelector('i');
+            if (icon) {
+                icon.className = currentSort.direction === 'asc' 
+                    ? 'fas fa-sort-up ml-1 text-blue-600' 
+                    : 'fas fa-sort-down ml-1 text-blue-600';
+            }
+        }
+    }
+}
+
+// Initialize sort icons on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Get current sort from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const sortField = urlParams.get('sort');
+    const sortDirection = urlParams.get('direction');
+    
+    if (sortField && sortDirection) {
+        currentSort.field = sortField;
+        currentSort.direction = sortDirection;
+        updateSortIcons();
+    }
+    
+    // Initialize search functionality
+    const searchInput = document.getElementById('searchInput');
+    let searchTimeout;
+    
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            performSearch();
+        }, 500); // Wait 500ms after user stops typing
+    });
+    
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            performSearch();
+        }
+    });
+});
+
+function performSearch() {
+    const searchValue = document.getElementById('searchInput').value.trim();
+    const url = new URL(window.location);
+    
+    if (searchValue) {
+        url.searchParams.set('search', searchValue);
+    } else {
+        url.searchParams.delete('search');
+    }
+    
+    // Reset to first page when searching
+    url.searchParams.delete('page');
+    
+    window.location.href = url.toString();
+}
 </script>
 @endsection

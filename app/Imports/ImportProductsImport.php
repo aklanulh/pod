@@ -185,6 +185,11 @@ class ImportProductsImport implements ToModel, WithHeadingRow, WithValidation, S
 
         if (is_string($value)) {
             $value = strtolower(trim($value));
+            // Check for false values first
+            if (in_array($value, ['false', '0', 'no', 'tidak', 'inactive', 'tidak aktif'])) {
+                return false;
+            }
+            // Then check for true values
             return in_array($value, ['true', '1', 'yes', 'ya', 'active', 'aktif']);
         }
 
