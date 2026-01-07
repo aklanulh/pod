@@ -88,7 +88,7 @@ class ImportStockMovementsImport implements ToModel, WithHeadingRow, WithValidat
             'final_amount' => $finalAmount,
             'discount_percent' => $row['discount_percent'] ?? 0,
             'discount_amount' => $row['discount_amount'] ?? 0,
-            'payment_terms' => $row['payment_terms'] ?? '',
+            'payment_terms' => !empty($row['payment_terms']) ? (int) $row['payment_terms'] : 30,
             'supplier_id' => $supplier?->id,
             'customer_id' => $customer?->id,
             'notes' => $row['notes'] ?? null,
@@ -118,7 +118,7 @@ class ImportStockMovementsImport implements ToModel, WithHeadingRow, WithValidat
             'include_tax' => 'nullable', // Remove strict validation, handle in model method
             'discount_percent' => 'nullable|numeric|min:0',
             'discount_amount' => 'nullable|numeric|min:0',
-            'payment_terms' => 'nullable|string|max:255',
+            'payment_terms' => 'nullable|integer',
             'notes' => 'nullable|string',
         ];
     }
