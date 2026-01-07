@@ -136,7 +136,6 @@ class ImportStockMovementsImport implements ToModel, WithHeadingRow, WithValidat
             'quantity.required' => 'Quantity wajib diisi',
             'quantity.min' => 'Quantity harus lebih dari 0',
             'unit_price.numeric' => 'Harga satuan harus berupa angka',
-            'transaction_date.date' => 'Format tanggal transaksi tidak valid',
         ];
     }
 
