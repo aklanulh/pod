@@ -81,7 +81,7 @@ class ImportProductsImport implements ToModel, WithHeadingRow, WithValidation, S
                 'price' => is_numeric($row['price']) && $row['price'] !== '' ? $row['price'] : 0,
                 'current_stock' => is_numeric($row['current_stock']) && $row['current_stock'] !== '' ? $row['current_stock'] : 0,
                 'minimum_stock' => is_numeric($row['minimum_stock']) ? $row['minimum_stock'] : 0,
-                'is_active' => isset($row['is_active']) ? in_array(strtolower($row['is_active']), ['true', '1', 'yes']) : true,
+                'is_active' => isset($row['is_active']) ? $this->parseBoolean($row['is_active']) : true,
                 'migrated_to_product_id' => !empty($row['migrated_to_product_code']) ? $this->findProductByCode($row['migrated_to_product_code'])?->id : null,
                 'migration_notes' => $row['migration_notes'] ?? '',
             ]);
@@ -152,8 +152,8 @@ class ImportProductsImport implements ToModel, WithHeadingRow, WithValidation, S
      */
     public function onError(\Throwable $e)
     {
-        \Log::error('ImportProductsImport Error: ' . $e->getMessage());
-        \Log::error('Stack trace: ' . $e->getTraceAsString());
+        Log::error('ImportProductsImport Error: ' . $e->getMessage());
+        Log::error('Stack trace: ' . $e->getTraceAsString());
     }
 
     /**
@@ -162,12 +162,33 @@ class ImportProductsImport implements ToModel, WithHeadingRow, WithValidation, S
     public function onFailure(\Maatwebsite\Excel\Validators\Failure ...$failures)
     {
         foreach ($failures as $failure) {
-            \Log::error('ImportProductsImport Validation Failure:');
-            \Log::error('Row: ' . $failure->row());
-            \Log::error('Attribute: ' . $failure->attribute());
-            \Log::error('Errors: ' . implode(', ', $failure->errors()));
-            \Log::error('Values: ' . json_encode($failure->values()));
+            Log::error('ImportProductsImport Validation Failure:');
+            Log::error('Row: ' . $failure->row());
+            Log::error('Attribute: ' . $failure->attribute());
+            Log::error('Errors: ' . implode(', ', $failure->errors()));
+            Log::error('Values: ' . json_encode($failure->values()));
         }
+    }
+
+    /**
+     * Parse boolean value from Excel with flexible format handling
+     */
+    private function parseBoolean($value)
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_numeric($value)) {
+            return (int)$value === 1;
+        }
+
+        if (is_string($value)) {
+            $value = strtolower(trim($value));
+            return in_array($value, ['true', '1', 'yes', 'ya', 'active', 'aktif']);
+        }
+
+        return true; // Default to true if value is null/empty
     }
 
     /**
