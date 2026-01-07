@@ -126,15 +126,22 @@ class DataImportController extends Controller
         ]);
 
         try {
+            Log::info('Starting stock movement import');
             $import = new ImportStockMovementsImport();
             Excel::import($import, $request->file('file'));
 
+            $rowCount = method_exists($import, 'getRowCount') ? $import->getRowCount() : 0;
+            Log::info('Stock movement import completed. Rows processed: ' . $rowCount);
+
             return response()->json([
                 'success' => true,
-                'message' => 'Data stock movement berhasil diimport! ' . (method_exists($import, 'getRowCount') ? $import->getRowCount() : 0) . ' baris diproses.',
-                'imported' => method_exists($import, 'getRowCount') ? $import->getRowCount() : 0
+                'message' => 'Data stock movement berhasil diimport! ' . $rowCount . ' baris diproses.',
+                'imported' => $rowCount
             ]);
         } catch (\Exception $e) {
+            Log::error('Stock movement import error: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error: ' . $e->getMessage()
