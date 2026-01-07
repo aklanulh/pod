@@ -92,7 +92,7 @@ class ImportStockMovementsImport implements ToModel, WithHeadingRow, WithValidat
             'supplier_id' => $supplier?->id,
             'customer_id' => $customer?->id,
             'notes' => $row['notes'] ?? null,
-            'transaction_date' => !empty($row['transaction_date']) ? \Carbon\Carbon::parse($row['transaction_date'])->format('Y-m-d H:i:s') : now(),
+            'transaction_date' => !empty($row['transaction_date']) ? $this->parseTransactionDate($row['transaction_date'])->format('Y-m-d H:i:s') : now(),
         ]);
 
         Log::info('StockMovement model created successfully');
@@ -109,7 +109,7 @@ class ImportStockMovementsImport implements ToModel, WithHeadingRow, WithValidat
             'type' => 'required|in:in,out,opname',
             'quantity' => 'required|integer|min:1',
             'unit_price' => 'nullable|numeric|min:0',
-            'transaction_date' => 'nullable|date',
+            'transaction_date' => 'nullable|string',
             'reference_number' => 'nullable|string|max:255|unique:stock_movements,reference_number',
             'order_number' => 'nullable|max:255',
             'invoice_number' => 'nullable|max:255',
@@ -159,6 +159,19 @@ class ImportStockMovementsImport implements ToModel, WithHeadingRow, WithValidat
             Log::error('Failed row data: ' . json_encode($failure->row()));
         }
         // Handle validation failures
+    }
+
+    /**
+     * Parse transaction date with flexible format handling
+     */
+    private function parseTransactionDate($date)
+    {
+        try {
+            return \Carbon\Carbon::parse($date);
+        } catch (\Exception $e) {
+            Log::warning('Invalid date format, using current time: ' . $date);
+            return now();
+        }
     }
 
     /**
