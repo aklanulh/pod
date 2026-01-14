@@ -19,6 +19,7 @@ class ImportProductsImport implements ToModel, WithHeadingRow, WithValidation, S
 {
     private $rowCount = 0;
     private $productCache = [];
+    private $skippedRows = 0;
 
     /**
      * Find product by code with caching
@@ -78,8 +79,8 @@ class ImportProductsImport implements ToModel, WithHeadingRow, WithValidation, S
                 'lot_number' => $row['lot_number'] ?? '',
                 'expired_date' => $expiredDate,
                 'distribution_permit' => $row['distribution_permit'] ?? '',
-                'price' => is_numeric($row['price']) && $row['price'] !== '' ? $row['price'] : 0,
-                'current_stock' => is_numeric($row['current_stock']) && $row['current_stock'] !== '' ? $row['current_stock'] : 0,
+                'price' => is_numeric(trim($row['price'] ?? '')) && trim($row['price'] ?? '') !== '' ? (float)$row['price'] : 0,
+                'current_stock' => is_numeric(trim($row['current_stock'] ?? '')) && trim($row['current_stock'] ?? '') !== '' ? (int)$row['current_stock'] : 0,
                 'minimum_stock' => is_numeric($row['minimum_stock']) ? $row['minimum_stock'] : 0,
                 'is_active' => isset($row['is_active']) ? $this->parseBoolean($row['is_active']) : true,
                 'migrated_to_product_id' => !empty($row['migrated_to_product_code']) ? $this->findProductByCode($row['migrated_to_product_code'])?->id : null,
@@ -102,14 +103,14 @@ class ImportProductsImport implements ToModel, WithHeadingRow, WithValidation, S
             'name' => 'required|string|max:255',
             'category_name' => 'nullable|string|max:255',
             'unit' => 'nullable|string|max:50',
-            'price' => 'nullable|numeric|min:0',
-            'current_stock' => 'nullable|integer|min:0',
+            'price' => 'nullable|regex:/^\s*[\d.]+\s*$/|min:0',
+            'current_stock' => 'nullable|regex:/^\s*\d+\s*$/|min:0',
             'minimum_stock' => 'nullable|integer|min:0',
             'expired_date' => 'nullable|string|max:255',
             'lot_number' => 'nullable|string|max:255',
             'distribution_permit' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'is_active' => 'nullable|string|in:true,false,1,0,TRUE,FALSE,True,False',
+            'is_active' => 'nullable',
             'migrated_to_product_code' => 'nullable|string|max:255',
             'migration_notes' => 'nullable|string',
         ];
@@ -162,6 +163,7 @@ class ImportProductsImport implements ToModel, WithHeadingRow, WithValidation, S
     public function onFailure(\Maatwebsite\Excel\Validators\Failure ...$failures)
     {
         foreach ($failures as $failure) {
+            $this->skippedRows++;
             Log::error('ImportProductsImport Validation Failure:');
             Log::error('Row: ' . $failure->row());
             Log::error('Attribute: ' . $failure->attribute());
@@ -202,5 +204,21 @@ class ImportProductsImport implements ToModel, WithHeadingRow, WithValidation, S
     public function getRowCount(): int
     {
         return $this->rowCount;
+    }
+
+    /**
+     * Get skipped rows count
+     */
+    public function getSkippedRowsCount(): int
+    {
+        return $this->skippedRows;
+    }
+
+    /**
+     * Get total processed rows (successful + skipped)
+     */
+    public function getTotalProcessedRows(): int
+    {
+        return $this->rowCount + $this->skippedRows;
     }
 }

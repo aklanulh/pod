@@ -99,11 +99,24 @@ class DataImportController extends Controller
 
             Log::info('Import completed successfully');
             Log::info('Rows processed: ' . $import->getRowCount());
+            Log::info('Rows skipped: ' . $import->getSkippedRowsCount());
+            Log::info('Total rows attempted: ' . $import->getTotalProcessedRows());
+
+            $message = 'Data produk berhasil diimport! ';
+            $message .= $import->getRowCount() . ' baris berhasil, ';
+            if ($import->getSkippedRowsCount() > 0) {
+                $message .= $import->getSkippedRowsCount() . ' baris dilewati (total: ' . $import->getTotalProcessedRows() . ' baris). ';
+                $message .= 'Periksa log untuk detail baris yang gagal.';
+            } else {
+                $message .= 'dari ' . $import->getTotalProcessedRows() . ' baris total.';
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data produk berhasil diimport! ' . $import->getRowCount() . ' baris diproses.',
-                'imported' => $import->getRowCount()
+                'message' => $message,
+                'imported' => $import->getRowCount(),
+                'skipped' => $import->getSkippedRowsCount(),
+                'total_attempted' => $import->getTotalProcessedRows()
             ]);
         } catch (\Exception $e) {
             Log::error('Import error: ' . $e->getMessage());
