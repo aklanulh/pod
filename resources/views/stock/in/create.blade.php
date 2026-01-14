@@ -880,8 +880,8 @@ function stockInForm() {
             }
 
             // Generate temporary data for PO
-            const orderNumber = document.querySelector('input[name="order_number"]').value || 'PO-' + new Date().toISOString().slice(0,10).replace(/-/g,'');
-            const invoiceNumber = document.querySelector('input[name="invoice_number"]').value || 'INV-' + new Date().toISOString().slice(0,10).replace(/-/g,'');
+            const orderNumber = document.querySelector('input[name="order_number"]').value || this.generatePONumber();
+            const invoiceNumber = document.querySelector('input[name="invoice_number"]').value || this.generateInvoiceNumber();
             const transactionDate = document.querySelector('input[name="transaction_date"]').value || new Date().toISOString().slice(0,10);
             
             // Create form data
@@ -919,6 +919,38 @@ function stockInForm() {
                 alert('Terjadi kesalahan saat mencetak Purchase Order');
                 newWindow.close();
             });
+        },
+
+        // Generate invoice number with format: [CV_CODE][RUNNING_NUMBER][MONTH_YEAR]
+        generateInvoiceNumber() {
+            const date = new Date();
+            const monthYear = date.getFullYear().toString().slice(-2) + String(date.getMonth() + 1).padStart(2, '0');
+            
+            // For now, generate a simple format - the actual logic will be handled server-side
+            // This is just for display purposes before form submission
+            return '11985' + monthYear; // Placeholder - server will generate the correct one
+        },
+
+        // Generate PO number with format: [RUNNING_NUMBER]/[PO_CODE]/[MONTH]/[YEAR]
+        generatePONumber() {
+            const date = new Date();
+            const monthRoman = this.numberToRoman(date.getMonth() + 1);
+            const yearShort = date.getFullYear().toString().slice(-2);
+            
+            // For now, generate a simple format - the actual logic will be handled server-side
+            // This is just for display purposes before form submission
+            return '1572/YP/I/MSA/' + yearShort; // Placeholder - server will generate the correct one
+        },
+
+        // Convert number to Roman numeral
+        numberToRoman(num) {
+            const map = {
+                1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V',
+                6: 'VI', 7: 'VII', 8: 'VIII', 9: 'IX', 10: 'X',
+                11: 'XI', 12: 'XII'
+            };
+            
+            return map[num] || num;
         }
     }
 }

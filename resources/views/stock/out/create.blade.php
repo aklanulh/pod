@@ -697,7 +697,7 @@ function stockOutForm() {
             try {
                 // Get form data
                 const orderNumber = document.getElementById('order_number')?.value || '';
-                const invoiceNumber = document.getElementById('invoice_number')?.value || '';
+                const invoiceNumber = document.getElementById('invoice_number')?.value || this.generateInvoiceNumber();
                 const paymentTerms = document.getElementById('payment_terms')?.value || '30';
                 const bankOption = document.getElementById('bank_option')?.value || 'mandiri_cibubur';
                 
@@ -853,10 +853,10 @@ function stockOutForm() {
             }
 
             try {
-                // Get form data
-                const orderNumber = document.getElementById('order_number')?.value || '';
-                const invoiceNumber = document.getElementById('invoice_number')?.value || '';
-                const transactionDate = document.getElementById('transaction_date')?.value || '';
+                // Generate temporary data for PO
+            const orderNumber = document.querySelector('input[name="order_number"]').value || 'PO-' + new Date().toISOString().slice(0,10).replace(/-/g,'');
+            const invoiceNumber = document.querySelector('input[name="invoice_number"]').value || this.generateInvoiceNumber();
+            const transactionDate = document.querySelector('input[name="transaction_date"]').value || new Date().toISOString().slice(0,10);
                 const notes = document.getElementById('notes')?.value || '';
                 const paymentTerms = document.getElementById('payment_terms')?.value || '30';
                 const deliveryNumber = document.getElementById('delivery_number')?.value || '';
@@ -931,6 +931,16 @@ function stockOutForm() {
         getProductName(productId) {
             const product = this.availableProducts.find(p => p.id == productId);
             return product ? product.name : 'Unknown Product';
+        },
+
+        // Generate invoice number with format: [CV_CODE][RUNNING_NUMBER][MONTH_YEAR]
+        generateInvoiceNumber() {
+            const date = new Date();
+            const monthYear = date.getFullYear().toString().slice(-2) + String(date.getMonth() + 1).padStart(2, '0');
+            
+            // For now, generate a simple format - the actual logic will be handled server-side
+            // This is just for display purposes before form submission
+            return '11985' + monthYear; // Placeholder - server will generate the correct one
         },
 
     }
