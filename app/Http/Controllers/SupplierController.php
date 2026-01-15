@@ -7,10 +7,34 @@ use Illuminate\Http\Request;
 
 class SupplierController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $suppliers = Supplier::orderBy('name')->paginate(15);
-        return view('suppliers.index', compact('suppliers'));
+        $isActive = $request->get('is_active', 1);
+        $search = $request->get('search');
+
+        $query = Supplier::orderBy('name');
+
+        if ($isActive !== null) {
+            $query->where('is_active', $isActive);
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', '%' . $search . '%')
+                    ->orWhere('contact_person', 'LIKE', '%' . $search . '%')
+                    ->orWhere('contact_person_2', 'LIKE', '%' . $search . '%')
+                    ->orWhere('contact_person_3', 'LIKE', '%' . $search . '%')
+                    ->orWhere('phone', 'LIKE', '%' . $search . '%')
+                    ->orWhere('phone_2', 'LIKE', '%' . $search . '%')
+                    ->orWhere('phone_3', 'LIKE', '%' . $search . '%')
+                    ->orWhere('email', 'LIKE', '%' . $search . '%')
+                    ->orWhere('address', 'LIKE', '%' . $search . '%');
+            });
+        }
+
+        $suppliers = $query->get();
+
+        return view('suppliers.index', compact('suppliers', 'isActive', 'search'));
     }
 
     public function create()

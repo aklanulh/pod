@@ -7,10 +7,34 @@ use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $customers = Customer::orderBy('name')->paginate(15);
-        return view('customers.index', compact('customers'));
+        $isActive = $request->get('is_active', 1);
+        $search = $request->get('search');
+
+        $query = Customer::orderBy('name');
+
+        if ($isActive !== null) {
+            $query->where('is_active', $isActive);
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', '%' . $search . '%')
+                    ->orWhere('contact_person', 'LIKE', '%' . $search . '%')
+                    ->orWhere('contact_person_2', 'LIKE', '%' . $search . '%')
+                    ->orWhere('contact_person_3', 'LIKE', '%' . $search . '%')
+                    ->orWhere('phone', 'LIKE', '%' . $search . '%')
+                    ->orWhere('phone_2', 'LIKE', '%' . $search . '%')
+                    ->orWhere('phone_3', 'LIKE', '%' . $search . '%')
+                    ->orWhere('email', 'LIKE', '%' . $search . '%')
+                    ->orWhere('address', 'LIKE', '%' . $search . '%');
+            });
+        }
+
+        $customers = $query->get();
+
+        return view('customers.index', compact('customers', 'isActive', 'search'));
     }
 
     public function create()

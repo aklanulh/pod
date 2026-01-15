@@ -31,17 +31,20 @@ class ProductController extends Controller
         }
 
         // Handle sorting
-        $sortField = $request->get('sort', 'name');
-        $direction = $request->get('direction', 'asc');
+        $sortField = $request->get('sort', 'stock_priority');
+        $direction = $request->get('direction', 'desc');
 
         // Validate sort field to prevent SQL injection
-        $allowedSortFields = ['code', 'name', 'category', 'current_stock', 'price', 'expired_date'];
+        $allowedSortFields = ['code', 'name', 'category', 'current_stock', 'price', 'expired_date', 'stock_priority'];
         if (!in_array($sortField, $allowedSortFields)) {
-            $sortField = 'name';
+            $sortField = 'stock_priority';
         }
 
         // Apply sorting
         switch ($sortField) {
+            case 'stock_priority':
+                $query->orderByRaw("CASE WHEN current_stock > 0 THEN 1 ELSE 0 END DESC, name ASC");
+                break;
             case 'category':
                 $query->join('product_categories', 'products.category_id', '=', 'product_categories.id')
                     ->orderBy('product_categories.name', $direction)
