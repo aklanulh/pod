@@ -20,18 +20,18 @@ return new class extends Migration
             $table->text('spesifikasi')->nullable();
 
             // Equipment Details
-            $table->string('brand')->nullable()->after('spesifikasi');
-            $table->string('model')->nullable()->after('brand');
-            $table->string('serial_number')->nullable()->after('model');
-            $table->string('no_registrasi')->nullable()->after('serial_number');
-            $table->date('tanggal_install')->nullable()->after('no_registrasi');
-            $table->string('kategori')->nullable()->after('tanggal_install');
-            $table->date('garansi_berakhir')->nullable()->after('kategori');
-            $table->date('periode_kso_mulai')->nullable()->after('garansi_berakhir');
-            $table->date('periode_kso_berakhir')->nullable()->after('periode_kso_mulai');
-            $table->string('lokasi_penempatan')->nullable()->after('periode_kso_berakhir');
-            $table->string('kondisi')->default('excellent')->after('lokasi_penempatan');
-            $table->string('status')->default('active')->after('kondisi');
+            $table->string('brand')->nullable();
+            $table->string('model')->nullable();
+            $table->string('serial_number')->nullable();
+            $table->string('no_registrasi')->nullable();
+            $table->date('tanggal_install')->nullable();
+            $table->string('kategori')->nullable();
+            $table->date('garansi_berakhir')->nullable();
+            $table->date('periode_kso_mulai')->nullable();
+            $table->date('periode_kso_berakhir')->nullable();
+            $table->string('lokasi_penempatan')->nullable();
+            $table->string('kondisi')->default('excellent');
+            $table->string('status')->default('active');
 
             $table->timestamps();
 

@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('suppliers', function (Blueprint $table) {
-            $table->boolean('is_active')->default(true)->after('name');
-            $table->text('notes')->nullable()->after('is_active');
+            $table->boolean('is_active')->default(true);
+            $table->text('notes')->nullable();
         });
     }
 
