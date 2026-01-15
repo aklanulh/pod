@@ -33,13 +33,29 @@ class DataImportController extends Controller
         ]);
 
         try {
+            Log::info('Import suppliers request received');
             $import = new ImportSuppliersImport();
             Excel::import($import, $request->file('file'));
 
+            Log::info('Supplier import completed. Rows processed: ' . $import->getRowCount());
+            Log::info('Rows skipped: ' . $import->getSkippedRowsCount());
+            Log::info('Total rows attempted: ' . $import->getTotalProcessedRows());
+
+            $message = 'Data supplier berhasil diimport! ';
+            $message .= $import->getRowCount() . ' baris berhasil, ';
+            if ($import->getSkippedRowsCount() > 0) {
+                $message .= $import->getSkippedRowsCount() . ' baris dilewati (total: ' . $import->getTotalProcessedRows() . ' baris). ';
+                $message .= 'Periksa log untuk detail baris yang gagal.';
+            } else {
+                $message .= 'dari ' . $import->getTotalProcessedRows() . ' baris total.';
+            }
+
             return response()->json([
                 'success' => true,
-                'message' => 'Data supplier berhasil diimport!',
-                'imported' => method_exists($import, 'getRowCount') ? $import->getRowCount() : 0
+                'message' => $message,
+                'imported' => $import->getRowCount(),
+                'skipped' => $import->getSkippedRowsCount(),
+                'total_attempted' => $import->getTotalProcessedRows()
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -59,13 +75,29 @@ class DataImportController extends Controller
         ]);
 
         try {
+            Log::info('Import customers request received');
             $import = new ImportCustomersImport();
             Excel::import($import, $request->file('file'));
 
+            Log::info('Customer import completed. Rows processed: ' . $import->getRowCount());
+            Log::info('Rows skipped: ' . $import->getSkippedRowsCount());
+            Log::info('Total rows attempted: ' . $import->getTotalProcessedRows());
+
+            $message = 'Data customer berhasil diimport! ';
+            $message .= $import->getRowCount() . ' baris berhasil, ';
+            if ($import->getSkippedRowsCount() > 0) {
+                $message .= $import->getSkippedRowsCount() . ' baris dilewati (total: ' . $import->getTotalProcessedRows() . ' baris). ';
+                $message .= 'Periksa log untuk detail baris yang gagal.';
+            } else {
+                $message .= 'dari ' . $import->getTotalProcessedRows() . ' baris total.';
+            }
+
             return response()->json([
                 'success' => true,
-                'message' => 'Data customer berhasil diimport!',
-                'imported' => method_exists($import, 'getRowCount') ? $import->getRowCount() : 0
+                'message' => $message,
+                'imported' => $import->getRowCount(),
+                'skipped' => $import->getSkippedRowsCount(),
+                'total_attempted' => $import->getTotalProcessedRows()
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -139,17 +171,29 @@ class DataImportController extends Controller
         ]);
 
         try {
-            Log::info('Starting stock movement import');
+            Log::info('Import stock movements request received');
             $import = new ImportStockMovementsImport();
             Excel::import($import, $request->file('file'));
 
-            $rowCount = method_exists($import, 'getRowCount') ? $import->getRowCount() : 0;
-            Log::info('Stock movement import completed. Rows processed: ' . $rowCount);
+            Log::info('Stock movement import completed. Rows processed: ' . $import->getRowCount());
+            Log::info('Rows skipped: ' . $import->getSkippedRowsCount());
+            Log::info('Total rows attempted: ' . $import->getTotalProcessedRows());
+
+            $message = 'Data stock movement berhasil diimport! ';
+            $message .= $import->getRowCount() . ' baris berhasil, ';
+            if ($import->getSkippedRowsCount() > 0) {
+                $message .= $import->getSkippedRowsCount() . ' baris dilewati (total: ' . $import->getTotalProcessedRows() . ' baris). ';
+                $message .= 'Periksa log untuk detail baris yang gagal.';
+            } else {
+                $message .= 'dari ' . $import->getTotalProcessedRows() . ' baris total.';
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data stock movement berhasil diimport! ' . $rowCount . ' baris diproses.',
-                'imported' => $rowCount
+                'message' => $message,
+                'imported' => $import->getRowCount(),
+                'skipped' => $import->getSkippedRowsCount(),
+                'total_attempted' => $import->getTotalProcessedRows()
             ]);
         } catch (\Exception $e) {
             Log::error('Stock movement import error: ' . $e->getMessage());
