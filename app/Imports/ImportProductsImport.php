@@ -82,9 +82,6 @@ class ImportProductsImport implements ToModel, WithHeadingRow, WithValidation, S
                 'price' => is_numeric(trim($row['price'] ?? '')) && trim($row['price'] ?? '') !== '' ? (float)$row['price'] : 0,
                 'current_stock' => is_numeric(trim($row['current_stock'] ?? '')) && trim($row['current_stock'] ?? '') !== '' ? (int)$row['current_stock'] : 0,
                 'minimum_stock' => is_numeric($row['minimum_stock']) ? $row['minimum_stock'] : 0,
-                'is_active' => isset($row['is_active']) ? $this->parseBoolean($row['is_active']) : true,
-                'migrated_to_product_id' => !empty($row['migrated_to_product_code']) ? $this->findProductByCode($row['migrated_to_product_code'])?->id : null,
-                'migration_notes' => $row['migration_notes'] ?? '',
             ]);
         } catch (\Exception $e) {
             Log::error('Error processing row: ' . json_encode($row));
@@ -110,9 +107,6 @@ class ImportProductsImport implements ToModel, WithHeadingRow, WithValidation, S
             'lot_number' => 'nullable|string|max:255',
             'distribution_permit' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'is_active' => 'nullable',
-            'migrated_to_product_code' => 'nullable|string|max:255',
-            'migration_notes' => 'nullable|string',
         ];
     }
 
@@ -172,31 +166,6 @@ class ImportProductsImport implements ToModel, WithHeadingRow, WithValidation, S
         }
     }
 
-    /**
-     * Parse boolean value from Excel with flexible format handling
-     */
-    private function parseBoolean($value)
-    {
-        if (is_bool($value)) {
-            return $value;
-        }
-
-        if (is_numeric($value)) {
-            return (int)$value === 1;
-        }
-
-        if (is_string($value)) {
-            $value = strtolower(trim($value));
-            // Check for false values first
-            if (in_array($value, ['false', '0', 'no', 'tidak', 'inactive', 'tidak aktif'])) {
-                return false;
-            }
-            // Then check for true values
-            return in_array($value, ['true', '1', 'yes', 'ya', 'active', 'aktif']);
-        }
-
-        return true; // Default to true if value is null/empty
-    }
 
     /**
      * Get row count

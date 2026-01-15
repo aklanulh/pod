@@ -34,6 +34,34 @@ class ImportCustomersImport implements ToModel, WithHeadingRow, WithValidation, 
     }
 
     /**
+     * Parse is_active value from various formats
+     */
+    private function parseIsActive($value)
+    {
+        // Handle boolean values directly FIRST (before empty check)
+        if (is_bool($value)) {
+            return $value; // Return boolean as-is
+        }
+
+        if (is_null($value) || $value === '') {
+            return true; // Default to active
+        }
+
+        // Handle string representations
+        if (is_string($value)) {
+            $value = strtolower(trim($value));
+            return in_array($value, ['yes', 'y', 'true', '1', 'active', 'aktif', 'on']);
+        }
+
+        // Handle numeric values
+        if (is_numeric($value)) {
+            return (bool)$value;
+        }
+
+        return true; // Default to active
+    }
+
+    /**
      * @param array $row
      * 
      * @return \Illuminate\Database\Eloquent\Model|null
@@ -53,6 +81,8 @@ class ImportCustomersImport implements ToModel, WithHeadingRow, WithValidation, 
                 'phone_3' => $this->cleanFormula($row['phone_3']),
                 'email' => $this->cleanFormula($row['email']),
                 'address' => $this->cleanFormula($row['address']),
+                'is_active' => $this->parseIsActive($row['is_active'] ?? 'yes'),
+                'notes' => $this->cleanFormula($row['notes'] ?? ''),
             ]);
         } catch (\Exception $e) {
             Log::error('Error processing customer row: ' . json_encode($row));
@@ -76,6 +106,7 @@ class ImportCustomersImport implements ToModel, WithHeadingRow, WithValidation, 
             'contact_person_2' => 'nullable|string|max:255',
             'contact_person_3' => 'nullable|string|max:255',
             'address' => 'nullable|string',
+            'notes' => 'nullable|string',
         ];
     }
 
@@ -88,6 +119,7 @@ class ImportCustomersImport implements ToModel, WithHeadingRow, WithValidation, 
             'name.required' => 'Nama customer wajib diisi',
             'name.string' => 'Nama customer harus berupa string',
             'email.email' => 'Format email tidak valid',
+            'is_active.in' => 'Status aktif harus berupa: yes, no, y, n, true, false, TRUE, FALSE, 1, 0, active, inactive, aktif, tidak aktif, on, atau off',
         ];
     }
 

@@ -23,6 +23,12 @@ return new class extends Migration
             $table->boolean('include_tax')->default(false);
             $table->json('cart_data'); // Store product cart as JSON
             $table->decimal('total_amount', 15, 2)->default(0);
+
+            // Additional fields
+            $table->integer('payment_terms')->default(30)->after('total_amount');
+            $table->string('delivery_number')->nullable()->after('payment_terms');
+            $table->string('bank_option')->nullable()->after('delivery_number');
+
             $table->timestamps();
         });
     }

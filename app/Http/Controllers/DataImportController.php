@@ -220,11 +220,14 @@ class DataImportController extends Controller
             'phone_2',
             'phone_3',
             'email',
-            'address'
+            'address',
+            'is_active',
+            'notes'
         ];
 
         $data = [
-            ['PT. Supplier Medika', 'John Doe', 'Jane Smith', '', '021-12345678', '021-87654321', '', 'info@supplier.com', 'Jakarta Selatan']
+            ['PT. Supplier Medika', 'John Doe', 'Jane Smith', '', '021-12345678', '021-87654321', '', 'info@supplier.com', 'Jakarta Selatan', 'TRUE', 'Supplier aktif untuk alat kesehatan'],
+            ['PT. Old Supplier Name', 'Old Contact', '', '', '021-9999999', '', '', 'old@supplier.com', 'Jl. Lama', 'FALSE', 'Nama lama - tidak digunakan lagi, hanya untuk data historis']
         ];
 
         return $this->createExcelFile('supplier_template.xlsx', $headers, $data);
@@ -244,11 +247,14 @@ class DataImportController extends Controller
             'phone_2',
             'phone_3',
             'email',
-            'address'
+            'address',
+            'is_active',
+            'notes'
         ];
 
         $data = [
-            ['RS. Sehat', 'Dr. Budi', 'Siti', '', '021-11111111', '021-22222222', '', 'info@rssehat.com', 'Jakarta Pusat']
+            ['RS. Sehat', 'Dr. Budi', 'Siti', '', '021-11111111', '021-22222222', '', 'info@rssehat.com', 'Jakarta Pusat', 'TRUE', 'Customer aktif untuk rumah sakit'],
+            ['RS. Lama', 'Dr. Old', '', '', '021-9999999', '', '', 'old@rs.com', 'Jakarta Lama', 'FALSE', 'Nama lama - tidak digunakan lagi, hanya untuk data historis']
         ];
 
         return $this->createExcelFile('customer_template.xlsx', $headers, $data);

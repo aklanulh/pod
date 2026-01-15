@@ -18,12 +18,24 @@ class Customer extends Model
         'phone_2',
         'phone_3',
         'email',
-        'address'
+        'address',
+        'is_active',
+        'notes'
     ];
 
     public function stockMovements()
     {
         return $this->hasMany(StockMovement::class);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeInactive($query)
+    {
+        return $query->where('is_active', false);
     }
 
     public function customerSchedules()
@@ -53,7 +65,7 @@ class Customer extends Model
             ->where('type', 'out')
             ->selectRaw('SUM(quantity * COALESCE(unit_price, 0)) as total_value')
             ->first();
-            
+
         return $stats->total_value ?? 0;
     }
 
@@ -64,11 +76,11 @@ class Customer extends Model
     {
         $totalInvestment = $this->getTotalKsoInvestment();
         $totalSales = $this->getTotalSalesValue();
-        
+
         if ($totalInvestment <= 0) {
             return 0;
         }
-        
+
         return ($totalSales / $totalInvestment) * 100;
     }
 
@@ -88,11 +100,11 @@ class Customer extends Model
         $totalInvestment = $this->getTotalKsoInvestment();
         $totalSales = $this->getTotalSalesValue();
         $roiPercentage = $this->calculateOverallROI();
-        
+
         // Target is 100% ROI (sales = investment)
         $targetSales = $totalInvestment;
         $difference = $totalSales - $targetSales;
-        
+
         return [
             'amount' => abs($difference),
             'type' => $difference >= 0 ? 'profit' : 'kurang',

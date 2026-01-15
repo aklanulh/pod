@@ -22,6 +22,91 @@
     </div>
 </div>
 
+<!-- Filter Section -->
+<div class="bg-white rounded-lg shadow p-4 mb-6">
+    <form method="GET" action="{{ route('stock.in.index') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Supplier</label>
+            <select name="supplier_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">Semua Supplier</option>
+                @foreach($suppliers as $supplier)
+                    <option value="{{ $supplier->id }}" {{ request('supplier_id') == $supplier->id ? 'selected' : '' }}>
+                        {{ $supplier->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">No. Pemesanan</label>
+            <input type="text" name="order_number" value="{{ request('order_number') }}" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   placeholder="Cari nomor pemesanan">
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">No. Invoice</label>
+            <input type="text" name="invoice_number" value="{{ request('invoice_number') }}" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   placeholder="Cari nomor invoice">
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Dari</label>
+            <input type="date" name="date_from" value="{{ request('date_from') }}" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Sampai</label>
+            <input type="date" name="date_to" value="{{ request('date_to') }}" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        
+        <div class="lg:col-span-5 flex justify-end space-x-2 mt-4">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center">
+                <i class="fas fa-filter mr-2"></i>
+                Filter
+            </button>
+            <a href="{{ route('stock.in.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md flex items-center">
+                <i class="fas fa-times mr-2"></i>
+                Reset
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Active Filters Info -->
+@if(request()->hasAny(['supplier_id', 'order_number', 'invoice_number', 'date_from', 'date_to']))
+<div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+    <div class="flex">
+        <div class="flex-shrink-0">
+            <i class="fas fa-filter text-blue-400"></i>
+        </div>
+        <div class="ml-3">
+            <p class="text-sm text-blue-700">
+                <strong>Filter Aktif:</strong>
+                @if(request('supplier_id'))
+                    Supplier: {{ $suppliers->where('id', request('supplier_id'))->first()->name ?? 'Unknown' }}
+                @endif
+                @if(request('order_number'))
+                    No. Pemesanan: {{ request('order_number') }}
+                @endif
+                @if(request('invoice_number'))
+                    No. Invoice: {{ request('invoice_number') }}
+                @endif
+                @if(request('date_from'))
+                    Tanggal: {{ request('date_from') }}
+                @endif
+                @if(request('date_to') && request('date_to') != request('date_from'))
+                    - {{ request('date_to') }}
+                @endif
+            </p>
+        </div>
+    </div>
+</div>
+@endif
+
 <div class="bg-white rounded-lg shadow overflow-hidden">
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
@@ -47,7 +132,7 @@
                             {{ $transaction->invoice_number ?? '-' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $transaction->transaction_date->format('d/m/Y H:i') }}
+                            {{ $transaction->transaction_date ? $transaction->transaction_date->format('d/m/Y H:i') : '-' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ $transaction->supplier->name ?? '-' }}
@@ -76,7 +161,7 @@
                                     <i class="fas fa-eye"></i> Detail
                                 </button>
                                 <button type="button" 
-                                        onclick="printPurchaseOrder('{{ $transaction->order_number }}', '{{ $transaction->invoice_number }}', '{{ $transaction->supplier->id }}', '{{ $transaction->transaction_date->format('Y-m-d') }}')"
+                                        onclick="printPurchaseOrder('{{ $transaction->order_number }}', '{{ $transaction->invoice_number }}', '{{ $transaction->supplier ? $transaction->supplier->id : '' }}', '{{ $transaction->transaction_date->format('Y-m-d') }}')"
                                         class="text-green-600 hover:text-green-900"
                                         title="Cetak Purchase Order">
                                     <i class="fas fa-print"></i> PO

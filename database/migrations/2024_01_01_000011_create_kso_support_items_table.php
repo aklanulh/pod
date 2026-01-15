@@ -11,7 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('kso_support_items', function (Blueprint $table) {
+        Schema::create('kso_support_items', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('kso_item_id')->constrained('kso_items')->onDelete('cascade');
+            $table->string('nama_item');
+            $table->decimal('nilai_item', 15, 2);
+            $table->integer('jumlah')->default(1);
+            $table->text('spesifikasi')->nullable();
+
+            // Equipment Details
             $table->string('brand')->nullable()->after('spesifikasi');
             $table->string('model')->nullable()->after('brand');
             $table->string('serial_number')->nullable()->after('model');
@@ -24,6 +32,10 @@ return new class extends Migration
             $table->string('lokasi_penempatan')->nullable()->after('periode_kso_berakhir');
             $table->string('kondisi')->default('excellent')->after('lokasi_penempatan');
             $table->string('status')->default('active')->after('kondisi');
+
+            $table->timestamps();
+
+            $table->index('kso_item_id');
         });
     }
 
@@ -32,21 +44,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('kso_support_items', function (Blueprint $table) {
-            $table->dropColumn([
-                'brand',
-                'model', 
-                'serial_number',
-                'no_registrasi',
-                'tanggal_install',
-                'kategori',
-                'garansi_berakhir',
-                'periode_kso_mulai',
-                'periode_kso_berakhir',
-                'lokasi_penempatan',
-                'kondisi',
-                'status'
-            ]);
-        });
+        Schema::dropIfExists('kso_support_items');
     }
 };

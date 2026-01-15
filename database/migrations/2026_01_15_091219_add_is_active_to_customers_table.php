@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('maintenance_schedules', function (Blueprint $table) {
-            $table->text('technician_notes')->nullable()->after('technician');
+        Schema::table('customers', function (Blueprint $table) {
+            $table->boolean('is_active')->default(true)->after('name');
+            $table->text('notes')->nullable()->after('is_active');
         });
     }
 
@@ -21,8 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('maintenance_schedules', function (Blueprint $table) {
-            $table->dropColumn('technician_notes');
+        Schema::table('customers', function (Blueprint $table) {
+            $table->dropColumn(['is_active', 'notes']);
         });
     }
 };

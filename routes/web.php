@@ -51,26 +51,6 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
         return 'Super Admin middleware working - ' . now();
     });
 
-    // Test Controller Directly
-    Route::get('/test-controller', function () {
-        try {
-            $controller = new \App\Http\Controllers\ProductMigrationController();
-            return 'ProductMigrationController loaded successfully';
-        } catch (\Exception $e) {
-            return 'Error loading ProductMigrationController: ' . $e->getMessage();
-        }
-    });
-
-    // Test Controller Method
-    Route::get('/test-method', function () {
-        try {
-            $controller = new \App\Http\Controllers\ProductMigrationController();
-            $result = $controller->index();
-            return 'Controller method executed successfully';
-        } catch (\Exception $e) {
-            return 'Error executing controller method: ' . $e->getMessage();
-        }
-    });
 
     // Dashboard - Super Admin Only (with fallback)
     Route::get('/dashboard', function () {
@@ -86,11 +66,6 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
     Route::resource('products', ProductController::class);
     Route::post('products/ajax', [ProductController::class, 'store'])->name('products.ajax.store');
 
-    // Product Migration - Super Admin Only
-    Route::get('/products-migration', [\App\Http\Controllers\ProductMigrationController::class, 'index'])->name('products.migration.index');
-    Route::get('/products-migration/{product}', [\App\Http\Controllers\ProductMigrationController::class, 'showMigrationHistory'])->name('products.migration.show');
-    Route::post('/products-migration/{oldProductId}/migrate', [\App\Http\Controllers\ProductMigrationController::class, 'migrate'])->name('products.migration.migrate');
-    Route::get('/products-migration/get-active-products', [\App\Http\Controllers\ProductMigrationController::class, 'getActiveProducts'])->name('products.migration.get-active-products');
 
     // Reports - Super Admin Only
     Route::prefix('reports')->name('reports.')->group(function () {

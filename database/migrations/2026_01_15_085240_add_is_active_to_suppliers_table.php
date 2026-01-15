@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('stock_out_drafts', function (Blueprint $table) {
-            $table->dropColumn('signer_name');
+        Schema::table('suppliers', function (Blueprint $table) {
+            $table->boolean('is_active')->default(true)->after('name');
+            $table->text('notes')->nullable()->after('is_active');
         });
     }
 
@@ -21,8 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('stock_out_drafts', function (Blueprint $table) {
-            $table->string('signer_name')->nullable()->after('notes');
+        Schema::table('suppliers', function (Blueprint $table) {
+            $table->dropColumn(['is_active', 'notes']);
         });
     }
 };

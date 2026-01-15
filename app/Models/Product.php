@@ -21,15 +21,11 @@ class Product extends Model
         'price',
         'current_stock',
         'minimum_stock',
-        'is_active',
-        'migrated_to_product_id',
-        'migration_notes'
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'expired_date' => 'date',
-        'is_active' => 'boolean'
     ];
 
     public function category()
@@ -72,28 +68,9 @@ class Product extends Model
         return $this->expired_date && $this->expired_date->diffInDays(now()) <= $days && !$this->isExpired();
     }
 
-    public function migratedToProduct()
-    {
-        return $this->belongsTo(Product::class, 'migrated_to_product_id');
-    }
-
-    public function migratedFromProducts()
-    {
-        return $this->hasMany(Product::class, 'migrated_to_product_id');
-    }
-
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
-
-    public function scopeInactive($query)
-    {
-        return $query->where('is_active', false);
-    }
 
     public function canBeDeleted()
     {
-        return $this->is_active && $this->stockMovements()->count() === 0;
+        return $this->stockMovements()->count() === 0;
     }
 }

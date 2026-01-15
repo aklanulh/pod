@@ -25,8 +25,9 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->decimal('cost', 12, 2)->nullable();
             $table->string('technician')->nullable();
+            $table->text('technician_notes')->nullable()->after('technician');
             $table->timestamps();
-            
+
             $table->index(['next_maintenance_date', 'status']);
             $table->index(['kso_item_id', 'equipment_type']);
         });

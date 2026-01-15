@@ -20,11 +20,42 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
 class StockMovementController extends Controller
 {
-    public function stockInIndex()
+    public function stockInIndex(Request $request)
     {
+        // Get filter parameters
+        $supplierId = $request->get('supplier_id');
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+        $orderNumber = $request->get('order_number');
+        $invoiceNumber = $request->get('invoice_number');
+
+        // Build query with filters
+        $query = StockMovement::stockIn()
+            ->with(['product', 'supplier']);
+
+        // Apply filters
+        if ($supplierId) {
+            $query->where('supplier_id', $supplierId);
+        }
+
+        if ($dateFrom) {
+            $query->whereDate('transaction_date', '>=', $dateFrom);
+        }
+
+        if ($dateTo) {
+            $query->whereDate('transaction_date', '<=', $dateTo);
+        }
+
+        if ($orderNumber) {
+            $query->where('order_number', 'like', '%' . $orderNumber . '%');
+        }
+
+        if ($invoiceNumber) {
+            $query->where('invoice_number', 'like', '%' . $invoiceNumber . '%');
+        }
+
         // Group stock movements by transaction batch
-        $stockInGroups = StockMovement::stockIn()
-            ->with(['product', 'supplier'])
+        $stockInGroups = $query
             ->orderBy('transaction_date', 'desc')
             ->get()
             ->groupBy(function ($item) {
@@ -73,10 +104,16 @@ class StockMovementController extends Controller
             ['path' => request()->url(), 'pageName' => 'page']
         );
 
+        // Preserve query parameters for pagination
+        $stockIns->appends(request()->query());
+
         // Get count of pending drafts for notification badge
         $draftCount = \App\Models\StockInDraft::count();
 
-        return view('stock.in.index', compact('stockIns', 'draftCount'));
+        // Get all suppliers for filter dropdown
+        $suppliers = \App\Models\Supplier::active()->orderBy('name')->get();
+
+        return view('stock.in.index', compact('stockIns', 'draftCount', 'suppliers'));
     }
 
     public function stockInDraftIndex()
@@ -91,7 +128,7 @@ class StockMovementController extends Controller
     public function stockInCreate()
     {
         $products = Product::orderBy('name')->get(['id', 'code', 'name', 'unit', 'current_stock']);
-        $suppliers = Supplier::orderBy('name')->get();
+        $suppliers = Supplier::active()->orderBy('name')->get();
         $categories = \App\Models\ProductCategory::orderBy('name')->get();
 
         return view('stock.in.create', compact('products', 'suppliers', 'categories'));
@@ -195,11 +232,42 @@ class StockMovementController extends Controller
         }
     }
 
-    public function stockOutIndex()
+    public function stockOutIndex(Request $request)
     {
+        // Get filter parameters
+        $customerId = $request->get('customer_id');
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+        $orderNumber = $request->get('order_number');
+        $invoiceNumber = $request->get('invoice_number');
+
+        // Build query with filters
+        $query = StockMovement::stockOut()
+            ->with(['product', 'customer']);
+
+        // Apply filters
+        if ($customerId) {
+            $query->where('customer_id', $customerId);
+        }
+
+        if ($dateFrom) {
+            $query->whereDate('transaction_date', '>=', $dateFrom);
+        }
+
+        if ($dateTo) {
+            $query->whereDate('transaction_date', '<=', $dateTo);
+        }
+
+        if ($orderNumber) {
+            $query->where('order_number', 'like', '%' . $orderNumber . '%');
+        }
+
+        if ($invoiceNumber) {
+            $query->where('invoice_number', 'like', '%' . $invoiceNumber . '%');
+        }
+
         // Group stock movements by transaction batch
-        $stockOutGroups = StockMovement::stockOut()
-            ->with(['product', 'customer'])
+        $stockOutGroups = $query
             ->orderBy('transaction_date', 'desc')
             ->get()
             ->groupBy(function ($item) {
@@ -252,16 +320,22 @@ class StockMovementController extends Controller
             ['path' => request()->url(), 'pageName' => 'page']
         );
 
+        // Preserve query parameters for pagination
+        $stockOuts->appends(request()->query());
+
         // Get count of pending drafts for notification badge
         $draftCount = \App\Models\StockOutDraft::count();
 
-        return view('stock.out.index', compact('stockOuts', 'draftCount'));
+        // Get all customers for filter dropdown
+        $customers = \App\Models\Customer::active()->orderBy('name')->get();
+
+        return view('stock.out.index', compact('stockOuts', 'draftCount', 'customers'));
     }
 
     public function stockOutCreate()
     {
         $products = Product::where('current_stock', '>', 0)->orderBy('name')->get();
-        $customers = Customer::orderBy('name')->get();
+        $customers = Customer::active()->orderBy('name')->get();
         $categories = ProductCategory::orderBy('name')->get();
 
         return view('stock.out.create', compact('products', 'customers', 'categories'));
@@ -1386,10 +1460,10 @@ class StockMovementController extends Controller
             // Extract CV code and running number
             $cvCode = substr($lastInvoice->invoice_number, 0, 2);
             $runningNumber = substr($lastInvoice->invoice_number, 2, 3);
-            
+
             // Increment running number
             $runningNumber = (int)$runningNumber + 1;
-            
+
             // Check if running number reaches 1000
             if ($runningNumber >= 1000) {
                 $cvCode = (int)$cvCode + 1; // Increment CV code (11 -> 12)
@@ -1411,11 +1485,11 @@ class StockMovementController extends Controller
     private function generatePONumber($transactionDate)
     {
         $date = is_string($transactionDate) ? \Carbon\Carbon::parse($transactionDate) : $transactionDate;
-        
+
         // Month in Roman numeral
         $monthRoman = $this->numberToRoman($date->month);
         $yearShort = $date->format('y'); // 26 for 2026
-        
+
         // Get last PO for this month
         $lastPO = StockMovement::where('type', 'in')
             ->whereMonth('transaction_date', $date->month)
@@ -1439,207 +1513,20 @@ class StockMovementController extends Controller
     private function numberToRoman($num)
     {
         $map = [
-            1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V',
-            6 => 'VI', 7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X',
-            11 => 'XI', 12 => 'XII'
+            1 => 'I',
+            2 => 'II',
+            3 => 'III',
+            4 => 'IV',
+            5 => 'V',
+            6 => 'VI',
+            7 => 'VII',
+            8 => 'VIII',
+            9 => 'IX',
+            10 => 'X',
+            11 => 'XI',
+            12 => 'XII'
         ];
-        
+
         return $map[$num] ?? $num;
     }
-
-public function getStockInDraftData($id)
-{
-    try {
-        $draft = \App\Models\StockInDraft::with('supplier')->findOrFail($id);
-
-        return response()->json([
-            'success' => true,
-            'draft' => $draft
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Draft tidak ditemukan'
-        ], 404);
-    }
-}
-
-public function exportStockInPurchaseOrder(Request $request)
-{
-    try {
-        // Get the transaction data from the request
-        $orderNumber = $request->input('order_number');
-        $invoiceNumber = $request->input('invoice_number');
-        $supplierId = $request->input('supplier_id');
-        $transactionDate = $request->input('transaction_date');
-
-        // Check if this is from draft form (products array)
-        $productsData = $request->input('products', []);
-
-        if (!empty($productsData)) {
-            // Handle draft form data
-            $stockMovements = collect();
-            $supplier = Supplier::find($supplierId);
-
-            if (!$supplier) {
-                return response()->json(['error' => 'Supplier tidak ditemukan'], 400);
-            }
-
-            foreach ($productsData as $productData) {
-                $product = Product::find($productData['product_id']);
-                if ($product) {
-                    // Create temporary stock movement object for PO
-                    $movement = new \stdClass();
-                    $movement->product = $product;
-                    $movement->supplier = $supplier;
-                    $movement->quantity = $productData['quantity'];
-                    $movement->unit_price = $productData['unit_price'];
-                    $movement->transaction_date = $transactionDate;
-                    $movement->include_tax = false; // Default, can be enhanced
-                    $movement->notes = ''; // Add empty notes property
-                    $stockMovements->push($movement);
-                }
-            }
-
-            if ($stockMovements->isEmpty()) {
-                return response()->json(['error' => 'Tidak ada produk valid ditemukan'], 400);
-            }
-        } else {
-            // Get stock movements for this transaction (existing data)
-            $stockMovements = StockMovement::stockIn()
-                ->with(['product', 'supplier'])
-                ->where('order_number', $orderNumber)
-                ->where('invoice_number', $invoiceNumber)
-                ->where('supplier_id', $supplierId)
-                ->whereDate('transaction_date', $transactionDate)
-                ->get();
-
-            if ($stockMovements->isEmpty()) {
-                return response()->json(['error' => 'Tidak ada data transaksi ditemukan'], 400);
-            }
-
-            $supplier = $stockMovements->first()->supplier;
-        }
-
-        // Calculate totals
-        $subtotal = 0;
-        foreach ($stockMovements as $movement) {
-            $subtotal += $movement->quantity * $movement->unit_price;
-        }
-
-        $includeTax = $stockMovements->first()->include_tax;
-        $taxAmount = $includeTax ? $subtotal * 0.11 : 0;
-        $finalAmount = $subtotal + $taxAmount;
-
-        // Generate terbilang
-        $terbilang = $this->terbilang($finalAmount);
-
-        // Generate HTML content for Purchase Order (formal template only)
-        $transactionDateObj = is_string($stockMovements->first()->transaction_date)
-            ? \Carbon\Carbon::parse($stockMovements->first()->transaction_date)
-            : $stockMovements->first()->transaction_date;
-
-        $html = view('exports.stock-in-purchase-order-formal', [
-            'stockMovements' => $stockMovements,
-            'supplier' => $supplier,
-            'orderNumber' => $orderNumber,
-            'invoiceNumber' => $invoiceNumber,
-            'transactionDate' => $transactionDateObj,
-            'subtotal' => $subtotal,
-            'taxAmount' => $taxAmount,
-            'finalAmount' => $finalAmount,
-            'includeTax' => $includeTax,
-            'terbilang' => $terbilang,
-            'currentDate' => now()->format('d F Y')
-        ])->render();
-
-        return response($html, 200, [
-            'Content-Type' => 'text/html; charset=UTF-8',
-            'Content-Disposition' => 'inline'
-        ]);
-    } catch (\Exception $e) {
-        return response()->json(['error' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
-    }
-}
-
-/**
- * Generate invoice number with format: [CV_CODE][RUNNING_NUMBER][MONTH_YEAR]
- * Example: 119851225 (CV 11, No 985, Dec 2025)
- */
-private function generateInvoiceNumber($transactionDate, $type)
-{
-    $date = is_string($transactionDate) ? \Carbon\Carbon::parse($transactionDate) : $transactionDate;
-    $monthYear = $date->format('my'); // 1225 for December 2025
-
-    // Get last invoice for this month
-    $lastInvoice = StockMovement::where('type', $type)
-        ->whereMonth('transaction_date', $date->month)
-        ->whereYear('transaction_date', $date->year)
-        ->whereNotNull('invoice_number')
-        ->orderBy('invoice_number', 'desc')
-        ->first();
-
-    if ($lastInvoice && strlen($lastInvoice->invoice_number) >= 7) {
-        // Extract CV code and running number
-        $cvCode = substr($lastInvoice->invoice_number, 0, 2);
-        $runningNumber = substr($lastInvoice->invoice_number, 2, 3);
-
-        // Increment running number
-        $runningNumber = (int)$runningNumber + 1;
-
-        // Check if running number reaches 1000
-        if ($runningNumber >= 1000) {
-            $cvCode = (int)$cvCode + 1; // Increment CV code (11 -> 12)
-            $runningNumber = 1; // Reset to 001
-        }
-    } else {
-        // Default values for first invoice of the month
-        $cvCode = 11;
-        $runningNumber = 1;
-    }
-
-    return sprintf('%02d%03d%s', $cvCode, $runningNumber, $monthYear);
-}
-
-/**
- * Generate PO number with format: [RUNNING_NUMBER]/[PO_CODE]/[MONTH]/[YEAR]
- * Example: 1572/YP/I/MSA/26 (No 1572, PO Code YP/MSA, Month I, Year 26)
- */
-private function generatePONumber($transactionDate)
-{
-    $date = is_string($transactionDate) ? \Carbon\Carbon::parse($transactionDate) : $transactionDate;
-
-    // Month in Roman numeral
-    $monthRoman = $this->numberToRoman($date->month);
-    $yearShort = $date->format('y'); // 26 for 2026
-
-    // Get last PO for this month
-    $lastPO = StockMovement::where('type', 'in')
-        ->whereMonth('transaction_date', $date->month)
-        ->whereYear('transaction_date', $date->year)
-        ->whereNotNull('order_number')
-        ->orderBy('order_number', 'desc')
-        ->first();
-
-    if ($lastPO && preg_match('/^(\d+)\/YP\/I\/MSA\/\d{2}$/', $lastPO->order_number, $matches)) {
-        $runningNumber = (int)$matches[1] + 1;
-    } else {
-        $runningNumber = 1;
-    }
-
-    return sprintf('%04d/YP/I/MSA/%s', $runningNumber, $yearShort);
-}
-
-/**
- * Convert number to Roman numeral
- */
-private function numberToRoman($num)
-{
-    $map = [
-        1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V',
-        6 => 'VI', 7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X',
-        11 => 'XI', 12 => 'XII'
-    ];
-
-    return $map[$num] ?? $num;
 }

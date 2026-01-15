@@ -18,11 +18,23 @@ class Supplier extends Model
         'phone_2',
         'phone_3',
         'email',
-        'address'
+        'address',
+        'is_active',
+        'notes'
     ];
 
     public function stockMovements()
     {
         return $this->hasMany(StockMovement::class);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeInactive($query)
+    {
+        return $query->where('is_active', false);
     }
 }
