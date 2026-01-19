@@ -308,12 +308,23 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Year selection change handler
-    document.getElementById('yearSelect').addEventListener('change', function() {
-        const selectedYear = this.value;
-        const currentUrl = new URL(window.location);
-        currentUrl.searchParams.set('year', selectedYear);
-        window.location.href = currentUrl.toString();
-    });
+    const yearSelect = document.getElementById('yearSelect');
+    if (yearSelect) {
+        yearSelect.addEventListener('change', function() {
+            const selectedYear = this.value;
+            console.log('Year changed to:', selectedYear); // Debug log
+            
+            const currentUrl = new URL(window.location);
+            currentUrl.searchParams.set('year', selectedYear);
+            
+            const newUrl = currentUrl.toString();
+            console.log('New URL:', newUrl); // Debug log
+            
+            window.location.href = newUrl;
+        });
+    } else {
+        console.error('yearSelect element not found!'); // Debug log
+    }
 });
 
 function showNoteModal(note) {

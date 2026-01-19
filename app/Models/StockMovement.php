@@ -155,10 +155,14 @@ class StockMovement extends Model
             ? "CAST(strftime('%m', stock_movements.transaction_date) AS INTEGER)"
             : "MONTH(stock_movements.transaction_date)";
 
+        $yearExpr = config('database.default') === 'sqlite'
+            ? "strftime('%Y', stock_movements.transaction_date)"
+            : "YEAR(stock_movements.transaction_date)";
+
         return self::join('customers', 'stock_movements.customer_id', '=', 'customers.id')
             ->where('stock_movements.product_id', $productId)
             ->where('stock_movements.type', 'out')
-            ->whereYear('stock_movements.transaction_date', $year)
+            ->whereRaw("$yearExpr = ?", [$year])
             ->selectRaw("
                 customers.id as customer_id,
                 customers.name as customer_name,

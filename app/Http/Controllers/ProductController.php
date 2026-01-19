@@ -137,8 +137,13 @@ class ProductController extends Controller
         try {
             $product->load('category', 'stockMovements.supplier', 'stockMovements.customer');
 
-            // Get selected year from request, default to current year
-            $selectedYear = $request->get('year', date('Y'));
+            // Get selected year from request
+            $selectedYear = $request->get('year');
+
+            // If no year selected, use first available year
+            if (!$selectedYear) {
+                $selectedYear = date('Y');
+            }
 
             // Generate chart data for selected year
             $chartData = $this->generateProductChartData($product->id, $selectedYear);
@@ -158,6 +163,18 @@ class ProductController extends Controller
 
             if (empty($availableYears)) {
                 $availableYears = [date('Y')];
+            }
+
+            // Always include 2025 in available years
+            if (!in_array(2025, $availableYears)) {
+                $availableYears[] = 2025;
+                sort($availableYears);
+                $availableYears = array_reverse($availableYears);
+            }
+
+            // Ensure selected year is valid, fallback to first available year
+            if (!in_array($selectedYear, $availableYears)) {
+                $selectedYear = $availableYears[0];
             }
 
             return view('products.show', compact('product', 'chartData', 'selectedYear', 'availableYears'));
@@ -210,25 +227,22 @@ class ProductController extends Controller
 
     private function generateProductChartData($productId, $year)
     {
-        // Get all customers who purchased this product in the selected year
-        $customers = StockMovement::with('customer')
-            ->where('product_id', $productId)
-            ->where('type', 'out')
-            ->whereYear('transaction_date', $year)
-            ->select('customer_id')
-            ->distinct()
-            ->get()
-            ->pluck('customer')
-            ->filter()
-            ->unique('id');
+        // Using the same efficient method as ReportController
+        return $this->processChartData(StockMovement::getProductChartData($productId, $year));
+    }
 
+    /**
+     * Process chart data from StockMovement helper methods
+     */
+    private function processChartData($chartData)
+    {
         // Generate months array
         $months = [];
         for ($i = 1; $i <= 12; $i++) {
             $months[] = date('M', mktime(0, 0, 0, $i, 1));
         }
 
-        // Generate colors for customers
+        // Generate colors
         $colors = [
             '#3B82F6',
             '#EF4444',
@@ -250,22 +264,19 @@ class ProductController extends Controller
         $datasets = [];
         $colorIndex = 0;
 
-        foreach ($customers as $customer) {
-            $monthlyData = [];
+        // Process grouped data
+        foreach ($chartData as $entityId => $entityData) {
+            $monthlyData = array_fill(0, 12, 0); // Initialize 12 months with 0
+            $entityName = '';
 
-            for ($month = 1; $month <= 12; $month++) {
-                $quantity = StockMovement::where('product_id', $productId)
-                    ->where('customer_id', $customer->id)
-                    ->where('type', 'out')
-                    ->whereYear('transaction_date', $year)
-                    ->whereMonth('transaction_date', $month)
-                    ->sum('quantity');
-
-                $monthlyData[] = $quantity;
+            foreach ($entityData as $data) {
+                // Handle customer_name for product chart
+                $entityName = $data->customer_name ?? 'Unknown';
+                $monthlyData[$data->month - 1] = (int) $data->total_quantity;
             }
 
             $datasets[] = [
-                'label' => $customer->name,
+                'label' => $entityName,
                 'data' => $monthlyData,
                 'backgroundColor' => $colors[$colorIndex % count($colors)],
                 'borderColor' => $colors[$colorIndex % count($colors)],
