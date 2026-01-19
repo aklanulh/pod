@@ -38,17 +38,17 @@
         </div>
         
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">No. Pemesanan</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">No. PO dari RS</label>
             <input type="text" name="order_number" value="{{ request('order_number') }}" 
                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                   placeholder="Cari nomor pemesanan">
+                   placeholder="Cari nomor PO dari RS">
         </div>
         
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">No. Invoice</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">No. Faktur</label>
             <input type="text" name="invoice_number" value="{{ request('invoice_number') }}" 
                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                   placeholder="Cari nomor invoice">
+                   placeholder="Cari nomor faktur">
         </div>
         
         <div>
@@ -90,10 +90,10 @@
                     Customer: {{ $customers->where('id', request('customer_id'))->first()->name ?? 'Unknown' }}
                 @endif
                 @if(request('order_number'))
-                    No. Pemesanan: {{ request('order_number') }}
+                    No. PO dari RS: {{ request('order_number') }}
                 @endif
                 @if(request('invoice_number'))
-                    No. Invoice: {{ request('invoice_number') }}
+                    No. Faktur: {{ request('invoice_number') }}
                 @endif
                 @if(request('date_from'))
                     Tanggal: {{ request('date_from') }}
@@ -115,7 +115,7 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'order_number', 'sort_order' => request('sort_by') == 'order_number' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
                            class="flex items-center hover:text-gray-700">
-                            No. Pemesanan
+                            No. PO dari RS
                             @if(request('sort_by') == 'order_number')
                                 <i class="fas fa-caret-{{ request('sort_order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
                             @else
@@ -126,7 +126,7 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'invoice_number', 'sort_order' => request('sort_by') == 'invoice_number' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
                            class="flex items-center hover:text-gray-700">
-                            No. Invoice
+                            No. Faktur
                             @if(request('sort_by') == 'invoice_number')
                                 <i class="fas fa-caret-{{ request('sort_order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
                             @else

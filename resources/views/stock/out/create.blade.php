@@ -348,7 +348,7 @@
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label for="order_number" class="block text-sm font-medium text-gray-700 mb-2">Nomor Pemesanan</label>
+                        <label for="order_number" class="block text-sm font-medium text-gray-700 mb-2">Nomor Pemesanan (PO) dari customer</label>
                         <input type="text" name="order_number" id="order_number" 
                                value="{{ old('order_number', isset($draft) ? $draft->order_number : '') }}" 
                                placeholder="Masukkan nomor pemesanan"
@@ -366,9 +366,16 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                     <div>
-                        <label for="transaction_date" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Transaksi</label>
+                        <label for="transaction_date" class="block text-sm font-medium text-gray-700 mb-2">Tanggal PO dari customer</label>
                         <input type="datetime-local" name="transaction_date" id="transaction_date" 
                                value="{{ old('transaction_date', isset($draft) ? $draft->transaction_date->format('Y-m-d\TH:i') : now()->format('Y-m-d\TH:i')) }}" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label for="invoice_date" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Invoice</label>
+                        <input type="date" name="invoice_date" id="invoice_date" 
+                               value="{{ old('invoice_date', isset($draft) ? $draft->invoice_date?->format('Y-m-d') : now()->format('Y-m-d')) }}" 
                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     

@@ -634,6 +634,7 @@ class StockMovementController extends Controller
                 })->toArray();
 
                 $customerName = $stockMovements->first()->customer->name ?? 'Customer';
+                $invoiceNumber = $stockMovements->first()->invoice_number;
                 $includeTax = $stockMovements->first()->include_tax;
                 $paymentTerms = (int) ($stockMovements->first()->payment_terms ?? 30);
                 $bankOption = $request->input('bank_option', 'mandiri_cibubur');
@@ -675,7 +676,7 @@ class StockMovementController extends Controller
                 'customerName' => $customerName,
                 'customer' => $customer,
                 'orderNumber' => $orderNumber,
-                'invoiceNumber' => $invoiceNumber ?: ('118640625'),
+                'invoiceNumber' => $invoiceNumber,
                 'includeTax' => $includeTax,
                 'subtotal' => $subtotal,
                 'taxAmount' => $taxAmount,
