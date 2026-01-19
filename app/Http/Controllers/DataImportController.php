@@ -15,6 +15,13 @@ use Illuminate\Support\Facades\Log;
 
 class DataImportController extends Controller
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth',
+            'super_admin'
+        ];
+    }
     /**
      * Display import page
      */

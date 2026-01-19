@@ -13,6 +13,12 @@ use Illuminate\Support\Facades\DB;
 
 class AdminDashboardController extends Controller
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth'
+        ];
+    }
     public function index(Request $request)
     {
         // Get selected month and year from request, default to current month

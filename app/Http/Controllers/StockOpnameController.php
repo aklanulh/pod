@@ -12,6 +12,12 @@ use Illuminate\Support\Facades\Log;
 
 class StockOpnameController extends Controller
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth'
+        ];
+    }
     public function index()
     {
         $opnames = StockOpname::with('details')

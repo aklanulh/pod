@@ -14,6 +14,13 @@ use Carbon\Carbon;
 
 class KsoRoiController extends Controller
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth',
+            'super_admin'
+        ];
+    }
     /**
      * Display KSO ROI dashboard
      */

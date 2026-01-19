@@ -10,6 +10,13 @@ use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth',
+            'super_admin'
+        ];
+    }
     public function index(Request $request)
     {
         $isActive = $request->get('is_active', 1);

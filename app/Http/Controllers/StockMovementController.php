@@ -22,6 +22,12 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
 class StockMovementController extends Controller
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth'
+        ];
+    }
     public function stockInIndex(Request $request)
     {
         // Get filter parameters

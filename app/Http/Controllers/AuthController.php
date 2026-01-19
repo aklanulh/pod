@@ -9,11 +9,20 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
+    public static function middleware(): array
+    {
+        return [];
+    }
     /**
-     * Show the login form
+     * Show login form
      */
     public function showLoginForm()
     {
+        // Redirect if already logged in
+        if (Auth::check()) {
+            return redirect('/');
+        }
+
         return view('auth.login');
     }
 
@@ -22,6 +31,11 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
+        // Redirect if already logged in
+        if (Auth::check()) {
+            return redirect('/');
+        }
+
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
@@ -32,7 +46,7 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
-            
+
             // Redirect based on user role
             $user = Auth::user();
             if ($user->isSuperAdmin()) {

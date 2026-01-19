@@ -15,6 +15,13 @@ use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth',
+            'super_admin',
+        ];
+    }
     public function index(Request $request)
     {
         // Get selected month and year from request, default to current month

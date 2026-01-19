@@ -40,7 +40,7 @@ class UserSeeder extends Seeder
                 'name' => 'rani',
                 'email' => 'rani@msa.com',
                 'password' => Hash::make('password'),
-                'role' => 'user',
+                'role' => 'super_admin',
                 'email_verified_at' => now(),
             ],
             [

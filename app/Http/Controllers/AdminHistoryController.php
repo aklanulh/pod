@@ -9,6 +9,13 @@ use Carbon\Carbon;
 
 class AdminHistoryController extends Controller
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth',
+            'super_admin'
+        ];
+    }
     public function index(Request $request)
     {
         $query = AdminActivityLog::with('user')

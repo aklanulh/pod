@@ -7,6 +7,12 @@ use Illuminate\Http\Request;
 
 class ProductCategoryController extends Controller
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth'
+        ];
+    }
     public function index()
     {
         try {

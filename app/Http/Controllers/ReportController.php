@@ -13,6 +13,13 @@ use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth',
+            'super_admin'
+        ];
+    }
     public function index()
     {
         return view('reports.index');

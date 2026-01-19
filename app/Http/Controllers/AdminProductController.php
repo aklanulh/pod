@@ -8,6 +8,12 @@ use App\Models\ProductCategory;
 
 class AdminProductController extends Controller
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth'
+        ];
+    }
     /**
      * Display a listing of products for admin (without financial data)
      */

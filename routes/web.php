@@ -17,6 +17,7 @@ use App\Http\Controllers\CustomerScheduleController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\KsoRoiController;
 use App\Http\Controllers\DataImportController;
+use App\Http\Controllers\UserManagementController;
 
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -157,6 +158,15 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
     Route::get('customers/{customer}/last-purchases', [CustomerScheduleController::class, 'getCustomerLastPurchases'])->name('customers.last-purchases');
     Route::post('customer-schedules/{customerSchedule}/notify', [CustomerScheduleController::class, 'markAsNotified'])->name('customer-schedules.notify');
     Route::post('customer-schedules/{customerSchedule}/complete', [CustomerScheduleController::class, 'markAsCompleted'])->name('customer-schedules.complete');
+
+    // User Management - Super Admin Only
+    Route::prefix('users')->name('users.')->group(function () {
+        Route::get('/', [UserManagementController::class, 'index'])->name('index');
+        Route::get('/{user}/edit', [UserManagementController::class, 'edit'])->name('edit');
+        Route::put('/{user}', [UserManagementController::class, 'update'])->name('update');
+        Route::delete('/{user}', [UserManagementController::class, 'destroy'])->name('destroy');
+        Route::post('/{user}/reset-token', [UserManagementController::class, 'generateResetToken'])->name('reset-token');
+    });
 
     // KSO ROI Routes - Super Admin Only
     Route::prefix('kso-roi')->name('kso-roi.')->group(function () {

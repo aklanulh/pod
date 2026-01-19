@@ -12,6 +12,12 @@ use Illuminate\Support\Facades\Log;
 
 class CustomerScheduleController extends Controller
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth'
+        ];
+    }
     public function index()
     {
         $schedules = CustomerSchedule::with(['customer', 'product'])
