@@ -1,0 +1,3 @@
+code,name,description,category_name,unit,lot_number,expired_date,distribution_permit,price,current_stock,minimum_stock,is_active
+TEST-001,Produk Tidak Aktif,"Ini adalah produk test dengan is_active = false",Alat Kesehatan,Box,LOT001,2024-12-31,DIST001,150000,100,10,FALSE
+TEST-002,Produk Aktif,"Ini adalah produk test dengan is_active = true",Alat Kesehatan,Box,LOT002,2024-12-31,DIST002,200000,50,5,TRUE

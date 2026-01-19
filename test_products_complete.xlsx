@@ -1,0 +1,7 @@
+code,name,description,category_name,unit,lot_number,expired_date,distribution_permit,price,current_stock,minimum_stock,is_active
+TEST-FALSE-001,Produk Tidak Aktif 1,"Produk test dengan is_active false",Alat Kesehatan,Box,LOT001,2024-12-31,DIST001,150000,100,10,FALSE
+TEST-FALSE-002,Produk Tidak Aktif 2,"Produk test kedua dengan is_active false",Alat Kesehatan,Box,LOT002,2024-12-31,DIST002,200000,50,5,FALSE
+TEST-FALSE-003,Produk Tidak Aktif 3,"Produk test ketiga dengan is_active false",Alat Kesehatan,Box,LOT003,2024-12-31,DIST003,300000,0,3,FALSE
+TEST-TRUE-001,Produk Aktif 1,"Produk test dengan is_active true",Alat Kesehatan,Box,LOT004,2024-12-31,DIST004,100000,100,10,TRUE
+TEST-TRUE-002,Produk Aktif 2,"Produk test kedua dengan is_active true",Alat Kesehatan,Box,LOT005,2024-12-31,DIST005,250000,25,5,TRUE
+TEST-TRUE-003,Produk Aktif 3,"Produk test ketiga dengan is_active true",Alat Kesehatan,Box,LOT006,2024-12-31,DIST006,500000,50,5,TRUE

@@ -22,6 +22,32 @@ class ImportProductsImport implements ToModel, WithHeadingRow, WithValidation, S
     private $skippedRows = 0;
 
     /**
+     * Parse boolean value from Excel
+     */
+    private function parseBooleanValue($value)
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_numeric($value)) {
+            return (int)$value === 1;
+        }
+
+        if (is_string($value)) {
+            $value = strtolower(trim($value));
+            if (in_array($value, ['false', '0', 'no', 'tidak', 'inactive', 'tidak aktif'])) {
+                return false;
+            }
+            if (in_array($value, ['true', '1', 'yes', 'ya', 'active', 'aktif'])) {
+                return true;
+            }
+        }
+
+        return true; // Default to true if value is unclear
+    }
+
+    /**
      * Find product by code with caching
      */
     private function findProductByCode($code)
@@ -70,6 +96,12 @@ class ImportProductsImport implements ToModel, WithHeadingRow, WithValidation, S
                 }
             }
 
+            // Handle is_active value from Excel
+            $isActive = true; // Default to true
+            if (isset($row['is_active'])) {
+                $isActive = $this->parseBooleanValue($row['is_active']);
+            }
+
             return new Product([
                 'code' => $row['code'],
                 'name' => $row['name'],
@@ -82,6 +114,7 @@ class ImportProductsImport implements ToModel, WithHeadingRow, WithValidation, S
                 'price' => is_numeric(trim($row['price'] ?? '')) && trim($row['price'] ?? '') !== '' ? (float)$row['price'] : 0,
                 'current_stock' => is_numeric(trim($row['current_stock'] ?? '')) && trim($row['current_stock'] ?? '') !== '' ? (int)$row['current_stock'] : 0,
                 'minimum_stock' => is_numeric($row['minimum_stock']) ? $row['minimum_stock'] : 0,
+                'is_active' => $isActive,
             ]);
         } catch (\Exception $e) {
             Log::error('Error processing row: ' . json_encode($row));

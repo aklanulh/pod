@@ -112,13 +112,83 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. Pemesanan</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. Invoice</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Transaksi</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Item</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Qty</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'order_number', 'sort_order' => request('sort_by') == 'order_number' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
+                           class="flex items-center hover:text-gray-700">
+                            No. Pemesanan
+                            @if(request('sort_by') == 'order_number')
+                                <i class="fas fa-caret-{{ request('sort_order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
+                            @else
+                                <i class="fas fa-sort ml-1 text-gray-400"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'invoice_number', 'sort_order' => request('sort_by') == 'invoice_number' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
+                           class="flex items-center hover:text-gray-700">
+                            No. Invoice
+                            @if(request('sort_by') == 'invoice_number')
+                                <i class="fas fa-caret-{{ request('sort_order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
+                            @else
+                                <i class="fas fa-sort ml-1 text-gray-400"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'transaction_date', 'sort_order' => request('sort_by') == 'transaction_date' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
+                           class="flex items-center hover:text-gray-700">
+                            Tanggal Transaksi
+                            @if(request('sort_by') == 'transaction_date')
+                                <i class="fas fa-caret-{{ request('sort_order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
+                            @else
+                                <i class="fas fa-sort ml-1 text-gray-400"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'customer_id', 'sort_order' => request('sort_by') == 'customer_id' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
+                           class="flex items-center hover:text-gray-700">
+                            Customer
+                            @if(request('sort_by') == 'customer_id')
+                                <i class="fas fa-caret-{{ request('sort_order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
+                            @else
+                                <i class="fas fa-sort ml-1 text-gray-400"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'items_count', 'sort_order' => request('sort_by') == 'items_count' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
+                           class="flex items-center hover:text-gray-700">
+                            Jumlah Item
+                            @if(request('sort_by') == 'items_count')
+                                <i class="fas fa-caret-{{ request('sort_order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
+                            @else
+                                <i class="fas fa-sort ml-1 text-gray-400"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'total_quantity', 'sort_order' => request('sort_by') == 'total_quantity' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
+                           class="flex items-center hover:text-gray-700">
+                            Total Qty
+                            @if(request('sort_by') == 'total_quantity')
+                                <i class="fas fa-caret-{{ request('sort_order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
+                            @else
+                                <i class="fas fa-sort ml-1 text-gray-400"></i>
+                            @endif
+                        </a>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'total_amount', 'sort_order' => request('sort_by') == 'total_amount' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
+                           class="flex items-center hover:text-gray-700">
+                            Total Amount
+                            @if(request('sort_by') == 'total_amount')
+                                <i class="fas fa-caret-{{ request('sort_order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
+                            @else
+                                <i class="fas fa-sort ml-1 text-gray-400"></i>
+                            @endif
+                        </a>
+                    </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                 </tr>
             </thead>

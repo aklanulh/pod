@@ -34,7 +34,12 @@ class CustomerController extends Controller
 
         $customers = $query->get();
 
-        return view('customers.index', compact('customers', 'isActive', 'search'));
+        // Get counts for different statuses
+        $totalCustomers = Customer::count();
+        $activeCustomers = Customer::where('is_active', true)->count();
+        $inactiveCustomers = Customer::where('is_active', false)->count();
+
+        return view('customers.index', compact('customers', 'isActive', 'search', 'totalCustomers', 'activeCustomers', 'inactiveCustomers'));
     }
 
     public function create()

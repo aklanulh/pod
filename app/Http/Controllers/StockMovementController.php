@@ -7,10 +7,12 @@ use App\Models\ProductCategory;
 use App\Models\StockMovement;
 use App\Models\Supplier;
 use App\Models\Customer;
+use App\Models\PONumber;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -28,6 +30,8 @@ class StockMovementController extends Controller
         $dateTo = $request->get('date_to');
         $orderNumber = $request->get('order_number');
         $invoiceNumber = $request->get('invoice_number');
+        $sortBy = $request->get('sort_by', 'updated_at');
+        $sortOrder = $request->get('sort_order', 'desc');
 
         // Build query with filters
         $query = StockMovement::stockIn()
@@ -56,7 +60,6 @@ class StockMovementController extends Controller
 
         // Group stock movements by transaction batch
         $stockInGroups = $query
-            ->orderBy('transaction_date', 'desc')
             ->get()
             ->groupBy(function ($item) {
                 // Group by combination of order_number, invoice_number, supplier_id, and date
@@ -93,6 +96,51 @@ class StockMovementController extends Controller
             })
             ->values();
 
+        // Sort the grouped results
+        if (in_array($sortBy, ['items_count', 'total_quantity', 'total_amount'])) {
+            $stockInGroups = $sortOrder === 'desc'
+                ? $stockInGroups->sortByDesc($sortBy)->values()
+                : $stockInGroups->sortBy($sortBy)->values();
+        } else {
+            // For other fields, sort before grouping
+            $stockInGroups = $query
+                ->orderBy($sortBy, $sortOrder)
+                ->get()
+                ->groupBy(function ($item) {
+                    return $item->order_number . '|' . $item->invoice_number . '|' . $item->supplier_id . '|' . $item->transaction_date->format('Y-m-d');
+                })
+                ->map(function ($group) {
+                    $first = $group->first();
+
+                    // Calculate subtotal (before tax) for each item
+                    $subtotal = $group->sum(function ($item) {
+                        return $item->quantity * $item->unit_price;
+                    });
+
+                    // Calculate total amount (subtotal + tax if applicable)
+                    $totalAmount = $subtotal;
+                    if ($first->include_tax) {
+                        $totalAmount = $subtotal + ($subtotal * 0.11); // Add 11% PPN
+                    }
+
+                    return (object) [
+                        'id' => $first->id,
+                        'order_number' => $first->order_number,
+                        'invoice_number' => $first->invoice_number,
+                        'supplier' => $first->supplier,
+                        'transaction_date' => $first->transaction_date,
+                        'notes' => $first->notes,
+                        'include_tax' => $first->include_tax,
+                        'items_count' => $group->count(),
+                        'total_quantity' => $group->sum('quantity'),
+                        'subtotal_amount' => $subtotal,
+                        'total_amount' => $totalAmount,
+                        'items' => $group
+                    ];
+                })
+                ->values();
+        }
+
         // Paginate the grouped results
         $perPage = 25;
         $currentPage = request()->get('page', 1);
@@ -113,7 +161,7 @@ class StockMovementController extends Controller
         // Get all suppliers for filter dropdown
         $suppliers = \App\Models\Supplier::active()->orderBy('name')->get();
 
-        return view('stock.in.index', compact('stockIns', 'draftCount', 'suppliers'));
+        return view('stock.in.index', compact('stockIns', 'draftCount', 'suppliers', 'sortBy', 'sortOrder'));
     }
 
     public function stockInDraftIndex()
@@ -127,7 +175,7 @@ class StockMovementController extends Controller
 
     public function stockInCreate()
     {
-        $products = Product::orderBy('name')->get(['id', 'code', 'name', 'unit', 'current_stock']);
+        $products = Product::active()->orderBy('name')->get(['id', 'code', 'name', 'unit', 'current_stock']);
         $suppliers = Supplier::active()->orderBy('name')->get();
         $categories = \App\Models\ProductCategory::orderBy('name')->get();
 
@@ -145,6 +193,7 @@ class StockMovementController extends Controller
                 'supplier_id' => 'required|exists:suppliers,id',
                 'order_number' => 'nullable|string|max:255',
                 'invoice_number' => 'nullable|string|max:255',
+                'invoice_date' => 'nullable|date',
                 'notes' => 'nullable',
                 'transaction_date' => 'required|date',
                 'include_tax' => 'nullable|in:0,1,true,false',
@@ -162,6 +211,7 @@ class StockMovementController extends Controller
             DB::transaction(function () use ($request) {
                 $supplierId = $request->supplier_id;
                 $transactionDate = $request->transaction_date;
+                $invoiceDate = $request->invoice_date;
                 $notes = $request->notes;
 
                 // Tax information
@@ -173,12 +223,17 @@ class StockMovementController extends Controller
                 $orderNumber = $request->order_number;
                 if (empty($orderNumber)) {
                     $orderNumber = $this->generatePONumber($transactionDate);
+
+                    // Simpan ke po_numbers table saat menyimpan stok sebenarnya
+                    $date = is_string($transactionDate) ? \Carbon\Carbon::parse($transactionDate) : $transactionDate;
+                    PONumber::savePO($orderNumber, $date->month, $date->year, (int)substr($orderNumber, 0, 4));
                 }
 
                 // Generate invoice number if not provided
                 $invoiceNumber = $request->invoice_number;
                 if (empty($invoiceNumber)) {
-                    $invoiceNumber = $this->generateInvoiceNumber($transactionDate, 'in');
+                    $date = is_string($transactionDate) ? \Carbon\Carbon::parse($transactionDate) : $transactionDate;
+                    $invoiceNumber = $date->format('dmY'); // ddmmyyyy format
                 }
 
                 // Calculate subtotal
@@ -200,14 +255,16 @@ class StockMovementController extends Controller
                     // Create stock movement
                     StockMovement::create([
                         'reference_number' => $referenceNumber,
-                        'order_number' => $request->order_number,
+                        'order_number' => $orderNumber,
                         'invoice_number' => $invoiceNumber,
+                        'invoice_date' => $invoiceDate,
                         'product_id' => $productData['product_id'],
                         'type' => 'in',
                         'quantity' => $productData['quantity'],
                         'stock_before' => $stockBefore,
                         'stock_after' => $stockAfter,
                         'unit_price' => $productData['unit_price'],
+                        'discount_percent' => $productData['discount'] ?? 0,
                         'include_tax' => $includeTax,
                         'tax_amount' => $taxAmount,
                         'subtotal_amount' => $subtotalAmount,
@@ -240,6 +297,8 @@ class StockMovementController extends Controller
         $dateTo = $request->get('date_to');
         $orderNumber = $request->get('order_number');
         $invoiceNumber = $request->get('invoice_number');
+        $sortBy = $request->get('sort_by', 'updated_at');
+        $sortOrder = $request->get('sort_order', 'desc');
 
         // Build query with filters
         $query = StockMovement::stockOut()
@@ -268,7 +327,6 @@ class StockMovementController extends Controller
 
         // Group stock movements by transaction batch
         $stockOutGroups = $query
-            ->orderBy('transaction_date', 'desc')
             ->get()
             ->groupBy(function ($item) {
                 // Group by combination of order_number, invoice_number, customer_id, and date
@@ -309,6 +367,55 @@ class StockMovementController extends Controller
             })
             ->values();
 
+        // Sort grouped results
+        if (in_array($sortBy, ['items_count', 'total_quantity', 'total_amount'])) {
+            $stockOutGroups = $sortOrder === 'desc'
+                ? $stockOutGroups->sortByDesc($sortBy)->values()
+                : $stockOutGroups->sortBy($sortBy)->values();
+        } else {
+            // For other fields, sort before grouping
+            $stockOutGroups = $query
+                ->orderBy($sortBy, $sortOrder)
+                ->get()
+                ->groupBy(function ($item) {
+                    return $item->order_number . '|' . $item->invoice_number . '|' . $item->customer_id . '|' . $item->transaction_date->format('Y-m-d');
+                })
+                ->map(function ($group) {
+                    $first = $group->first();
+
+                    // Calculate subtotal (before tax) for each item
+                    $subtotal = $group->sum(function ($item) {
+                        $itemSubtotal = $item->quantity * $item->unit_price;
+                        if ($item->discount_percent > 0) {
+                            $itemSubtotal = $itemSubtotal - ($itemSubtotal * ($item->discount_percent / 100));
+                        }
+                        return $itemSubtotal;
+                    });
+
+                    // Calculate total amount (subtotal + tax if applicable)
+                    $totalAmount = $subtotal;
+                    if ($first->include_tax) {
+                        $totalAmount = $subtotal + ($subtotal * 0.11); // Add 11% PPN
+                    }
+
+                    return (object) [
+                        'id' => $first->id,
+                        'order_number' => $first->order_number,
+                        'invoice_number' => $first->invoice_number,
+                        'customer' => $first->customer,
+                        'transaction_date' => $first->transaction_date,
+                        'notes' => $first->notes,
+                        'include_tax' => $first->include_tax,
+                        'items_count' => $group->count(),
+                        'total_quantity' => $group->sum('quantity'),
+                        'subtotal_amount' => $subtotal,
+                        'total_amount' => $totalAmount,
+                        'items' => $group
+                    ];
+                })
+                ->values();
+        }
+
         // Paginate the grouped results
         $perPage = 25;
         $currentPage = request()->get('page', 1);
@@ -329,7 +436,7 @@ class StockMovementController extends Controller
         // Get all customers for filter dropdown
         $customers = \App\Models\Customer::active()->orderBy('name')->get();
 
-        return view('stock.out.index', compact('stockOuts', 'draftCount', 'customers'));
+        return view('stock.out.index', compact('stockOuts', 'draftCount', 'customers', 'sortBy', 'sortOrder'));
     }
 
     public function stockOutCreate()
@@ -1212,11 +1319,24 @@ class StockMovementController extends Controller
         try {
             $draft = \App\Models\StockInDraft::findOrFail($id);
 
-            $cartDataJson = $request->input('cart_data', '[]');
-            $cartData = json_decode($cartDataJson, true);
+            // Get cart data from form submission (HTML format)
+            $productsData = $request->input('products', []);
 
-            if (empty($cartData) || !is_array($cartData)) {
-                return response()->json(['success' => false, 'message' => 'Tidak ada data produk untuk disimpan'], 400);
+            if (empty($productsData) || !is_array($productsData)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Tidak ada data produk untuk disimpan');
+            }
+
+            // Convert products data to cart_data format
+            $cartData = [];
+            foreach ($productsData as $product) {
+                $cartData[] = [
+                    'product_id' => $product['product_id'],
+                    'quantity' => $product['quantity'],
+                    'unit_price' => $product['unit_price'],
+                    'discount' => $product['discount'] ?? 0
+                ];
             }
 
             $draft->supplier_id = $request->input('supplier_id') ?: null;
@@ -1231,16 +1351,12 @@ class StockMovementController extends Controller
 
             $draft->save();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Draft stok masuk berhasil diupdate',
-                'draft_id' => $draft->id
-            ]);
+            return redirect()->route('stock.in.draft.index')
+                ->with('success', 'Draft stok masuk berhasil diupdate');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengupdate draft: ' . $e->getMessage()
-            ], 500);
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Gagal mengupdate draft: ' . $e->getMessage());
         }
     }
 
@@ -1268,8 +1384,18 @@ class StockMovementController extends Controller
                 $transactionDate = $draft->transaction_date;
                 $notes = $draft->notes;
 
+                // Generate PO number if not provided
+                $orderNumber = $draft->order_number;
+                if (empty($orderNumber)) {
+                    $orderNumber = $this->generatePONumber($transactionDate);
+
+                    // Simpan ke po_numbers table saat memproses draft
+                    $date = is_string($transactionDate) ? \Carbon\Carbon::parse($transactionDate) : $transactionDate;
+                    PONumber::savePO($orderNumber, $date->month, $date->year, (int)substr($orderNumber, 0, 4));
+                }
+
                 // Generate base reference number for this batch
-                $baseRefNumber = 'IN-' . date('Ymd', strtotime($transactionDate)) . '-' . str_pad(StockMovement::stockIn()->whereDate('created_at', today())->count() + 1, 4, '0', STR_PAD_LEFT);
+                $baseRefNumber = 'IN-' . date('Ymd', strtotime($transactionDate)) . '-' . str_pad(StockMovement::stockIn()->whereDate('transaction_date', $transactionDate)->count() + 1, 4, '0', STR_PAD_LEFT);
 
                 foreach ($draft->cart_data as $index => $productData) {
                     $product = Product::find($productData['product_id']);
@@ -1291,7 +1417,7 @@ class StockMovementController extends Controller
 
                     StockMovement::create([
                         'reference_number' => $referenceNumber,
-                        'order_number' => $draft->order_number,
+                        'order_number' => $orderNumber,
                         'invoice_number' => $draft->invoice_number,
                         'product_id' => $productData['product_id'],
                         'supplier_id' => $supplierId,
@@ -1349,6 +1475,14 @@ class StockMovementController extends Controller
             $invoiceNumber = $request->input('invoice_number');
             $supplierId = $request->input('supplier_id');
             $transactionDate = $request->input('transaction_date');
+            $includeTax = $request->input('include_tax') === '1';
+            $taxAmount = $request->input('tax_amount', 0);
+            $finalAmount = $request->input('final_amount', 0);
+
+            // Generate PO number if not provided
+            if (empty($orderNumber)) {
+                $orderNumber = $this->generatePONumber($transactionDate);
+            }
 
             // Check if this is from draft form (products array)
             $productsData = $request->input('products', []);
@@ -1371,8 +1505,9 @@ class StockMovementController extends Controller
                         $movement->supplier = $supplier;
                         $movement->quantity = $productData['quantity'];
                         $movement->unit_price = $productData['unit_price'];
+                        $movement->discount = (float)($productData['discount'] ?? 0);
                         $movement->transaction_date = $transactionDate;
-                        $movement->include_tax = false; // Default, can be enhanced
+                        $movement->include_tax = $includeTax; // Use actual tax setting
                         $movement->notes = ''; // Add empty notes property
                         $stockMovements->push($movement);
                     }
@@ -1389,6 +1524,7 @@ class StockMovementController extends Controller
                     ->where('invoice_number', $invoiceNumber)
                     ->where('supplier_id', $supplierId)
                     ->whereDate('transaction_date', $transactionDate)
+                    ->select(['reference_number', 'order_number', 'invoice_number', 'invoice_date', 'product_id', 'type', 'quantity', 'stock_before', 'stock_after', 'unit_price', 'discount_percent', 'include_tax', 'tax_amount', 'subtotal_amount', 'final_amount', 'supplier_id', 'supplier_name', 'notes', 'payment_terms', 'transaction_date'])
                     ->get();
 
                 if ($stockMovements->isEmpty()) {
@@ -1401,12 +1537,23 @@ class StockMovementController extends Controller
             // Calculate totals
             $subtotal = 0;
             foreach ($stockMovements as $movement) {
-                $subtotal += $movement->quantity * $movement->unit_price;
+                $itemTotal = $movement->quantity * $movement->unit_price;
+                $discountAmount = $itemTotal * (($movement->discount ?? 0) / 100);
+                $subtotal += ($itemTotal - $discountAmount);
             }
 
-            $includeTax = $stockMovements->first()->include_tax;
-            $taxAmount = $includeTax ? $subtotal * 0.11 : 0;
-            $finalAmount = $subtotal + $taxAmount;
+            // Use tax data from request for draft, or from existing data
+            if (!empty($productsData)) {
+                // Use tax data from request
+                $includeTax = $request->input('include_tax') === '1';
+                $taxAmount = $request->input('tax_amount', 0);
+                $finalAmount = $request->input('final_amount', $subtotal);
+            } else {
+                // Use tax data from existing movements
+                $includeTax = $stockMovements->first()->include_tax;
+                $taxAmount = $includeTax ? $subtotal * 0.11 : 0;
+                $finalAmount = $subtotal + $taxAmount;
+            }
 
             // Generate terbilang
             $terbilang = $this->terbilang($finalAmount);
@@ -1479,32 +1626,35 @@ class StockMovementController extends Controller
     }
 
     /**
-     * Generate PO number with format: [RUNNING_NUMBER]/[PO_CODE]/[MONTH]/[YEAR]
+     * Generate PO number with format: [RUNNING_NUMBER]/YP/[MONTH]/MSA/[YEAR]
      * Example: 1572/YP/I/MSA/26 (No 1572, PO Code YP/MSA, Month I, Year 26)
      */
     private function generatePONumber($transactionDate)
     {
         $date = is_string($transactionDate) ? \Carbon\Carbon::parse($transactionDate) : $transactionDate;
+        $month = $date->month;
+        $year = $date->year;
 
-        // Month in Roman numeral
-        $monthRoman = $this->numberToRoman($date->month);
-        $yearShort = $date->format('y'); // 26 for 2026
+        // Get last PO number for this month/year from dedicated table
+        $lastPO = PONumber::getLastPO($month, $year);
 
-        // Get last PO for this month
-        $lastPO = StockMovement::where('type', 'in')
-            ->whereMonth('transaction_date', $date->month)
-            ->whereYear('transaction_date', $date->year)
-            ->whereNotNull('order_number')
-            ->orderBy('order_number', 'desc')
-            ->first();
-
-        if ($lastPO && preg_match('/^(\d+)\/YP\/I\/MSA\/\d{2}$/', $lastPO->order_number, $matches)) {
-            $runningNumber = (int)$matches[1] + 1;
+        if ($lastPO) {
+            $runningNumber = $lastPO->last_number + 1;
         } else {
-            $runningNumber = 1;
+            // Start from 1572 as requested (continuing from previous)
+            $runningNumber = 1572;
         }
 
-        return sprintf('%04d/YP/I/MSA/%s', $runningNumber, $yearShort);
+        // Generate PO number
+        $monthRoman = $this->numberToRoman($month);
+        $yearShort = $date->format('y');
+        $poNumber = sprintf('%04d/YP/%s/MSA/%s', $runningNumber, $monthRoman, $yearShort);
+
+        // JANGAN simpan ke po_numbers table saat generate PO untuk print
+        // Hanya simpan saat menyimpan stok sebenarnya di stockInStore
+        // PONumber::savePO($poNumber, $month, $year, $runningNumber);
+
+        return $poNumber;
     }
 
     /**

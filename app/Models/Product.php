@@ -21,11 +21,13 @@ class Product extends Model
         'price',
         'current_stock',
         'minimum_stock',
+        'is_active',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'expired_date' => 'date',
+        'is_active' => 'boolean',
     ];
 
     public function category()
@@ -46,6 +48,11 @@ class Product extends Model
     public function customerSchedules()
     {
         return $this->hasMany(CustomerSchedule::class);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 
     public function scopeLowStock($query)

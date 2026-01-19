@@ -13,6 +13,7 @@ class StockMovement extends Model
         'reference_number',
         'order_number',
         'invoice_number',
+        'invoice_date',
         'product_id',
         'type',
         'quantity',
@@ -42,7 +43,8 @@ class StockMovement extends Model
         'subtotal_amount' => 'decimal:2',
         'final_amount' => 'decimal:2',
         'include_tax' => 'boolean',
-        'transaction_date' => 'datetime'
+        'transaction_date' => 'datetime',
+        'invoice_date' => 'date'
     ];
 
     public function product()

@@ -10,15 +10,49 @@
             <p class="text-gray-600">Daftar stok produk saat ini</p>
         </div>
         <div class="flex space-x-3">
+            <a href="{{ route('reports.stock', ['is_active' => 1]) }}" 
+               class="inline-flex items-center px-3 py-1 text-sm rounded-lg @if($isActive == 1) bg-green-600 text-white @else bg-gray-200 text-gray-700 hover:bg-gray-300 @endif">
+                <i class="fas fa-check-circle mr-1"></i> Aktif
+            </a>
+            <a href="{{ route('reports.stock', ['is_active' => 0]) }}" 
+               class="inline-flex items-center px-3 py-1 text-sm rounded-lg @if($isActive == 0) bg-red-600 text-white @else bg-gray-200 text-gray-700 hover:bg-gray-300 @endif">
+                <i class="fas fa-times-circle mr-1"></i> Tidak Aktif
+            </a>
+            <a href="{{ route('reports.stock') }}" 
+               class="inline-flex items-center px-3 py-1 text-sm rounded-lg @if($isActive === null) bg-blue-600 text-white @else bg-gray-200 text-gray-700 hover:bg-gray-300 @endif">
+                <i class="fas fa-boxes mr-1"></i> Semua
+            </a>
             <a href="{{ route('reports.export.stock', request()->query()) }}" 
-               class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors">
-                <i class="fas fa-file-excel mr-2"></i>
+               class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-sm rounded-lg transition-colors">
+                <i class="fas fa-file-excel mr-1"></i>
                 Export Excel
             </a>
-            <a href="{{ route('reports.index') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md">
-                <i class="fas fa-arrow-left mr-2"></i>Kembali
+            <a href="{{ route('reports.index') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 text-sm rounded-lg">
+                <i class="fas fa-arrow-left mr-1"></i>Kembali
             </a>
         </div>
+    </div>
+    <div class="mt-2 text-sm text-gray-600">
+        Menampilkan {{ $products->count() }} dari {{ $totalProducts }} produk total
+        @if($isActive == 1)
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <i class="fas fa-check-circle mr-1"></i> Aktif ({{ $activeProducts }})
+            </span>
+        @elseif($isActive == 0)
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                <i class="fas fa-times-circle mr-1"></i> Tidak Aktif ({{ $inactiveProducts }})
+            </span>
+        @else
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <i class="fas fa-boxes mr-1"></i> Semua ({{ $totalProducts }})
+            </span>
+        @endif
+        @if($request->category_id)
+            untuk kategori "{{ \App\Models\ProductCategory::find($request->category_id)->name }}"
+        @endif
+        @if($request->low_stock)
+            dengan filter stok menipis
+        @endif
     </div>
 </div>
 
@@ -120,53 +154,233 @@
 </div>
 
 <!-- Summary Cards -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center">
-            <div class="p-3 rounded-full bg-blue-100 text-blue-500">
-                <i class="fas fa-boxes text-xl"></i>
-            </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">Total Produk</p>
-                <p class="text-2xl font-semibold text-gray-900">{{ $products->count() }}</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center">
-            <div class="p-3 rounded-full bg-green-100 text-green-500">
-                <i class="fas fa-check-circle text-xl"></i>
-            </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">Stok Aman</p>
-                <p class="text-2xl font-semibold text-gray-900">{{ $products->filter(function($product) { return $product->current_stock > $product->minimum_stock; })->count() }}</p>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+    @if($isActive == 1)
+        <!-- Active Products Summary -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-blue-100 text-blue-500">
+                    <i class="fas fa-boxes text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Produk Aktif</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ $activeProducts }}</p>
+                </div>
             </div>
         </div>
-    </div>
-    
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center">
-            <div class="p-3 rounded-full bg-red-100 text-red-500">
-                <i class="fas fa-exclamation-triangle text-xl"></i>
-            </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">Stok Menipis</p>
-                <p class="text-2xl font-semibold text-gray-900">{{ $products->filter(function($product) { return $product->current_stock <= $product->minimum_stock; })->count() }}</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center">
-            <div class="p-3 rounded-full bg-yellow-100 text-yellow-500">
-                <i class="fas fa-calculator text-xl"></i>
-            </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">Total Nilai Stok</p>
-                <p class="text-2xl font-semibold text-gray-900">Rp {{ number_format($products->sum(function($product) { return $product->current_stock * $product->price; }), 0, ',', '.') }}</p>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-100 text-green-500">
+                    <i class="fas fa-check-circle text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Stok Aman</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ $products->filter(function($product) { return $product->current_stock > $product->minimum_stock; })->count() }}</p>
+                </div>
             </div>
         </div>
-    </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-yellow-100 text-yellow-500">
+                    <i class="fas fa-exclamation-triangle text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Stok Menipis</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ $products->filter(function($product) { return $product->current_stock <= $product->minimum_stock; })->count() }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-red-100 text-red-500">
+                    <i class="fas fa-times-circle text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Stok Habis</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ $products->where('current_stock', 0)->count() }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-orange-100 text-orange-500">
+                    <i class="fas fa-calculator text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Nilai Stok Aktif</p>
+                    <p class="text-2xl font-semibold text-gray-900">
+                        Rp {{ number_format($products->sum(function($product) { 
+                            return $product->current_stock * $product->price; 
+                        }), 0, ',', '.') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    @elseif($isActive == 0)
+        <!-- Inactive Products Summary -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-gray-100 text-gray-500">
+                    <i class="fas fa-boxes text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Produk Tidak Aktif</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ $inactiveProducts }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-blue-100 text-blue-500">
+                    <i class="fas fa-info-circle text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Status Stok (Tidak Aktif)</p>
+                    <p class="text-2xl font-semibold text-gray-900">
+                        @php
+                            $safeStock = $products->filter(function($product) { return $product->current_stock > 0; })->count();
+                            $lowStock = $products->filter(function($product) { return $product->current_stock <= $product->minimum_stock; })->count();
+                            $outOfStock = $products->filter(function($product) { return $product->current_stock == 0; })->count();
+                        @endphp
+                        {{ $safeStock }} Aman, {{ $lowStock }} Menipis, {{ $outOfStock }} Habis
+                    @endphp
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-yellow-100 text-yellow-500">
+                    <i class="fas fa-calculator text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Nilai Stok (Tidak Aktif)</p>
+                    <p class="text-2xl font-semibold text-gray-900">
+                        Rp {{ number_format($products->sum(function($product) { 
+                            return $product->current_stock * $product->price; 
+                        }), 0, ',', '.') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-purple-100 text-purple-500">
+                    <i class="fas fa-chart-line text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Rata-rata Nilai/Produk</p>
+                    <p class="text-2xl font-semibold text-gray-900">
+                        Rp {{ $products->count() > 0 ? number_format($products->sum(function($product) { 
+                            return $product->current_stock * $product->price; 
+                        }) / $products->count(), 0, ',', '.') : 0 }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    @else
+        <!-- All Products Summary -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-blue-100 text-blue-500">
+                    <i class="fas fa-boxes text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Produk</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ $totalProducts }}</p>
+                    <p class="text-xs text-gray-500 mt-1">{{ round(($activeProducts / $totalProducts) * 100, 1) }}% aktif, {{ round(($inactiveProducts / $totalProducts) * 100, 1) }}% tidak aktif</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-100 text-green-500">
+                    <i class="fas fa-check-circle text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Produk Aktif</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ $activeProducts }}</p>
+                    <p class="text-xs text-gray-500 mt-1">{{ round(($activeProducts / $totalProducts) * 100, 1) }}% dari total</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-red-100 text-red-500">
+                    <i class="fas fa-times-circle text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Produk Tidak Aktif</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ $inactiveProducts }}</p>
+                    <p class="text-xs text-gray-500 mt-1">{{ round(($inactiveProducts / $totalProducts) * 100, 1) }}% dari total</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-yellow-100 text-yellow-500">
+                    <i class="fas fa-exclamation-triangle text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Stok Menipis</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ $products->filter(function($product) { return $product->current_stock <= $product->minimum_stock; })->count() }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-red-100 text-red-500">
+                    <i class="fas fa-times-circle text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Stok Habis</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ $products->where('current_stock', 0)->count() }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-orange-100 text-orange-500">
+                    <i class="fas fa-calculator text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Nilai Stok</p>
+                    <p class="text-2xl font-semibold text-gray-900">
+                        Rp {{ number_format($products->sum(function($product) { 
+                            return $product->current_stock * $product->price; 
+                        }), 0, ',', '.') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-purple-100 text-purple-500">
+                    <i class="fas fa-chart-line text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Rata-rata Nilai/Produk</p>
+                    <p class="text-2xl font-semibold text-gray-900">
+                        Rp {{ $products->count() > 0 ? number_format($products->sum(function($product) { 
+                            return $product->current_stock * $product->price; 
+                        }) / $products->count(), 0, ',', '.') : 0 }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
 @endsection

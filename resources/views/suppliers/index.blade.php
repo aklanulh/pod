@@ -6,6 +6,25 @@
 <div class="flex justify-between items-center mb-6">
     <div>
         <h1 class="text-2xl font-bold text-gray-900">Daftar Supplier</h1>
+        <div class="mt-2 text-sm text-gray-600">
+            Menampilkan {{ $suppliers->count() }} dari {{ $totalSuppliers }} supplier total
+            @if($isActive == 1)
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <i class="fas fa-user-check mr-1"></i> Aktif ({{ $activeSuppliers }})
+                </span>
+            @elseif($isActive == 0)
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    <i class="fas fa-user-times mr-1"></i> Tidak Aktif ({{ $inactiveSuppliers }})
+                </span>
+            @else
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <i class="fas fa-users mr-1"></i> Semua ({{ $totalSuppliers }})
+                </span>
+            @endif
+            @if($search)
+                untuk pencarian "{{ $search }}"
+            @endif
+        </div>
         <div class="mt-2 flex space-x-2">
             <a href="{{ route('suppliers.index', ['is_active' => 1]) }}" 
                class="px-3 py-1 text-sm rounded-lg @if($isActive == 1) bg-green-600 text-white @else bg-gray-200 text-gray-700 hover:bg-gray-300 @endif">

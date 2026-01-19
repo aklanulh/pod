@@ -4,18 +4,61 @@
 
 @section('content')
 <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold text-gray-900">Daftar Produk</h1>
-    <div class="flex space-x-3">
-        <div class="relative">
-            <input type="text" 
-                   id="searchInput" 
-                   placeholder="Cari produk..." 
-                   class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 w-64"
-                   value="{{ request('search', '') }}">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="fas fa-search text-gray-400"></i>
-            </div>
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Daftar Produk</h1>
+        <div class="mt-2 text-sm text-gray-600">
+            Menampilkan {{ $products->count() }} dari {{ $totalProducts }} produk total
+            @if($isActive == 1)
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <i class="fas fa-check-circle mr-1"></i> Aktif ({{ $activeProducts }})
+                </span>
+            @elseif($isActive == 0)
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    <i class="fas fa-times-circle mr-1"></i> Tidak Aktif ({{ $inactiveProducts }})
+                </span>
+            @else
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <i class="fas fa-box mr-1"></i> Semua ({{ $totalProducts }})
+                </span>
+            @endif
+            @if($search)
+                untuk pencarian "{{ $search }}"
+            @endif
         </div>
+        <div class="mt-2 flex space-x-2">
+            <a href="{{ route('products.index', ['is_active' => 1]) }}" 
+               class="px-3 py-1 text-sm rounded-lg @if($isActive == 1) bg-green-600 text-white @else bg-gray-200 text-gray-700 hover:bg-gray-300 @endif">
+                <i class="fas fa-check-circle mr-1"></i> Aktif
+            </a>
+            <a href="{{ route('products.index', ['is_active' => 0]) }}" 
+               class="px-3 py-1 text-sm rounded-lg @if($isActive == 0) bg-red-600 text-white @else bg-gray-200 text-gray-700 hover:bg-gray-300 @endif">
+                <i class="fas fa-times-circle mr-1"></i> Tidak Aktif
+            </a>
+            <a href="{{ route('products.index') }}" 
+               class="px-3 py-1 text-sm rounded-lg @if($isActive === null) bg-blue-600 text-white @else bg-gray-200 text-gray-700 hover:bg-gray-300 @endif">
+                <i class="fas fa-box mr-1"></i> Semua
+            </a>
+        </div>
+    </div>
+    <div class="flex space-x-3">
+        <form method="GET" action="{{ route('products.index') }}" class="flex">
+            @if($isActive !== null)
+                <input type="hidden" name="is_active" value="{{ $isActive }}">
+            @endif
+            <div class="relative">
+                <input type="text" 
+                       name="search" 
+                       placeholder="Cari produk..." 
+                       class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 w-64"
+                       value="{{ $search ?? '' }}">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+            </div>
+            <button type="submit" class="ml-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
         <button onclick="openCategoryModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center">
             <i class="fas fa-tags mr-2"></i>
             Kelola Kategori

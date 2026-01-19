@@ -46,9 +46,14 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            border-bottom: 2px solid #2c3e50;
+            border-bottom: 2px solid #333;
             padding-bottom: 8px;
             margin-bottom: 15px;
+        }
+        
+        .company-logo {
+            flex: 0 0 auto;
+            margin-right: 20px;
         }
         
         .company-info {
@@ -271,7 +276,6 @@
             padding: 8px;
             border: 1px solid #ccc;
             font-size: 8px;
-            background: #fff9e6;
         }
         
         .notes-title {
@@ -306,6 +310,9 @@
     <div class="container">
         <!-- Letterhead -->
         <div class="letterhead">
+            <div class="company-logo">
+                <img src="{{ asset('images/logo.png') }}" alt="PT. MITRAJAYA SELARAS ABADI" style="max-height: 80px;">
+            </div>
             <div class="company-info">
                 <div class="company-name">PT. MITRAJAYA SELARAS ABADI</div>
                 <div class="company-tagline">Laboratory & Medical Equipment</div>
@@ -315,60 +322,40 @@
                     Email: info@mitrajayaselarasabadi.com
                 </div>
             </div>
-            <div class="company-legal">
-                <div><strong>NPWP:</strong> 91.345.678.1-123.000</div>
-                <div><strong>TDP:</strong> 12.34.56.78901234</div>
-                <div><strong>SIUP:</strong> 1234/1234/PK/VI/2023</div>
-            </div>
         </div>
 
         <!-- Document Header -->
         <div class="doc-header">
-            <div class="doc-number">No: {{ $orderNumber ?? 'PO-' . date('Ymd') }}</div>
             <div class="doc-title">Purchase Order</div>
+            <div class="doc-subject">Subject: Pemesanan Barang</div>
+            <div class="doc-number">No: {{ $orderNumber ?? 'PO-' . date('Ymd') }}</div>
         </div>
 
-        <!-- Info Sections -->
+        <!-- Date and Recipient -->
         <div class="info-sections">
             <div class="info-section">
-                <div class="section-title">Supplier</div>
+                <div class="section-title">Kepada:</div>
                 <div class="info-item">
-                    <span class="info-label">Kepada:</span>
                     {{ $supplier->name ?? '-' }}
                 </div>
                 @if($supplier->address)
                     <div class="info-item">
-                        <span class="info-label">Alamat:</span>
                         {{ $supplier->address }}
-                    </div>
-                @endif
-                @if($supplier->phone)
-                    <div class="info-item">
-                        <span class="info-label">Telp:</span>
-                        {{ $supplier->phone }}
                     </div>
                 @endif
             </div>
             
-            <div class="info-section">
-                <div class="section-title">Order Details</div>
+            <div class="info-section text-right">
                 <div class="info-item">
-                    <span class="info-label">No. PO:</span>
-                    {{ $orderNumber ?? '-' }}
-                </div>
-                <div class="info-item">
-                    <span class="info-label">No. Invoice:</span>
-                    {{ $invoiceNumber ?? '-' }}
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Tanggal:</span>
-                    {{ $transactionDate ? $transactionDate->format('d/m/Y') : '-' }}
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Payment:</span>
-                    Transfer
+                    Bogor, {{ $transactionDate ? $transactionDate->format('d F Y') : date('d F Y') }}
                 </div>
             </div>
+        </div>
+
+        <!-- Formal Request Text Before Table -->
+        <div class="notes-section">
+            <p>Dengan hormat,<br>
+            Mohon disediakan pemesanan barang-barang tersebut di bawah ini:</p>
         </div>
 
         <!-- Items Table -->
@@ -376,33 +363,28 @@
             <thead>
                 <tr>
                     <th width="5%">No</th>
-                    <th width="35%">Nama Barang</th>
-                    <th width="10%">Kode</th>
-                    <th width="10%">Jumlah</th>
-                    <th width="15%">Harga Satuan</th>
-                    <th width="15%">Jumlah</th>
+                    <th width="45%">Nama Barang</th>
+                    <th width="10%">HARGA/BOX TERMASUK PPN</th>
+                    <th width="10%">DISC</th>
+                    <th width="10%">QTY</th>
+                    <th width="20%">JUMLAH</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($stockMovements as $index => $movement)
                     <tr>
                         <td class="text-center">{{ $index + 1 }}</td>
-                        <td>
-                            {{ $movement->product->name }}<br>
-                            @if($movement->product->category)
-                                <small>{{ $movement->product->category->name }}</small>
-                            @endif
-                        </td>
-                        <td class="text-center">{{ $movement->product->code }}</td>
-                        <td class="text-center">{{ $movement->quantity }} {{ $movement->product->unit }}</td>
+                        <td>{{ $movement->product->name }}</td>
                         <td class="text-right">Rp {{ number_format($movement->unit_price, 0, ',', '.') }}</td>
-                        <td class="text-right">Rp {{ number_format($movement->quantity * $movement->unit_price, 0, ',', '.') }}</td>
+                        <td class="text-center">{{ ($movement->discount ?? 0) }}%</td>
+                        <td class="text-center">{{ $movement->quantity }} {{ $movement->product->unit }}</td>
+                        <td class="text-right">Rp {{ number_format($movement->quantity * $movement->unit_price * (1 - (($movement->discount ?? 0) / 100)), 0, ',', '.') }}</td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
 
-        <!-- Totals -->
+        <!-- Totals Section -->
         <div class="totals-section">
             <div class="total-row">
                 <span class="total-label">Subtotal:</span>
@@ -420,48 +402,20 @@
             </div>
         </div>
 
-        <!-- Terbilang -->
-        <div class="terbilang-section">
-            <div><strong>Terbilang:</strong> {{ ucwords(trim($terbilang)) }} Rupiah</div>
+        <!-- Formal Request Text After Table -->
+        <div class="notes-section">
+            <p>Demikian permintaan barang dari kami, mohon segera disediakan, terimakasih atas kerjasamanya.</p>
         </div>
-
-        <!-- Terms -->
-        <div class="terms-section">
-            <div class="terms-title">Syarat dan Ketentuan:</div>
-            <ol class="terms-list">
-                <li>Pembayaran dilakukan setelah barang diterima</li>
-                <li>Barang harus dikirim sesuai spesifikasi</li>
-                <li>Harga sudah termasuk PPN 11% (jika applicable)</li>
-                <li>Garansi barang sesuai ketentuan pabrik</li>
-            </ol>
-        </div>
-
-        <!-- Notes -->
-        @if($stockMovements->first()->notes)
-            <div class="notes-section">
-                <div class="notes-title">Catatan:</div>
-                {{ $stockMovements->first()->notes }}
-            </div>
-        @endif
 
         <!-- Signatures -->
         <div class="signature-section">
             <div class="signature-box">
-                <div class="signature-title">Menyetujui</div>
-                <div class="signature-line"></div>
-                <div class="signature-name">Direktur Utama</div>
-            </div>
-            
-            <div class="signature-box">
+                <div class="signature-title">Hormat kami,</div>
+                <div class="signature-line">
+                    <img src="{{ asset('images/signature.png') }}" alt="" style="max-height: 40px;">
+                </div>
+                <div class="signature-name">(Yayuk P. Wardani)</div>
                 <div class="signature-title">Purchasing</div>
-                <div class="signature-line"></div>
-                <div class="signature-name"></div>
-            </div>
-            
-            <div class="signature-box">
-                <div class="signature-title">Supplier</div>
-                <div class="signature-line"></div>
-                <div class="signature-name">Direktur</div>
             </div>
         </div>
 

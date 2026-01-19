@@ -20,57 +20,112 @@ class ReportController extends Controller
 
     public function stockReport(Request $request)
     {
-        $products = Product::with('category')
-            ->when($request->category_id, function ($query) use ($request) {
-                return $query->where('category_id', $request->category_id);
-            })
+        $isActive = $request->get('is_active');
+
+        $query = Product::with('category');
+
+        // Filter by is_active if specified
+        if ($isActive !== null) {
+            $query->where('is_active', $isActive);
+        }
+
+        $products = $query->when($request->category_id, function ($query) use ($request) {
+            return $query->where('category_id', $request->category_id);
+        })
             ->when($request->low_stock, function ($query) {
                 return $query->lowStock();
             })
             ->orderBy('name')
             ->get();
 
-        return view('reports.stock', compact('products'));
+        // Get counts for different statuses
+        $totalProducts = Product::count();
+        $activeProducts = Product::where('is_active', true)->count();
+        $inactiveProducts = Product::where('is_active', false)->count();
+
+        return view('reports.stock', compact('products', 'isActive', 'totalProducts', 'activeProducts', 'inactiveProducts', 'request'));
     }
 
     public function movementReport(Request $request)
     {
+        $isActive = $request->get('is_active');
+
         $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->startOfMonth();
         $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now()->endOfMonth();
 
-        $movements = StockMovement::with(['product', 'supplier', 'customer'])
+        $query = StockMovement::with(['product', 'supplier', 'customer'])
             ->whereBetween('transaction_date', [$startDate, $endDate])
             ->when($request->type, function ($query) use ($request) {
                 return $query->where('type', $request->type);
-            })
-            ->orderBy('transaction_date', 'desc')
-            ->get();
+            });
 
-        return view('reports.movement', compact('movements', 'startDate', 'endDate'));
+        // Filter by is_active if specified
+        if ($isActive !== null) {
+            $query->whereHas('product', function ($query) use ($isActive) {
+                $query->where('is_active', $isActive);
+            });
+        }
+
+        $movements = $query->orderBy('transaction_date', 'desc')->get();
+
+        // Get counts for different statuses
+        $totalMovements = StockMovement::count();
+        $activeMovements = StockMovement::whereHas('product', function ($query) {
+            $query->where('is_active', true);
+        })->count();
+        $inactiveMovements = StockMovement::whereHas('product', function ($query) {
+            $query->where('is_active', false);
+        })->count();
+
+        return view('reports.movement', compact('movements', 'startDate', 'endDate', 'isActive', 'totalMovements', 'activeMovements', 'inactiveMovements', 'request'));
     }
 
-    public function supplierReport()
+    public function supplierReport(Request $request)
     {
-        $suppliers = Supplier::withCount('stockMovements')
+        $isActive = $request->get('is_active');
+
+        $query = Supplier::withCount('stockMovements')
             ->with(['stockMovements' => function ($query) {
                 $query->where('type', 'in');
-            }])
-            ->orderBy('name')
-            ->get();
+            }]);
 
-        return view('reports.supplier', compact('suppliers'));
+        // Filter by is_active if specified
+        if ($isActive !== null) {
+            $query->where('is_active', $isActive);
+        }
+
+        $suppliers = $query->orderBy('name')->get();
+
+        // Get counts for different statuses
+        $totalSuppliers = Supplier::count();
+        $activeSuppliers = Supplier::where('is_active', true)->count();
+        $inactiveSuppliers = Supplier::where('is_active', false)->count();
+
+        return view('reports.supplier', compact('suppliers', 'isActive', 'totalSuppliers', 'activeSuppliers', 'inactiveSuppliers'));
     }
 
-    public function customerReport()
+    public function customerReport(Request $request)
     {
-        $customers = Customer::withCount('stockMovements')
+        $isActive = $request->get('is_active');
+
+        $query = Customer::withCount('stockMovements')
             ->with(['stockMovements' => function ($query) {
                 $query->where('type', 'out');
-            }])
-            ->orderBy('name')
-            ->get();
+            }]);
 
-        return view('reports.customer', compact('customers'));
+        // Filter by is_active if specified
+        if ($isActive !== null) {
+            $query->where('is_active', $isActive);
+        }
+
+        $customers = $query->orderBy('name')->get();
+
+        // Get counts for different statuses
+        $totalCustomers = Customer::count();
+        $activeCustomers = Customer::where('is_active', true)->count();
+        $inactiveCustomers = Customer::where('is_active', false)->count();
+
+        return view('reports.customer', compact('customers', 'isActive', 'totalCustomers', 'activeCustomers', 'inactiveCustomers'));
     }
 
     // Excel Export Methods

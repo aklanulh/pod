@@ -204,13 +204,31 @@
                     <div class="flex space-x-4">
                         <div class="flex-1">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Produk</label>
-                            <select x-model="selectedProductForCart" 
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="">-- Pilih Produk --</option>
-                                <template x-for="product in availableProducts" :key="product.id">
-                                    <option :value="product.id" x-text="product.code + ' - ' + product.name + ' (Stok: ' + (product.current_stock || 0) + ' ' + product.unit + ')'"></option>
-                                </template>
-                            </select>
+                            <div class="relative">
+                                <input type="text" 
+                                       x-model="productSearch" 
+                                       @input="filterProducts()"
+                                       @focus="showProductDropdown = true"
+                                       @blur="setTimeout(() => showProductDropdown = false, 200)"
+                                       placeholder="Cari produk..."
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                
+                                <!-- Hidden field to store selected product ID -->
+                                <input type="hidden" x-model="selectedProductForCart">
+                                
+                                <!-- Dropdown for search results -->
+                                <div x-show="showProductDropdown && filteredProducts.length > 0" 
+                                     x-transition
+                                     class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                    <template x-for="product in filteredProducts" :key="product.id">
+                                        <div @click="selectProduct(product)"
+                                             class="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0">
+                                            <div class="font-medium" x-text="product.code + ' - ' + product.name"></div>
+                                            <div class="text-sm text-gray-500" x-text="'Stok: ' + (product.current_stock || 0) + ' ' + product.unit"></div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
                         </div>
                         <div class="w-32">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Qty</label>
@@ -220,6 +238,11 @@
                         <div class="w-40">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Harga Satuan</label>
                             <input type="number" x-model="tempUnitPrice" step="0.01" min="0"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div class="w-32">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Diskon (%)</label>
+                            <input type="number" x-model="tempDiscount" step="0.01" min="0" max="100" value="0"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div class="flex items-end">
@@ -288,6 +311,15 @@
                                     Harga Satuan <span class="text-red-500">*</span>
                                 </label>
                                 <input type="number" x-model="newProductForCart.price" step="0.01" min="0" required
+                                       placeholder="0"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Diskon (%)
+                                </label>
+                                <input type="number" x-model="newProductForCart.discount" step="0.01" min="0" max="100" value="0"
                                        placeholder="0"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
@@ -374,8 +406,12 @@
                                         <div class="font-medium" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(item.unit_price)"></div>
                                     </div>
                                     <div class="text-center">
+                                        <div class="text-sm text-gray-500">Diskon</div>
+                                        <div class="font-medium" x-text="(item.discount || 0) + '%'"></div>
+                                    </div>
+                                    <div class="text-center">
                                         <div class="text-sm text-gray-500">Total</div>
-                                        <div class="font-medium text-green-600" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(item.quantity * item.unit_price)"></div>
+                                        <div class="font-medium text-green-600" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(item.quantity * item.unit_price * (1 - (item.discount || 0) / 100))"></div>
                                     </div>
                                     <button type="button" @click="removeFromCart(index)"
                                             class="text-red-600 hover:text-red-800">
@@ -433,15 +469,16 @@
                         <input type="hidden" :name="'products[' + index + '][product_id]'" :value="item.product_id">
                         <input type="hidden" :name="'products[' + index + '][quantity]'" :value="item.quantity">
                         <input type="hidden" :name="'products[' + index + '][unit_price]'" :value="item.unit_price">
+                        <input type="hidden" :name="'products[' + index + '][discount]'" :value="item.discount || 0">
                     </div>
                 </template>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label for="order_number" class="block text-sm font-medium text-gray-700 mb-2">Nomor Pemesanan</label>
+                        <label for="order_number" class="block text-sm font-medium text-gray-700 mb-2">Nomor Pemesanan (PO)</label>
                         <input type="text" name="order_number" id="order_number" 
                                value="{{ old('order_number') }}" 
-                               placeholder="Masukkan nomor pemesanan"
+                               placeholder="Rekomendasi: {{ App\Models\PONumber::getLastPO(now()->month, now()->year) ? (App\Models\PONumber::getLastPO(now()->month, now()->year)->last_number + 1) : '1572' }}/YP/I/MSA/26 (kosongkan untuk auto)"
                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     
@@ -456,9 +493,16 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                     <div>
-                        <label for="transaction_date" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Transaksi</label>
+                        <label for="transaction_date" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Pemesanan (PO)</label>
                         <input type="datetime-local" name="transaction_date" id="transaction_date" 
                                value="{{ old('transaction_date', now()->format('Y-m-d\TH:i')) }}" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label for="invoice_date" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Invoice</label>
+                        <input type="date" name="invoice_date" id="invoice_date" 
+                               value="{{ old('invoice_date', now()->format('Y-m-d')) }}" 
                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     
@@ -502,11 +546,15 @@
                         <i class="fas fa-print mr-2"></i>
                         Cetak PO
                     </button>
+                    @empty($draft)
                     <button type="button" @click="saveDraft()"
+                            :disabled="!finalSupplierId || productCart.length === 0"
+                            x-bind:class="(!finalSupplierId || productCart.length === 0) ? 'px-4 py-2 bg-gray-400 text-white rounded-md cursor-not-allowed' : 'px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700'"
                             class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700">
                         <i class="fas fa-save mr-2"></i>
-                        Simpan Draft
+                        Simpan ke Draft
                     </button>
+                    @endempty
                     <button type="submit" 
                             x-bind:disabled="!finalSupplierId || productCart.length === 0"
                             x-bind:class="(!finalSupplierId || productCart.length === 0) ? 'px-4 py-2 bg-gray-400 text-white rounded-md cursor-not-allowed' : 'px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700'"
@@ -534,6 +582,7 @@ function stockInForm() {
             category_id: '',
             unit: '',
             price: '',
+            discount: 0,
             minimum_stock: 0
         },
         productSaved: false,
@@ -545,7 +594,13 @@ function stockInForm() {
         selectedProductForCart: '',
         tempQuantity: 1,
         tempUnitPrice: '',
+        tempDiscount: 0,
         productCart: [],
+        
+        // Product search
+        productSearch: '',
+        filteredProducts: [],
+        showProductDropdown: false,
         
         // PPN
         includeTax: false,
@@ -581,6 +636,9 @@ function stockInForm() {
 
         // Initialize draft data if editing
         init() {
+            // Initialize filtered products
+            this.filteredProducts = this.availableProducts.slice(0, 50);
+            
             @if(isset($draft))
                 // Load draft data
                 this.productCart = @json($draft->cart_data ?? []);
@@ -722,6 +780,7 @@ function stockInForm() {
                 // Update existing item
                 this.productCart[existingIndex].quantity = parseInt(this.productCart[existingIndex].quantity) + parseInt(this.tempQuantity);
                 this.productCart[existingIndex].unit_price = parseFloat(this.tempUnitPrice);
+                this.productCart[existingIndex].discount = parseFloat(this.tempDiscount) || 0;
             } else {
                 // Add new item
                 this.productCart.push({
@@ -730,14 +789,44 @@ function stockInForm() {
                     name: product.name,
                     unit: product.unit,
                     quantity: parseInt(this.tempQuantity),
-                    unit_price: parseFloat(this.tempUnitPrice)
+                    unit_price: parseFloat(this.tempUnitPrice),
+                    discount: parseFloat(this.tempDiscount) || 0
                 });
             }
 
             // Reset form
             this.selectedProductForCart = '';
+            this.productSearch = '';
             this.tempQuantity = 1;
             this.tempUnitPrice = '';
+            this.tempDiscount = 0;
+        },
+
+        filterProducts() {
+            if (!this.productSearch) {
+                this.filteredProducts = this.availableProducts.slice(0, 50); // Limit to 50 results
+                return;
+            }
+            
+            const searchTerm = this.productSearch.toLowerCase();
+            this.filteredProducts = this.availableProducts.filter(product => 
+                product.code.toLowerCase().includes(searchTerm) ||
+                product.name.toLowerCase().includes(searchTerm)
+            ).slice(0, 50); // Limit to 50 results
+        },
+
+        selectProduct(product) {
+            this.selectedProductForCart = product.id;
+            this.productSearch = `${product.code} - ${product.name}`;
+            this.showProductDropdown = false;
+            
+            // Auto-focus to quantity field
+            setTimeout(() => {
+                const quantityInput = document.querySelector('input[x-model="tempQuantity"]');
+                if (quantityInput) {
+                    quantityInput.focus();
+                }
+            }, 100);
         },
 
         canAddNewProduct() {
@@ -776,7 +865,8 @@ function stockInForm() {
                         name: data.name,
                         unit: data.unit,
                         quantity: parseInt(this.tempQuantity),
-                        unit_price: parseFloat(this.newProductForCart.price)
+                        unit_price: parseFloat(this.newProductForCart.price),
+                        discount: parseFloat(this.newProductForCart.discount) || 0
                     });
 
                     // Update available products list
@@ -794,6 +884,7 @@ function stockInForm() {
                         category_id: '',
                         unit: '',
                         price: '',
+                        discount: 0,
                         minimum_stock: 0,
                         exp: '',
                         lot: '',
@@ -821,7 +912,9 @@ function stockInForm() {
 
         getTotalAmount() {
             return this.productCart.reduce((total, item) => {
-                return total + (item.quantity * item.unit_price);
+                const itemTotal = item.quantity * item.unit_price;
+                const discountAmount = itemTotal * ((item.discount || 0) / 100);
+                return total + (itemTotal - discountAmount);
             }, 0);
         },
 
@@ -864,7 +957,7 @@ function stockInForm() {
 
                 if (response.ok) {
                     alert('Draft stok masuk berhasil disimpan!');
-                    window.location.href = '{{ route("stock.in.index") }}';
+                    window.location.href = '{{ route("stock.in.draft.index") }}';
                 } else {
                     alert('Error: ' + (data.message || 'Terjadi kesalahan'));
                 }
@@ -880,7 +973,8 @@ function stockInForm() {
             }
 
             // Generate temporary data for PO
-            const orderNumber = document.querySelector('input[name="order_number"]').value || this.generatePONumber();
+            const orderNumberField = document.querySelector('input[name="order_number"]');
+            const orderNumber = orderNumberField.value.trim() === '' ? '' : orderNumberField.value;
             const invoiceNumber = document.querySelector('input[name="invoice_number"]').value || this.generateInvoiceNumber();
             const transactionDate = document.querySelector('input[name="transaction_date"]').value || new Date().toISOString().slice(0,10);
             
@@ -890,12 +984,16 @@ function stockInForm() {
             formData.append('invoice_number', invoiceNumber);
             formData.append('supplier_id', this.finalSupplierId);
             formData.append('transaction_date', transactionDate);
+            formData.append('include_tax', this.includeTax ? '1' : '0');
+            formData.append('tax_amount', this.getTaxAmount());
+            formData.append('final_amount', this.getFinalAmount());
             
             // Add product data temporarily for PO generation
             this.productCart.forEach((item, index) => {
                 formData.append(`products[${index}][product_id]`, item.product_id);
                 formData.append(`products[${index}][quantity]`, item.quantity);
                 formData.append(`products[${index}][unit_price]`, item.unit_price);
+                formData.append(`products[${index}][discount]`, item.discount || 0);
             });
             
             // Open in new window
@@ -931,7 +1029,7 @@ function stockInForm() {
             return '11985' + monthYear; // Placeholder - server will generate the correct one
         },
 
-        // Generate PO number with format: [RUNNING_NUMBER]/[PO_CODE]/[MONTH]/[YEAR]
+        // Generate PO number with format: [RUNNING_NUMBER]/YP/[MONTH]/MSA/[YEAR]
         generatePONumber() {
             const date = new Date();
             const monthRoman = this.numberToRoman(date.getMonth() + 1);
@@ -939,7 +1037,8 @@ function stockInForm() {
             
             // For now, generate a simple format - the actual logic will be handled server-side
             // This is just for display purposes before form submission
-            return '1572/YP/I/MSA/' + yearShort; // Placeholder - server will generate the correct one
+            // Format: 1572/YP/I/MSA/26
+            return '1572/YP/' + monthRoman + '/MSA/' + yearShort; // Placeholder - server will generate the correct one
         },
 
         // Convert number to Roman numeral

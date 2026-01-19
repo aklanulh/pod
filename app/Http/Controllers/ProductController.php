@@ -12,8 +12,13 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with('category')
-            ->where('is_active', true);
+        $isActive = $request->get('is_active', 1);
+
+        $query = Product::with('category');
+
+        if ($isActive !== null) {
+            $query->where('is_active', $isActive);
+        }
 
         // Handle search
         $search = $request->get('search');
@@ -60,11 +65,16 @@ class ProductController extends Controller
 
         $products = $query->get();
 
+        // Get counts for different statuses
+        $totalProducts = Product::count();
+        $activeProducts = Product::where('is_active', true)->count();
+        $inactiveProducts = Product::where('is_active', false)->count();
+
         $categories = ProductCategory::withCount('products')
             ->orderBy('name')
             ->get();
 
-        return view('products.index', compact('products', 'categories'));
+        return view('products.index', compact('products', 'categories', 'isActive', 'search', 'totalProducts', 'activeProducts', 'inactiveProducts'));
     }
 
     public function create()

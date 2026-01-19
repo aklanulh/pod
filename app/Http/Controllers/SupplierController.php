@@ -34,7 +34,12 @@ class SupplierController extends Controller
 
         $suppliers = $query->get();
 
-        return view('suppliers.index', compact('suppliers', 'isActive', 'search'));
+        // Get counts for different statuses
+        $totalSuppliers = Supplier::count();
+        $activeSuppliers = Supplier::where('is_active', true)->count();
+        $inactiveSuppliers = Supplier::where('is_active', false)->count();
+
+        return view('suppliers.index', compact('suppliers', 'isActive', 'search', 'totalSuppliers', 'activeSuppliers', 'inactiveSuppliers'));
     }
 
     public function create()
