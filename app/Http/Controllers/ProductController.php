@@ -135,6 +135,8 @@ class ProductController extends Controller
     public function show(Request $request, Product $product)
     {
         try {
+            Log::info('Loading product detail', ['product_id' => $product->id, 'product_code' => $product->code]);
+
             $product->load('category', 'stockMovements.supplier', 'stockMovements.customer');
 
             // Get selected year from request
@@ -145,40 +147,73 @@ class ProductController extends Controller
                 $selectedYear = date('Y');
             }
 
-            // Get available years for dropdown
-            $availableYears = StockMovement::where('product_id', $product->id)
-                ->where('type', 'out')
-                ->selectRaw('DISTINCT strftime("%Y", transaction_date) as year')
-                ->orderBy('year', 'desc')
-                ->pluck('year')
-                ->toArray();
+            Log::info('Getting available years for product chart', ['product_id' => $product->id]);
 
-            if (empty($availableYears)) {
+            // Get available years for dropdown
+            try {
+                $availableYears = StockMovement::where('product_id', $product->id)
+                    ->where('type', 'out')
+                    ->selectRaw('DISTINCT strftime("%Y", transaction_date) as year')
+                    ->orderBy('year', 'desc')
+                    ->pluck('year')
+                    ->toArray();
+
+                if (empty($availableYears)) {
+                    $availableYears = [date('Y')];
+                }
+
+                // Always include 2025 in available years
+                if (!in_array(2025, $availableYears)) {
+                    $availableYears[] = 2025;
+                    sort($availableYears);
+                    $availableYears = array_reverse($availableYears);
+                }
+
+                // Ensure selected year is valid, fallback to first available year
+                if (!in_array($selectedYear, $availableYears)) {
+                    $selectedYear = $availableYears[0];
+                }
+
+                Log::info('Available years retrieved', ['available_years' => $availableYears, 'selected_year' => $selectedYear]);
+
+                // Generate chart data for selected year (AFTER year is finalized)
+                $chartData = $this->generateProductChartData($product->id, $selectedYear);
+                Log::info('Chart data generated successfully', ['product_id' => $product->id, 'year' => $selectedYear]);
+            } catch (\Exception $chartException) {
+                Log::error('Error generating chart data', [
+                    'product_id' => $product->id,
+                    'error' => $chartException->getMessage(),
+                    'trace' => $chartException->getTraceAsString()
+                ]);
+                $chartData = null;
                 $availableYears = [date('Y')];
             }
 
-            // Always include 2025 in available years
-            if (!in_array(2025, $availableYears)) {
-                $availableYears[] = 2025;
-                sort($availableYears);
-                $availableYears = array_reverse($availableYears);
-            }
-
-            // Ensure selected year is valid, fallback to first available year
-            if (!in_array($selectedYear, $availableYears)) {
-                $selectedYear = $availableYears[0];
-            }
-
-            // Generate chart data for selected year (AFTER year is finalized)
-            $chartData = $this->generateProductChartData($product->id, $selectedYear);
-
             return view('products.show', compact('product', 'chartData', 'selectedYear', 'availableYears'));
         } catch (\Exception $e) {
-            Log::error('Product show error: ' . $e->getMessage() . ' for product ID: ' . $product->id);
-            Log::error('Exception trace: ' . $e->getTraceAsString());
+            Log::error('Product show error: ' . $e->getMessage(), [
+                'product_id' => $product->id,
+                'product_code' => $product->code,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
 
             // Return simplified view without chart data
-            return view('products.show-simple', compact('product'));
+            try {
+                return view('products.show-simple', compact('product'));
+            } catch (\Exception $viewException) {
+                Log::error('Error loading fallback view', [
+                    'error' => $viewException->getMessage(),
+                    'product_id' => $product->id
+                ]);
+
+                // Last resort - return basic error page
+                return response()->view('errors.500', [
+                    'error' => 'Terjadi kesalahan saat memuat detail produk. Silakan coba lagi nanti.',
+                    'product_id' => $product->id
+                ], 500);
+            }
         }
     }
 
