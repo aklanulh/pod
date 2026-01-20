@@ -58,16 +58,16 @@
 
 <!-- Filter Section -->
 <div class="bg-white rounded-lg shadow p-6 mb-6">
-    <form method="GET" action="{{ route('reports.movement') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <form method="GET" action="{{ route('reports.movement') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Mulai</label>
-            <input type="date" name="start_date" value="{{ request('start_date', $startDate->format('Y-m-d')) }}" 
-                   class="w-full border border-gray-300 rounded-md px-3 py-2">
+            <input type="date" name="start_date" value="{{ request('start_date', $startDate ? $startDate->format('Y-m-d') : '') }}" 
+                   class="w-full border border-gray-300 rounded-md px-3 py-2" placeholder="Semua periode">
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Akhir</label>
-            <input type="date" name="end_date" value="{{ request('end_date', $endDate->format('Y-m-d')) }}" 
-                   class="w-full border border-gray-300 rounded-md px-3 py-2">
+            <input type="date" name="end_date" value="{{ request('end_date', $endDate ? $endDate->format('Y-m-d') : '') }}" 
+                   class="w-full border border-gray-300 rounded-md px-3 py-2" placeholder="Semua periode">
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Jenis Transaksi</label>
@@ -76,6 +76,15 @@
                 <option value="in" {{ request('type') == 'in' ? 'selected' : '' }}>Stok Masuk</option>
                 <option value="out" {{ request('type') == 'out' ? 'selected' : '' }}>Stok Keluar</option>
                 <option value="opname" {{ request('type') == 'opname' ? 'selected' : '' }}>Stock Opname</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Tampilkan</label>
+            <select name="limit" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                <option value="100" {{ request('limit', '100') == '100' ? 'selected' : '' }}>100 data</option>
+                <option value="200" {{ request('limit') == '200' ? 'selected' : '' }}>200 data</option>
+                <option value="500" {{ request('limit') == '500' ? 'selected' : '' }}>500 data</option>
+                <option value="all" {{ request('limit') == 'all' ? 'selected' : '' }}>Semua data</option>
             </select>
         </div>
         <div class="flex items-end">
@@ -90,7 +99,14 @@
 <div class="bg-white rounded-lg shadow overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-200">
         <h3 class="text-lg font-medium text-gray-900">Data Pergerakan Stok</h3>
-        <p class="text-sm text-gray-600">Periode: {{ $startDate->format('d/m/Y') }} - {{ $endDate->format('d/m/Y') }}</p>
+        <p class="text-sm text-gray-600">
+    Periode: 
+    @if($startDate && $endDate)
+        {{ $startDate->format('d/m/Y') }} - {{ $endDate->format('d/m/Y') }}
+    @else
+        Semua periode
+    @endif
+</p>
     </div>
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
@@ -174,6 +190,22 @@
                 @endforelse
             </tbody>
         </table>
+    </div>
+    
+    <!-- Pagination and Data Info -->
+    <div class="px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+        <div class="text-sm text-gray-700">
+            @if($limit === 'all')
+                Menampilkan <span class="font-medium">{{ $movements->count() }}</span> dari <span class="font-medium">{{ $movements->count() }}</span> data (Semua data)
+            @else
+                Menampilkan <span class="font-medium">{{ $movements->firstItem() }}</span> - <span class="font-medium">{{ $movements->lastItem() }}</span> dari <span class="font-medium">{{ $movements->total() }}</span> data
+            @endif
+        </div>
+        @if($limit !== 'all' && $movements->hasPages())
+            <div class="flex items-center space-x-2">
+                {{ $movements->links() }}
+            </div>
+        @endif
     </div>
 </div>
 

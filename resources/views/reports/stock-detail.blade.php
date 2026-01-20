@@ -141,26 +141,36 @@
 </div>
 
 <!-- Customer Purchase Chart -->
-<div class="bg-white rounded-lg shadow p-6 mb-6">
-    <div class="flex items-center justify-between mb-6">
-        <div>
+    @if(isset($chartData) && isset($chartData['datasets']) && count($chartData['datasets']) > 0)
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Grafik Pembelian Customer per Bulan</h3>
+                <p class="text-sm text-gray-600">Jumlah produk yang dibeli setiap customer per bulan dalam tahun {{ $selectedYear }}</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <label for="yearSelect" class="text-sm font-medium text-gray-700">Tahun:</label>
+                <select id="yearSelect" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    @foreach($availableYears as $year)
+                        <option value="{{ $year }}" {{ $year == $selectedYear ? 'selected' : '' }}>{{ $year }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+        
+        <div class="relative" style="height: 400px;">
+            <canvas id="productCustomerChart"></canvas>
+        </div>
+    </div>
+    @else
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <div class="text-center py-8">
+            <i class="fas fa-chart-line text-gray-400 text-4xl mb-4"></i>
             <h3 class="text-lg font-medium text-gray-900 mb-2">Grafik Pembelian Customer per Bulan</h3>
-            <p class="text-sm text-gray-600">Jumlah produk yang dibeli setiap customer per bulan dalam tahun {{ $selectedYear }}</p>
-        </div>
-        <div class="flex items-center space-x-3">
-            <label for="yearSelect" class="text-sm font-medium text-gray-700">Tahun:</label>
-            <select id="yearSelect" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                @foreach($availableYears as $year)
-                    <option value="{{ $year }}" {{ $year == $selectedYear ? 'selected' : '' }}>{{ $year }}</option>
-                @endforeach
-            </select>
+            <p class="text-sm text-gray-600">Tidak ada data pembelian untuk tahun {{ $selectedYear }}</p>
         </div>
     </div>
-    
-    <div class="relative" style="height: 400px;">
-        <canvas id="productCustomerChart"></canvas>
-    </div>
-</div>
+    @endif
 
 <!-- Stock Movement History -->
 <div class="bg-white rounded-lg shadow overflow-hidden">
@@ -256,75 +266,103 @@
     @endif
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Chart configuration
-    const ctx = document.getElementById('productCustomerChart').getContext('2d');
-    const chartData = @json($chartData);
-    
-    const chart = new Chart(ctx, {
-        type: 'line',
-        data: chartData,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Pembelian per Customer - {{ $product->name }} ({{ $selectedYear }})',
-                    font: {
-                        size: 16,
-                        weight: 'bold'
-                    }
-                },
-                legend: {
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        usePointStyle: true,
-                        padding: 20
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
+@if(isset($chartData) && isset($chartData['datasets']) && count($chartData['datasets']) > 0)
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Chart configuration
+        const ctx = document.getElementById('productCustomerChart');
+        if (!ctx) {
+            console.error('Chart canvas not found');
+            return;
+        }
+        
+        const chartData = @json($chartData);
+        
+        // Debug: Log chart data to console
+        console.log('Reports Chart Data:', chartData);
+        console.log('Reports Chart Data Labels:', chartData.labels);
+        console.log('Reports Chart Data Datasets:', chartData.datasets);
+        
+        if (!chartData || !chartData.datasets || chartData.datasets.length === 0) {
+            console.warn('No chart data available');
+            return;
+        }
+        
+        const chart = new Chart(ctx.getContext('2d'), {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
                     title: {
                         display: true,
-                        text: 'Jumlah Pembelian'
+                        text: 'Pembelian per Customer - {{ $product->name }} ({{ $selectedYear }})',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        }
                     },
-                    ticks: {
-                        stepSize: 1
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20
+                        }
                     }
                 },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Bulan'
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Jumlah Pembelian'
+                        },
+                        ticks: {
+                            stepSize: 1
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Bulan'
+                        }
                     }
-                }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index'
-            },
-            elements: {
-                point: {
-                    radius: 4,
-                    hoverRadius: 6
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                elements: {
+                    point: {
+                        radius: 4,
+                        hoverRadius: 6
+                    }
                 }
             }
+        });
+
+        // Year selection change handler
+        const yearSelect = document.getElementById('yearSelect');
+        if (yearSelect) {
+            yearSelect.addEventListener('change', function() {
+                const selectedYear = this.value;
+                console.log('Year changed to:', selectedYear);
+                
+                const currentUrl = new URL(window.location);
+                currentUrl.searchParams.set('year', selectedYear);
+                
+                const newUrl = currentUrl.toString();
+                console.log('New URL:', newUrl);
+                
+                window.location.href = newUrl;
+            });
+        } else {
+            console.error('yearSelect element not found!');
         }
     });
-
-    // Year selection change handler
-    document.getElementById('yearSelect').addEventListener('change', function() {
-        const selectedYear = this.value;
-        const currentUrl = new URL(window.location);
-        currentUrl.searchParams.set('year', selectedYear);
-        window.location.href = currentUrl.toString();
-    });
-});
-</script>
+    </script>
+    @endif
 @endsection

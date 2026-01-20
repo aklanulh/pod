@@ -145,18 +145,10 @@ class ProductController extends Controller
                 $selectedYear = date('Y');
             }
 
-            // Generate chart data for selected year
-            $chartData = $this->generateProductChartData($product->id, $selectedYear);
-
             // Get available years for dropdown
-            $yearExpression = config('database.default') === 'sqlite'
-                ? "strftime('%Y', transaction_date) as year"
-                : 'YEAR(transaction_date) as year';
-
             $availableYears = StockMovement::where('product_id', $product->id)
                 ->where('type', 'out')
-                ->selectRaw("strftime('%Y', transaction_date) as year")
-                ->distinct()
+                ->selectRaw('DISTINCT strftime("%Y", transaction_date) as year')
                 ->orderBy('year', 'desc')
                 ->pluck('year')
                 ->toArray();
@@ -177,9 +169,13 @@ class ProductController extends Controller
                 $selectedYear = $availableYears[0];
             }
 
+            // Generate chart data for selected year (AFTER year is finalized)
+            $chartData = $this->generateProductChartData($product->id, $selectedYear);
+
             return view('products.show', compact('product', 'chartData', 'selectedYear', 'availableYears'));
         } catch (\Exception $e) {
             Log::error('Product show error: ' . $e->getMessage() . ' for product ID: ' . $product->id);
+            Log::error('Exception trace: ' . $e->getTraceAsString());
 
             // Return simplified view without chart data
             return view('products.show-simple', compact('product'));

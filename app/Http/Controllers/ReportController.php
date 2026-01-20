@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ReportController extends Controller
 {
@@ -56,15 +57,22 @@ class ReportController extends Controller
     public function movementReport(Request $request)
     {
         $isActive = $request->get('is_active');
+        $limit = $request->get('limit', 100); // Default 100 data
 
-        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->startOfMonth();
-        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now()->endOfMonth();
+        // Default to empty dates (show all data)
+        $startDate = $request->start_date ? Carbon::parse($request->start_date) : null;
+        $endDate = $request->end_date ? Carbon::parse($request->end_date) : null;
 
-        $query = StockMovement::with(['product', 'supplier', 'customer'])
-            ->whereBetween('transaction_date', [$startDate, $endDate])
-            ->when($request->type, function ($query) use ($request) {
-                return $query->where('type', $request->type);
-            });
+        $query = StockMovement::with(['product', 'supplier', 'customer']);
+
+        // Only apply date filter if dates are provided
+        if ($startDate && $endDate) {
+            $query->whereBetween('transaction_date', [$startDate, $endDate]);
+        }
+
+        $query->when($request->type, function ($query) use ($request) {
+            return $query->where('type', $request->type);
+        });
 
         // Filter by is_active if specified
         if ($isActive !== null) {
@@ -73,7 +81,12 @@ class ReportController extends Controller
             });
         }
 
-        $movements = $query->orderBy('transaction_date', 'desc')->get();
+        // Apply pagination or get all
+        if ($limit === 'all') {
+            $movements = $query->orderBy('transaction_date', 'desc')->get();
+        } else {
+            $movements = $query->orderBy('transaction_date', 'desc')->paginate($limit);
+        }
 
         // Get counts for different statuses
         $totalMovements = StockMovement::count();
@@ -84,7 +97,7 @@ class ReportController extends Controller
             $query->where('is_active', false);
         })->count();
 
-        return view('reports.movement', compact('movements', 'startDate', 'endDate', 'isActive', 'totalMovements', 'activeMovements', 'inactiveMovements', 'request'));
+        return view('reports.movement', compact('movements', 'startDate', 'endDate', 'isActive', 'limit', 'totalMovements', 'activeMovements', 'inactiveMovements', 'request'));
     }
 
     public function supplierReport(Request $request)
@@ -274,14 +287,20 @@ class ReportController extends Controller
 
     public function exportMovementReport(Request $request)
     {
-        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->startOfMonth();
-        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now()->endOfMonth();
+        // Default to empty dates (show all data)
+        $startDate = $request->start_date ? Carbon::parse($request->start_date) : null;
+        $endDate = $request->end_date ? Carbon::parse($request->end_date) : null;
 
-        $movements = StockMovement::with(['product.category', 'supplier', 'customer'])
-            ->whereBetween('transaction_date', [$startDate, $endDate])
-            ->when($request->type, function ($query) use ($request) {
-                return $query->where('type', $request->type);
-            })
+        $query = StockMovement::with(['product.category', 'supplier', 'customer']);
+
+        // Only apply date filter if dates are provided
+        if ($startDate && $endDate) {
+            $query->whereBetween('transaction_date', [$startDate, $endDate]);
+        }
+
+        $movements = $query->when($request->type, function ($query) use ($request) {
+            return $query->where('type', $request->type);
+        })
             ->orderBy('transaction_date', 'desc')
             ->get();
 
@@ -308,7 +327,14 @@ class ReportController extends Controller
             fputcsv($file, ['LAPORAN PERGERAKAN STOK'], $delimiter, $enclosure);
             fputcsv($file, ['PT. Mitrajaya Selaras Abadi'], $delimiter, $enclosure);
             fputcsv($file, ['Tanggal Export: ' . now()->format('d/m/Y H:i:s')], $delimiter, $enclosure);
-            fputcsv($file, ['Periode: ' . $startDate->format('d/m/Y') . ' - ' . $endDate->format('d/m/Y')], $delimiter, $enclosure);
+
+            // Handle period display safely
+            if ($startDate && $endDate) {
+                fputcsv($file, ['Periode: ' . $startDate->format('d/m/Y') . ' - ' . $endDate->format('d/m/Y')], $delimiter, $enclosure);
+            } else {
+                fputcsv($file, ['Periode: Semua periode'], $delimiter, $enclosure);
+            }
+
             fputcsv($file, ['Filter Jenis: ' . ($request->type ? ucfirst($request->type) : 'Semua Transaksi')], $delimiter, $enclosure);
             fputcsv($file, [''], $delimiter, $enclosure); // Empty row
 
@@ -1059,8 +1085,13 @@ class ReportController extends Controller
     {
         $product = Product::with('category')->findOrFail($id);
 
-        // Get selected year from request, default to current year
-        $selectedYear = $request->get('year', date('Y'));
+        // Get selected year from request
+        $selectedYear = $request->get('year');
+
+        // If no year selected, use first available year
+        if (!$selectedYear) {
+            $selectedYear = date('Y');
+        }
 
         $stockMovements = StockMovement::with(['supplier', 'customer'])
             ->where('product_id', $id)
@@ -1076,18 +1107,10 @@ class ReportController extends Controller
             ->where('type', 'out')
             ->sum('quantity');
 
-        // Generate chart data for selected year
-        $chartData = $this->generateProductChartData($id, $selectedYear);
-
-        // Get available years for dropdown
-        $yearExpression = config('database.default') === 'sqlite'
-            ? "strftime('%Y', transaction_date) as year"
-            : 'YEAR(transaction_date) as year';
-
+        // Get available years for dropdown (SAME LOGIC AS ProductController)
         $availableYears = StockMovement::where('product_id', $id)
             ->where('type', 'out')
-            ->selectRaw($yearExpression)
-            ->distinct()
+            ->selectRaw('DISTINCT strftime("%Y", transaction_date) as year')
             ->orderBy('year', 'desc')
             ->pluck('year')
             ->toArray();
@@ -1095,6 +1118,21 @@ class ReportController extends Controller
         if (empty($availableYears)) {
             $availableYears = [date('Y')];
         }
+
+        // Always include 2025 in available years
+        if (!in_array(2025, $availableYears)) {
+            $availableYears[] = 2025;
+            sort($availableYears);
+            $availableYears = array_reverse($availableYears);
+        }
+
+        // Ensure selected year is valid, fallback to first available year
+        if (!in_array($selectedYear, $availableYears)) {
+            $selectedYear = $availableYears[0];
+        }
+
+        // Generate chart data for selected year (AFTER year is finalized)
+        $chartData = $this->generateProductChartData($id, $selectedYear);
 
         return view('reports.stock-detail', compact(
             'product',

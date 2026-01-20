@@ -131,6 +131,7 @@
     </div>
 
     <!-- Customer Purchase Chart -->
+    @if(isset($chartData) && isset($chartData['datasets']) && count($chartData['datasets']) > 0)
     <div class="mt-8 bg-white rounded-lg shadow p-6">
         <div class="flex items-center justify-between mb-6">
             <div>
@@ -151,6 +152,115 @@
             <canvas id="productCustomerChart"></canvas>
         </div>
     </div>
+    
+    @if(isset($chartData) && isset($chartData['datasets']) && count($chartData['datasets']) > 0)
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Chart configuration
+        const ctx = document.getElementById('productCustomerChart');
+        if (!ctx) {
+            console.error('Chart canvas not found');
+            return;
+        }
+        
+        const chartData = @json($chartData);
+        
+        // Debug: Log chart data to console
+        console.log('Chart Data:', chartData);
+        console.log('Chart Data Labels:', chartData.labels);
+        console.log('Chart Data Datasets:', chartData.datasets);
+        
+        if (!chartData || !chartData.datasets || chartData.datasets.length === 0) {
+            console.warn('No chart data available');
+            return;
+        }
+        
+        const chart = new Chart(ctx.getContext('2d'), {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Pembelian per Customer - {{ $product->name }} ({{ $selectedYear }})',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        }
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Jumlah Pembelian'
+                        },
+                        ticks: {
+                            stepSize: 1
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Bulan'
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                elements: {
+                    point: {
+                        radius: 4,
+                        hoverRadius: 6
+                    }
+                }
+            }
+        });
+
+        // Year selection change handler
+        const yearSelect = document.getElementById('yearSelect');
+        if (yearSelect) {
+            yearSelect.addEventListener('change', function() {
+                const selectedYear = this.value;
+                console.log('Year changed to:', selectedYear);
+                
+                const currentUrl = new URL(window.location);
+                currentUrl.searchParams.set('year', selectedYear);
+                
+                const newUrl = currentUrl.toString();
+                console.log('New URL:', newUrl);
+                
+                window.location.href = newUrl;
+            });
+        } else {
+            console.error('yearSelect element not found!');
+        }
+    });
+    </script>
+    @endif
+    @else
+    <div class="mt-8 bg-white rounded-lg shadow p-6">
+        <div class="text-center py-8">
+            <i class="fas fa-chart-line text-gray-400 text-4xl mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Grafik Pembelian Customer per Bulan</h3>
+            <p class="text-sm text-gray-600">Tidak ada data pembelian untuk tahun {{ $selectedYear }}</p>
+        </div>
+    </div>
+    @endif
 
     @if($product->stockMovements->count() > 0)
         <div class="mt-8 bg-white rounded-lg shadow overflow-hidden">
@@ -245,88 +355,7 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Chart configuration
-    const ctx = document.getElementById('productCustomerChart').getContext('2d');
-    const chartData = @json($chartData);
-    
-    const chart = new Chart(ctx, {
-        type: 'line',
-        data: chartData,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Pembelian per Customer - {{ $product->name }} ({{ $selectedYear }})',
-                    font: {
-                        size: 16,
-                        weight: 'bold'
-                    }
-                },
-                legend: {
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        usePointStyle: true,
-                        padding: 20
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Jumlah Pembelian'
-                    },
-                    ticks: {
-                        stepSize: 1
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Bulan'
-                    }
-                }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index'
-            },
-            elements: {
-                point: {
-                    radius: 4,
-                    hoverRadius: 6
-                }
-            }
-        }
-    });
-
-    // Year selection change handler
-    const yearSelect = document.getElementById('yearSelect');
-    if (yearSelect) {
-        yearSelect.addEventListener('change', function() {
-            const selectedYear = this.value;
-            console.log('Year changed to:', selectedYear); // Debug log
-            
-            const currentUrl = new URL(window.location);
-            currentUrl.searchParams.set('year', selectedYear);
-            
-            const newUrl = currentUrl.toString();
-            console.log('New URL:', newUrl); // Debug log
-            
-            window.location.href = newUrl;
-        });
-    } else {
-        console.error('yearSelect element not found!'); // Debug log
-    }
-});
-
 function showNoteModal(note) {
     document.getElementById('noteContent').textContent = note;
     document.getElementById('noteModal').classList.remove('hidden');
@@ -339,17 +368,22 @@ function closeNoteModal() {
 }
 
 // Close modal when clicking outside
-document.getElementById('noteModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeNoteModal();
+document.addEventListener('DOMContentLoaded', function() {
+    const noteModal = document.getElementById('noteModal');
+    if (noteModal) {
+        noteModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeNoteModal();
+            }
+        });
     }
-});
 
-// Close modal with Escape key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeNoteModal();
-    }
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeNoteModal();
+        }
+    });
 });
 </script>
 @endsection
