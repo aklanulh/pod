@@ -32,8 +32,8 @@ class StockOpnameController extends Controller
 
     public function create()
     {
-        // Ambil semua produk yang aktif untuk opname
-        $products = Product::where('is_active', true)
+        // Hanya ambil produk yang ada stoknya untuk performance
+        $products = Product::where('current_stock', '>', 0)
             ->orderBy('name')
             ->get();
 
@@ -106,8 +106,8 @@ class StockOpnameController extends Controller
             $query->with('product');
         }])->findOrFail($id);
 
-        // Ambil semua produk yang aktif untuk dropdown
-        $products = Product::where('is_active', true)
+        // Hanya ambil produk yang ada stoknya untuk performance
+        $products = Product::where('current_stock', '>', 0)
             ->orderBy('name')
             ->get();
 
