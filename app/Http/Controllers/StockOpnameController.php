@@ -23,16 +23,20 @@ class StockOpnameController extends Controller
         $opnames = StockOpname::with('details')
             ->orderByRaw('opname_date IS NULL, opname_date DESC')
             ->paginate(15);
-            
+
         // Get count of draft opnames for notification
         $draftCount = StockOpname::draft()->count();
-        
+
         return view('stock.opname.index', compact('opnames', 'draftCount'));
     }
 
     public function create()
     {
-        $products = Product::orderBy('name')->get();
+        // Ambil semua produk yang aktif untuk opname
+        $products = Product::where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
         return view('stock.opname.create', compact('products'));
     }
 
@@ -68,7 +72,7 @@ class StockOpnameController extends Controller
 
             foreach ($request->products as $productData) {
                 $product = Product::find($productData['product_id']);
-                
+
                 // Use the difference from form if provided, otherwise calculate it
                 if (isset($productData['difference']) && $productData['difference'] !== null) {
                     $difference = (int) $productData['difference'];
@@ -98,14 +102,16 @@ class StockOpnameController extends Controller
     public function show($id)
     {
         // Explicitly find the stock opname with details
-        $stockOpname = StockOpname::with(['details' => function($query) {
+        $stockOpname = StockOpname::with(['details' => function ($query) {
             $query->with('product');
         }])->findOrFail($id);
-        
-        // Get all products for adding new details
-        $products = Product::orderBy('name')->get();
-        
-        // Debug: Log the data to see what's actually in the database
+
+        // Ambil semua produk yang aktif untuk dropdown
+        $products = Product::where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        // Debug: Log data to see what's actually in the database
         Log::info('Stock Opname Data:', [
             'id' => $stockOpname->id,
             'opname_number' => $stockOpname->opname_number,
@@ -116,14 +122,14 @@ class StockOpnameController extends Controller
             'details_count' => $stockOpname->details->count(),
             'details_loaded' => $stockOpname->relationLoaded('details')
         ]);
-        
+
         // Debug: Log details data
         if ($stockOpname->details->count() > 0) {
             Log::info('Stock Opname Details:', $stockOpname->details->toArray());
         } else {
             Log::warning('No details found for Stock Opname ID: ' . $id);
         }
-        
+
         return view('stock.opname.show', compact('stockOpname', 'products'));
     }
 
@@ -135,15 +141,15 @@ class StockOpnameController extends Controller
         ]);
 
         $stockOpname = StockOpname::findOrFail($opnameId);
-        
+
         // Only allow editing if status is draft
         if ($stockOpname->status !== 'draft') {
             return redirect()->back()->with('error', 'Tidak dapat mengedit opname yang sudah selesai');
         }
 
         $detail = StockOpnameDetail::where('stock_opname_id', $opnameId)
-                                  ->where('id', $detailId)
-                                  ->firstOrFail();
+            ->where('id', $detailId)
+            ->firstOrFail();
 
         $difference = $request->physical_stock - $detail->system_stock;
 
@@ -165,7 +171,7 @@ class StockOpnameController extends Controller
         ]);
 
         $stockOpname = StockOpname::findOrFail($opnameId);
-        
+
         // Only allow adding if status is draft
         if ($stockOpname->status !== 'draft') {
             return redirect()->back()->with('error', 'Tidak dapat menambah detail pada opname yang sudah selesai');
@@ -173,8 +179,8 @@ class StockOpnameController extends Controller
 
         // Check if product already exists in this opname
         $existingDetail = StockOpnameDetail::where('stock_opname_id', $opnameId)
-                                          ->where('product_id', $request->product_id)
-                                          ->first();
+            ->where('product_id', $request->product_id)
+            ->first();
 
         if ($existingDetail) {
             return redirect()->back()->with('error', 'Produk sudah ada dalam opname ini');
@@ -198,15 +204,15 @@ class StockOpnameController extends Controller
     public function deleteDetail($opnameId, $detailId)
     {
         $stockOpname = StockOpname::findOrFail($opnameId);
-        
+
         // Only allow deleting if status is draft
         if ($stockOpname->status !== 'draft') {
             return redirect()->back()->with('error', 'Tidak dapat menghapus detail pada opname yang sudah selesai');
         }
 
         $detail = StockOpnameDetail::where('stock_opname_id', $opnameId)
-                                  ->where('id', $detailId)
-                                  ->firstOrFail();
+            ->where('id', $detailId)
+            ->firstOrFail();
 
         $detail->delete();
 
@@ -216,7 +222,7 @@ class StockOpnameController extends Controller
     public function destroy($id)
     {
         $stockOpname = StockOpname::findOrFail($id);
-        
+
         // Only allow deleting if status is draft
         if ($stockOpname->status !== 'draft') {
             return redirect()->back()->with('error', 'Tidak dapat menghapus opname yang sudah selesai');
@@ -225,7 +231,7 @@ class StockOpnameController extends Controller
         DB::transaction(function () use ($stockOpname) {
             // Delete all details first
             $stockOpname->details()->delete();
-            
+
             // Delete the opname itself
             $stockOpname->delete();
         });
@@ -246,7 +252,7 @@ class StockOpnameController extends Controller
                     // Create stock movement for adjustment
                     $type = $detail->difference > 0 ? 'in' : 'out';
                     $quantity = abs($detail->difference);
-                    
+
                     StockMovement::create([
                         'reference_number' => 'ADJ-' . $stockOpname->opname_number . '-' . $detail->product_id,
                         'product_id' => $detail->product_id,
