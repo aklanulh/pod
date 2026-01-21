@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -93,11 +94,16 @@ class UserManagementController extends Controller
             // Generate unique token
             $token = Str::random(60);
 
-            // Log untuk debugging
-            \Log::info('Generating reset token for user: ' . $user->email);
+            // Store token in cache with 2 hours expiration
+            Cache::put('password_reset_' . $token, [
+                'email' => $user->email,
+                'user_id' => $user->id,
+                'created_at' => now()
+            ], 120); // 120 minutes = 2 hours
 
-            // Store token in password reset table (you may need to create this table)
-            // For now, return the token directly
+            // Log untuk debugging
+            \Log::info('Generating reset token for user: ' . $user->email . ' with token: ' . $token);
+
             return response()->json([
                 'success' => true,
                 'token' => $token,

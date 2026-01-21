@@ -18,11 +18,16 @@ use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\KsoRoiController;
 use App\Http\Controllers\DataImportController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\PasswordResetController;
 
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Password Reset Routes - Public
+Route::get('/password-reset/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
+Route::post('/password-reset/{token}', [PasswordResetController::class, 'reset'])->name('password.reset.post');
 
 // QR Routes - Tanpa Login (Public)
 Route::prefix('qr')->name('qr.')->group(function () {
