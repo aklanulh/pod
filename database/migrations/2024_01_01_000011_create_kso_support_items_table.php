@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('kso_item_id')->constrained('kso_items')->onDelete('cascade');
             $table->string('nama_item');
             $table->decimal('nilai_item', 15, 2);
-            $table->integer('jumlah')->default(1);
             $table->text('spesifikasi')->nullable();
 
             // Equipment Details
@@ -24,12 +23,7 @@ return new class extends Migration
             $table->string('model')->nullable();
             $table->string('serial_number')->nullable();
             $table->string('no_registrasi')->nullable();
-            $table->date('tanggal_install')->nullable();
-            $table->string('kategori')->nullable();
             $table->date('garansi_berakhir')->nullable();
-            $table->date('periode_kso_mulai')->nullable();
-            $table->date('periode_kso_berakhir')->nullable();
-            $table->string('lokasi_penempatan')->nullable();
             $table->string('kondisi')->default('excellent');
             $table->string('status')->default('active');
 

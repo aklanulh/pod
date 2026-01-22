@@ -112,7 +112,7 @@ class KsoRoiController extends Controller
      */
     public function createKsoItem()
     {
-        $customers = Customer::orderBy('name')->get();
+        $customers = Customer::active()->orderBy('name')->get();
         return view('kso-roi.create-kso-item', compact('customers'));
     }
 
@@ -147,14 +147,9 @@ class KsoRoiController extends Controller
             'support_items.*.model' => 'nullable|string|max:255',
             'support_items.*.serial_number' => 'nullable|string|max:255',
             'support_items.*.no_registrasi' => 'nullable|string|max:255',
-            'support_items.*.kategori' => 'nullable|string|max:255',
-            'support_items.*.jumlah' => 'required_with:support_items|integer|min:1',
+            'support_items.*.nilai_item' => 'nullable|numeric|min:0',
             'support_items.*.kondisi' => 'nullable|string|max:255',
-            'support_items.*.tanggal_install' => 'nullable|date',
-            'support_items.*.lokasi_penempatan' => 'nullable|string|max:255',
             'support_items.*.garansi_berakhir' => 'nullable|date',
-            'support_items.*.periode_kso_mulai' => 'nullable|date',
-            'support_items.*.periode_kso_berakhir' => 'nullable|date',
             'support_items.*.status' => 'nullable|string|max:255',
             'support_items.*.spesifikasi' => 'nullable|string'
         ]);
@@ -213,15 +208,9 @@ class KsoRoiController extends Controller
                             'model' => $supportItem['model'] ?? null,
                             'serial_number' => $supportItem['serial_number'] ?? null,
                             'no_registrasi' => $supportItem['no_registrasi'] ?? null,
-                            'kategori' => $supportItem['kategori'] ?? null,
-                            'jumlah' => $supportItem['jumlah'] ?? 1,
                             'kondisi' => $supportItem['kondisi'] ?? 'baik',
                             'nilai_item' => $supportItem['nilai_item'] ?? 0,
-                            'tanggal_install' => $supportItem['tanggal_install'] ?? null,
-                            'lokasi_penempatan' => $supportItem['lokasi_penempatan'] ?? null,
                             'garansi_berakhir' => $supportItem['garansi_berakhir'] ?? null,
-                            'periode_kso_mulai' => $supportItem['periode_kso_mulai'] ?? null,
-                            'periode_kso_berakhir' => $supportItem['periode_kso_berakhir'] ?? null,
                             'status' => $supportItem['status'] ?? 'active',
                             'spesifikasi' => $supportItem['spesifikasi'] ?? null
                         ]);
@@ -279,14 +268,9 @@ class KsoRoiController extends Controller
             'support_items.*.model' => 'nullable|string|max:255',
             'support_items.*.serial_number' => 'nullable|string|max:255',
             'support_items.*.no_registrasi' => 'nullable|string|max:255',
-            'support_items.*.kategori' => 'nullable|string|max:255',
-            'support_items.*.jumlah' => 'required_with:support_items|integer|min:1',
+            'support_items.*.nilai_item' => 'nullable|numeric|min:0',
             'support_items.*.kondisi' => 'nullable|string|max:255',
-            'support_items.*.tanggal_install' => 'nullable|date',
-            'support_items.*.lokasi_penempatan' => 'nullable|string|max:255',
             'support_items.*.garansi_berakhir' => 'nullable|date',
-            'support_items.*.periode_kso_mulai' => 'nullable|date',
-            'support_items.*.periode_kso_berakhir' => 'nullable|date',
             'support_items.*.status' => 'nullable|string|max:255',
             'support_items.*.spesifikasi' => 'nullable|string'
         ]);
@@ -354,15 +338,9 @@ class KsoRoiController extends Controller
                             'model' => $supportItem['model'] ?? null,
                             'serial_number' => $supportItem['serial_number'] ?? null,
                             'no_registrasi' => $supportItem['no_registrasi'] ?? null,
-                            'kategori' => $supportItem['kategori'] ?? null,
-                            'jumlah' => $supportItem['jumlah'] ?? 1,
                             'kondisi' => $supportItem['kondisi'] ?? 'baik',
                             'nilai_item' => $supportItem['nilai_item'] ?? 0,
-                            'tanggal_install' => $supportItem['tanggal_install'] ?? null,
-                            'lokasi_penempatan' => $supportItem['lokasi_penempatan'] ?? null,
                             'garansi_berakhir' => $supportItem['garansi_berakhir'] ?? null,
-                            'periode_kso_mulai' => $supportItem['periode_kso_mulai'] ?? null,
-                            'periode_kso_berakhir' => $supportItem['periode_kso_berakhir'] ?? null,
                             'status' => $supportItem['status'] ?? 'active',
                             'spesifikasi' => $supportItem['spesifikasi'] ?? null
                         ]);
@@ -597,21 +575,7 @@ class KsoRoiController extends Controller
     }
 
     /**
-     * Show QR verification page (tanpa login)
-     * Simplified flow: /qr/kso/{uniqueId} langsung ke halaman verifikasi
-     */
-    public function qrVerify($uniqueId)
-    {
-        $ksoItem = KsoItem::with(['customer', 'supportItems'])->byUniqueId($uniqueId)->first();
-
-        return view('kso-roi.qr-verify', [
-            'uniqueId' => $uniqueId,
-            'ksoItem' => $ksoItem
-        ]);
-    }
-
-    /**
-     * Search KSO item by unique_id (manual search untuk barcode rusak)
+     * Handle manual search by unique_id
      */
     public function qrSearch(Request $request, $uniqueId)
     {
@@ -619,17 +583,41 @@ class KsoRoiController extends Controller
             'search_id' => 'required|string|min:6|max:8'
         ]);
 
-        $searchId = trim($request->search_id);
+        $searchId = $request->search_id;
 
         // Cari KSO item berdasarkan unique_id
-        $ksoItem = KsoItem::with(['customer', 'supportItems'])->byUniqueId($searchId)->first();
+        $ksoItem = KsoItem::with(['customer', 'supportItems'])
+            ->where('unique_id', $searchId)
+            ->first();
 
         if (!$ksoItem) {
-            return back()->with('error', 'KSO Item dengan ID ' . $searchId . ' tidak ditemukan. Silakan periksa kembali ID yang Anda masukkan.');
+            return back()->with('error', 'KSO Item dengan ID tersebut tidak ditemukan');
         }
 
-        // Redirect ke halaman verifikasi dengan unique_id yang ditemukan
-        return redirect()->route('qr.verify', $ksoItem->unique_id);
+        // Redirect ke verification page dengan item yang ditemukan
+        return redirect()->route('qr.verify', $ksoItem->unique_id)
+            ->with('success', 'KSO Item ditemukan: ' . $ksoItem->nama_alat);
+    }
+
+    /**
+     * Show QR verification page (tanpa login)
+     * Simplified flow: /qr/kso/{uniqueId} langsung ke halaman verifikasi
+     */
+    public function qrVerify($uniqueId)
+    {
+        // Hanya cari berdasarkan unique_id, tidak boleh ID
+        $ksoItem = KsoItem::with(['customer', 'supportItems'])
+            ->where('unique_id', $uniqueId)
+            ->first();
+
+        if (!$ksoItem) {
+            return redirect()->route('kso-roi.kso-items')->with('error', 'KSO Item tidak ditemukan');
+        }
+
+        return view('kso-roi.qr-verify', [
+            'ksoItem' => $ksoItem,
+            'uniqueId' => $ksoItem->unique_id
+        ]);
     }
 
     /**
@@ -641,7 +629,10 @@ class KsoRoiController extends Controller
             'password' => 'required|string'
         ]);
 
-        $ksoItem = KsoItem::with(['customer', 'supportItems'])->byUniqueId($uniqueId)->first();
+        // Hanya cari berdasarkan unique_id, tidak boleh ID
+        $ksoItem = KsoItem::with(['customer', 'supportItems'])
+            ->where('unique_id', $uniqueId)
+            ->first();
 
         if (!$ksoItem) {
             return back()->with('error', 'KSO Item tidak ditemukan');
@@ -659,11 +650,11 @@ class KsoRoiController extends Controller
 
         // Store token di session dengan expiry time (15 menit)
         session([
-            'qr_token_' . $uniqueId => $token,
-            'qr_token_expires_' . $uniqueId => now()->addMinutes(15)
+            'qr_token_' . $ksoItem->id => $token,
+            'qr_token_expires_' . $ksoItem->id => now()->addMinutes(15)
         ]);
 
-        return redirect()->route('qr.detail', ['uniqueId' => $uniqueId, 'token' => $token]);
+        return redirect()->route('qr.detail', ['uniqueId' => $ksoItem->unique_id, 'token' => $token]);
     }
 
     /**
@@ -674,29 +665,32 @@ class KsoRoiController extends Controller
         // Ambil token dari URL
         $token = request('token');
 
-        // Check if token ada dan valid
-        $sessionToken = session('qr_token_' . $uniqueId);
-        $tokenExpires = session('qr_token_expires_' . $uniqueId);
-
-        // Validasi token
-        if (!$token || !$sessionToken || $token !== $sessionToken) {
-            return redirect()->route('qr.verify', $uniqueId)
-                ->with('error', 'Silakan masukkan password terlebih dahulu');
-        }
-
-        // Validasi expiry
-        if ($tokenExpires && now() > $tokenExpires) {
-            session()->forget(['qr_token_' . $uniqueId, 'qr_token_expires_' . $uniqueId]);
-            return redirect()->route('qr.verify', $uniqueId)
-                ->with('error', 'Session sudah kadaluarsa, silakan masukkan password lagi');
-        }
-
-        $ksoItem = KsoItem::with(['customer', 'supportItems'])->byUniqueId($uniqueId)->first();
+        // Hanya cari berdasarkan unique_id, tidak boleh ID
+        $ksoItem = KsoItem::with(['customer', 'supportItems'])
+            ->where('unique_id', $uniqueId)
+            ->first();
 
         if (!$ksoItem) {
             return view('kso-roi.qr-detail', [
                 'error' => 'KSO Item tidak ditemukan'
             ]);
+        }
+
+        // Check if token ada dan valid
+        $sessionToken = session('qr_token_' . $ksoItem->id);
+        $tokenExpires = session('qr_token_expires_' . $ksoItem->id);
+
+        // Validasi token
+        if (!$token || !$sessionToken || $token !== $sessionToken) {
+            return redirect()->route('qr.verify', $ksoItem->unique_id)
+                ->with('error', 'Silakan masukkan password terlebih dahulu');
+        }
+
+        // Validasi expiry
+        if ($tokenExpires && now() > $tokenExpires) {
+            session()->forget(['qr_token_' . $ksoItem->id, 'qr_token_expires_' . $ksoItem->id]);
+            return redirect()->route('qr.verify', $ksoItem->unique_id)
+                ->with('error', 'Session sudah kadaluarsa, silakan masukkan password lagi');
         }
 
         return view('kso-roi.qr-detail', [

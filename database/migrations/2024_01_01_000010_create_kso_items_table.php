@@ -38,8 +38,6 @@ return new class extends Migration
 
             // Financial
             $table->decimal('nilai_alat_utama', 15, 2);
-            $table->decimal('nilai_sewa_bulanan', 15, 2)->nullable();
-            $table->decimal('deposit', 15, 2)->nullable();
             $table->boolean('butuh_komputer')->default(false);
             $table->decimal('total_pendukung', 15, 2)->default(0);
             $table->decimal('total_investasi', 15, 2);

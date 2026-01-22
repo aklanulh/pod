@@ -124,30 +124,17 @@ class QrCodeHelper
     }
 
     /**
-     * Generate QR Code SVG menggunakan endroid/qr-code library
-     * Fallback ke API jika library tidak tersedia
+     * Generate QR Code SVG menggunakan API fallback
      * 
-     * @param int $ksoItemId - ID dari KSO Item
+     * @param int|string $ksoItemIdOrUniqueId - ID atau unique_id dari KSO Item
      * @param int $size - Ukuran QR Code (default: 300)
-     * @return string - SVG atau URL QR Code
+     * @return string - URL QR Code
      */
-    public static function generateQrCodeSvg($ksoItemId, $size = 300)
+    public static function generateQrCodeSvg($ksoItemIdOrUniqueId, $size = 300)
     {
-        $url = self::getFullQrAccessUrl($ksoItemId);
+        $url = self::getFullQrAccessUrl($ksoItemIdOrUniqueId);
 
-        // Try to use endroid/qr-code if available
-        if (class_exists('Endroid\QrCode\QrCode')) {
-            try {
-                $qrCode = new \Endroid\QrCode\QrCode($url);
-                $qrCode->setSize($size);
-                return $qrCode->writeString();
-            } catch (\Exception $e) {
-                // Fallback to API
-                return self::generateQrCodeUrl($url, $size);
-            }
-        }
-
-        // Fallback to API
+        // Fallback ke API
         return self::generateQrCodeUrl($url, $size);
     }
 
@@ -155,13 +142,13 @@ class QrCodeHelper
      * Generate QR Code Data URL (base64 encoded)
      * Untuk digunakan langsung di img tag
      * 
-     * @param int $ksoItemId - ID dari KSO Item
+     * @param int|string $ksoItemIdOrUniqueId - ID atau unique_id dari KSO Item
      * @param int $size - Ukuran QR Code (default: 300)
      * @return string - Data URL
      */
-    public static function generateQrCodeDataUrl($ksoItemId, $size = 300)
+    public static function generateQrCodeDataUrl($ksoItemIdOrUniqueId, $size = 300)
     {
-        $url = self::getFullQrAccessUrl($ksoItemId);
+        $url = self::getFullQrAccessUrl($ksoItemIdOrUniqueId);
         $qrImageUrl = self::generateQrCodeUrl($url, $size);
 
         // Fetch image from API and convert to data URL

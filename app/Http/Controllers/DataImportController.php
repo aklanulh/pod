@@ -7,7 +7,9 @@ use App\Imports\ImportSuppliersImport;
 use App\Imports\ImportCustomersImport;
 use App\Imports\ImportProductsImport;
 use App\Imports\ImportStockMovementsImport;
+use App\Imports\ImportKsoItemsImport;
 use App\Models\Product;
+use App\Exports\KsoItemsTemplateExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -169,6 +171,53 @@ class DataImportController extends Controller
     }
 
     /**
+     * Import KSO items from Excel
+     */
+    public function importKsoItems(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240'
+        ]);
+
+        try {
+            Log::info('Import KSO items request received');
+            $import = new ImportKsoItemsImport();
+            Excel::import($import, $request->file('file'));
+
+            // Process support items after main items are imported
+            $import->afterImport();
+
+            Log::info('KSO items import completed. Rows processed: ' . $import->getRowCount());
+            Log::info('Rows skipped: ' . $import->getSkippedRowsCount());
+            Log::info('Total rows attempted: ' . $import->getTotalProcessedRows());
+
+            $message = 'Data KSO items berhasil diimport! ';
+            $message .= $import->getRowCount() . ' baris berhasil, ';
+            if ($import->getSkippedRowsCount() > 0) {
+                $message .= $import->getSkippedRowsCount() . ' baris dilewati (total: ' . $import->getTotalProcessedRows() . ' baris). ';
+                $message .= 'Periksa log untuk detail baris yang gagal.';
+            } else {
+                $message .= 'dari ' . $import->getTotalProcessedRows() . ' baris total.';
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'imported' => $import->getRowCount(),
+                'skipped' => $import->getSkippedRowsCount(),
+                'total_attempted' => $import->getTotalProcessedRows()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('KSO items import error: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    /**
      * Import stock movements from Excel
      */
     public function importStockMovements(Request $request)
@@ -297,6 +346,73 @@ class DataImportController extends Controller
     }
 
     /**
+     * Download template for KSO items
+     */
+    public function downloadKsoItemTemplate()
+    {
+        $data = [
+            // Main KSO Item Example
+            [
+                'item_type' => 'main',
+                'main_item_no_registrasi' => '',
+                'customer_name' => 'RS. Sehat',
+                'nama_alat' => 'Hematology Analyzer Mindray BC-6800',
+                'brand' => 'Mindray',
+                'model' => 'BC-6800',
+                'serial_number' => 'SN001234567',
+                'no_registrasi' => 'REG001',
+                'kategori' => 'Alat Laboratorium',
+                'nilai_alat_utama' => '450000000',
+                'butuh_komputer' => 'TRUE',
+                'total_pendukung' => '75000000',
+                'keterangan' => 'Alat hematologi lengkap dengan reagen',
+                'spesifikasi_teknis' => '120 parameter, throughput 80 samples/jam',
+                'kondisi' => 'baik',
+                'lokasi_penempatan' => 'Lab Utama Lantai 2',
+                'pic_customer' => 'Dr. Budi',
+                'pic_msa' => 'Technician MSA',
+                'tanggal_investasi' => '2024-01-15',
+                'tanggal_install' => '2024-01-20',
+                'tanggal_deployment' => '2024-01-20',
+                'garansi_mulai' => '2024-01-20',
+                'garansi_berakhir' => '2027-01-19',
+                'durasi_kso_bulan' => '36',
+                'status' => 'active'
+            ],
+            // Support Item Example
+            [
+                'item_type' => 'support',
+                'main_item_no_registrasi' => 'REG001',
+                'customer_name' => '',
+                'nama_alat' => 'PC Support Hematology',
+                'brand' => 'Dell',
+                'model' => 'OptiPlex 7090',
+                'serial_number' => 'PC001234',
+                'no_registrasi' => '',
+                'kategori' => 'Alat Komputer',
+                'nilai_alat_utama' => '15000000',
+                'butuh_komputer' => '',
+                'total_pendukung' => '',
+                'keterangan' => 'PC untuk software hematologi',
+                'spesifikasi_teknis' => 'Intel i7, 16GB RAM, 512GB SSD',
+                'kondisi' => 'excellent',
+                'lokasi_penempatan' => 'Lab Utama Lantai 2',
+                'pic_customer' => '',
+                'pic_msa' => '',
+                'tanggal_investasi' => '',
+                'tanggal_install' => '2024-01-20',
+                'tanggal_deployment' => '',
+                'garansi_mulai' => '',
+                'garansi_berakhir' => '2027-01-19',
+                'durasi_kso_bulan' => '',
+                'status' => 'active'
+            ]
+        ];
+
+        return Excel::download(new KsoItemsTemplateExport($data), 'kso_items_template.xlsx');
+    }
+
+    /**
      * Download template for stock movements
      */
     public function downloadStockMovementTemplate()
@@ -335,11 +451,15 @@ class DataImportController extends Controller
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Add headers
-        $sheet->fromArray($headers, null, 'A1');
-
-        // Add data
-        $sheet->fromArray($data, null, 'A2');
+        // Check if first row of data is headers (for KSO items template)
+        if (is_array($data) && count($data) > 0 && is_array($data[0]) && $data[0] === $headers) {
+            // Data already includes headers, use as-is
+            $sheet->fromArray($data, null, 'A1');
+        } else {
+            // Add headers first, then data
+            $sheet->fromArray($headers, null, 'A1');
+            $sheet->fromArray($data, null, 'A2');
+        }
 
         // Style header row
         $sheet->getStyle('A1:' . $sheet->getHighestColumn() . '1')->getFont()->setBold(true);
@@ -395,7 +515,7 @@ class DataImportController extends Controller
     {
         $request->validate([
             'file' => 'required|mimes:xlsx,xls,csv|max:10240',
-            'type' => 'required|in:suppliers,customers,products,stock_movements'
+            'type' => 'required|in:suppliers,customers,products,stock_movements,kso_items'
         ]);
 
         try {
@@ -407,10 +527,13 @@ class DataImportController extends Controller
             $totalRows = count($rows);
 
             // Process preview data to show boolean values properly
-            if ($request->type === 'products') {
+            if ($request->type === 'products' || $request->type === 'kso_items') {
                 $preview = array_map(function ($row) {
                     if (isset($row['is_active'])) {
                         $row['is_active'] = $this->formatBooleanPreview($row['is_active']);
+                    }
+                    if (isset($row['butuh_komputer'])) {
+                        $row['butuh_komputer'] = $this->formatBooleanPreview($row['butuh_komputer']);
                     }
                     return $row;
                 }, $preview);

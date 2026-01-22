@@ -217,12 +217,6 @@
                                 <span class="px-3 py-2 rounded-full text-sm font-medium {{ $item->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
                                     {{ ucfirst($item->status) }}
                                 </span>
-                                @if($item->nilai_sewa_bulanan)
-                                    <div class="text-right">
-                                        <p class="text-lg font-bold text-green-600">Rp {{ number_format($item->nilai_sewa_bulanan, 0, ',', '.') }}</p>
-                                        <p class="text-xs text-gray-500">{{ $item->kondisi ?? 'excellent' }}</p>
-                                    </div>
-                                @endif
                             </div>
                         </div>
 

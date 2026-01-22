@@ -25,6 +25,7 @@ class KsoItem extends Model
         });
     }
 
+
     protected $fillable = [
         'customer_id',
         'unique_id',
@@ -35,8 +36,6 @@ class KsoItem extends Model
         'no_registrasi',
         'kategori',
         'nilai_alat_utama',
-        'nilai_sewa_bulanan',
-        'deposit',
         'butuh_komputer',
         'total_pendukung',
         'total_investasi',
@@ -57,9 +56,8 @@ class KsoItem extends Model
     ];
 
     protected $casts = [
+        'unique_id' => 'string',
         'nilai_alat_utama' => 'decimal:2',
-        'nilai_sewa_bulanan' => 'decimal:2',
-        'deposit' => 'decimal:2',
         'total_pendukung' => 'decimal:2',
         'total_investasi' => 'decimal:2',
         'butuh_komputer' => 'boolean',
@@ -327,25 +325,8 @@ class KsoItem extends Model
     }
 
     /**
-     * Calculate remaining KSO days
-     */
-    public function getRemainingKsoDaysAttribute(): ?int
-    {
-        if (!$this->periode_kso_berakhir) {
-            return null;
-        }
-
-        $today = now();
-        if ($this->periode_kso_berakhir < $today) {
-            return 0;
-        }
-
-        return $today->diffInDays($this->periode_kso_berakhir);
-    }
-
-    /**
      * Generate unique 8-digit ID
-     * Format: YYYYMMSSSS
+     * Format: YYMMSSSS
      * - YY: Tahun (2 digit, contoh: 25 untuk 2025)
      * - MM: Bulan (2 digit, 01-12)
      * - SSSS: Urutan barang dalam setahun (4 digit, 0001-9999)
@@ -390,5 +371,22 @@ class KsoItem extends Model
     public function scopeByUniqueId($query, $uniqueId)
     {
         return $query->where('unique_id', $uniqueId);
+    }
+
+    /**
+     * Calculate remaining KSO days
+     */
+    public function getRemainingKsoDaysAttribute(): ?int
+    {
+        if (!$this->periode_kso_berakhir) {
+            return null;
+        }
+
+        $today = now();
+        if ($this->periode_kso_berakhir < $today) {
+            return 0;
+        }
+
+        return $today->diffInDays($this->periode_kso_berakhir);
     }
 }

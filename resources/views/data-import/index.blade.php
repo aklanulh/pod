@@ -13,7 +13,7 @@
     </div>
 
     <!-- Import Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- Suppliers Import -->
         <div class="bg-white rounded-lg shadow-md">
             <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
@@ -178,6 +178,52 @@
                             Import Stock Movements
                         </button>
                         <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-md hover:bg-gray-300 transition-colors" onclick="previewData('stock_movements')">
+                            <i class="fas fa-eye mr-2"></i>
+                            Preview Data
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- KSO Items Import -->
+        <div class="bg-white rounded-lg shadow-md">
+            <div class="bg-purple-600 text-white px-6 py-4 rounded-t-lg">
+                <h5 class="text-lg font-semibold mb-0">
+                    <i class="fas fa-medkit mr-2"></i>
+                    Import KSO Items
+                </h5>
+            </div>
+            <div class="p-6">
+                <p class="text-gray-600 mb-4">Import data KSO items (alat medis & alat pendukung) dari file Excel</p>
+                
+                <!-- Download Template -->
+                <div class="mb-4">
+                    <a href="{{ route('data-import.template.kso-items') }}" class="inline-flex items-center px-3 py-2 bg-purple-100 text-purple-700 text-sm font-medium rounded-md hover:bg-purple-200 transition-colors">
+                        <i class="fas fa-download mr-1"></i>
+                        Download Template
+                    </a>
+                    <p class="text-sm text-gray-500 mt-1">Format: .xlsx, .xls, .csv (Max: 10MB)</p>
+                    <p class="text-xs text-gray-400 mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Template includes main items and support items. Use item_type column to specify.
+                    </p>
+                </div>
+
+                <!-- Upload Form -->
+                <form id="ksoItemsForm" enctype="multipart/form-data" class="space-y-4" onsubmit="return false;">
+                    @csrf
+                    <div>
+                        <label for="ksoItemsFile" class="block text-sm font-medium text-gray-700 mb-2">Pilih File</label>
+                        <input type="file" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100" id="ksoItemsFile" name="file" 
+                               accept=".xlsx,.xls,.csv" required>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button type="button" class="inline-flex items-center px-4 py-2 bg-purple-600 text-white font-medium rounded-md hover:bg-purple-700 transition-colors" onclick="importData('kso-items', 'ksoItemsFile')">
+                            <i class="fas fa-upload mr-2"></i>
+                            Import KSO Items
+                        </button>
+                        <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-md hover:bg-gray-300 transition-colors" onclick="previewData('kso_items')">
                             <i class="fas fa-eye mr-2"></i>
                             Preview Data
                         </button>

@@ -353,49 +353,8 @@
                 <input type="text" name="support_items[][no_registrasi]" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
-                <input type="text" name="support_items[][kategori]" list="support-kategori-list" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Pilih atau ketik kategori">
-                    <datalist id="support-kategori-list">
-                        <option value="komputer">Komputer</option>
-                        <option value="monitor">Monitor</option>
-                        <option value="ups">UPS</option>
-                        <option value="printer">Printer</option>
-                        <option value="keyboard">Keyboard</option>
-                        <option value="mouse">Mouse</option>
-                        <option value="network">Network</option>
-                        <option value="storage">Storage</option>
-                    </datalist>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah</label>
-                <input type="number" name="support_items[][jumlah]" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" min="1" value="1">
-            </div>
-            <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Nilai Item (Rp)</label>
                 <input type="number" name="support_items[][nilai_item]" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" min="0" value="0" placeholder="0">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Kondisi</label>
-                <select name="support_items[][kondisi]" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <option value="baik">Baik</option>
-                    <option value="cukup">Cukup</option>
-                    <option value="rusak ringan">Rusak Ringan</option>
-                    <option value="rusak berat">Rusak Berat</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Install</label>
-                <input type="date" name="support_items[][tanggal_install]" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Lokasi Penempatan</label>
-                <input type="text" name="support_items[][lokasi_penempatan]" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
             </div>
         </div>
 
@@ -411,17 +370,6 @@
                     <option value="inactive">Inactive</option>
                     <option value="maintenance">Maintenance</option>
                 </select>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Periode KSO Mulai</label>
-                <input type="date" name="support_items[][periode_kso_mulai]" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Periode KSO Berakhir</label>
-                <input type="date" name="support_items[][periode_kso_berakhir]" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
             </div>
         </div>
 

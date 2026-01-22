@@ -266,13 +266,13 @@
                             <div class="p-6 text-center">
                                 <div class="mb-4">
                                     <img src="{{ \App\Helpers\QrCodeHelper::generateKsoItemQrCode($ksoItem->id, 200) }}" 
-                                         alt="QR Code - KSO Item {{ $ksoItem->unique_id }}" 
+                                         alt="QR Code - KSO Item {{ $ksoItem->id }}" 
                                          class="mx-auto border-2 border-gray-200 rounded-lg shadow-sm"
                                          style="width: 200px; height: 200px;">
                                 </div>
                                 <div class="space-y-2">
                                     <p class="text-sm text-gray-600 font-medium">ID KSO Item</p>
-                                    <p class="text-lg font-bold text-gray-900">{{ $ksoItem->unique_id }}</p>
+                                    <p class="text-lg font-bold text-gray-900">{{ $ksoItem->id }}</p>
                                     <p class="text-xs text-gray-500 mt-2">Scan untuk melihat detail</p>
                                 </div>
                             </div>

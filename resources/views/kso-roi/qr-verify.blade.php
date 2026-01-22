@@ -63,14 +63,14 @@
                                 <p class="mt-1 text-sm text-green-700">
                                     <strong>{{ $ksoItem->nama_alat }}</strong> - {{ $ksoItem->customer->name }}
                                 </p>
-                                <p class="text-xs text-green-600 mt-1">ID: {{ $ksoItem->unique_id }}</p>
+                                <p class="text-xs text-green-600 mt-1">ID: {{ $ksoItem->id }}</p>
                             </div>
                         </div>
                     </div>
                 @endif
 
                 <!-- Password Form -->
-                <form action="{{ route('qr.password', $uniqueId) }}" method="POST" class="space-y-4">
+                <form action="{{ route('qr.password', $ksoItem->unique_id) }}" method="POST" class="space-y-4">
                     @csrf
 
                     <div>
@@ -118,7 +118,7 @@
                         Jika barcode rusak atau tidak terbaca, masukkan ID KSO secara manual
                     </p>
 
-                    <form action="{{ route('qr.search', $uniqueId) }}" method="POST" class="space-y-3">
+                    <form action="{{ route('qr.search', $ksoItem->unique_id) }}" method="POST" class="space-y-3">
                         @csrf
 
                         <div>

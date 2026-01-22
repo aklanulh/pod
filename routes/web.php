@@ -295,6 +295,7 @@ Route::middleware('auth')->group(function () {
         Route::post('customers', [DataImportController::class, 'importCustomers'])->name('customers');
         Route::post('products', [DataImportController::class, 'importProducts'])->name('products');
         Route::post('stock-movements', [DataImportController::class, 'importStockMovements'])->name('stock-movements');
+        Route::post('kso-items', [DataImportController::class, 'importKsoItems'])->name('kso-items');
         Route::post('preview', [DataImportController::class, 'previewData'])->name('preview');
 
         // Download templates
@@ -302,5 +303,6 @@ Route::middleware('auth')->group(function () {
         Route::get('template/customers', [DataImportController::class, 'downloadCustomerTemplate'])->name('template.customers');
         Route::get('template/products', [DataImportController::class, 'downloadProductTemplate'])->name('template.products');
         Route::get('template/stock-movements', [DataImportController::class, 'downloadStockMovementTemplate'])->name('template.stock-movements');
+        Route::get('template/kso-items', [DataImportController::class, 'downloadKsoItemTemplate'])->name('template.kso-items');
     });
 });
