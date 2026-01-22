@@ -289,7 +289,7 @@
                         @foreach($products as $product)
                             @if(!$stockOpname->details->contains('product_id', $product->id))
                                 <option value="{{ $product->id }}" data-stock="{{ $product->current_stock }}">
-                                    {{ $product->code }} - {{ $product->name }} (Stok: {{ $product->current_stock }})
+                                    {{ $product->code }} - {{ $product->name }}{{ $product->description ? ' - ' . $product->description : '' }} (Stok: {{ $product->current_stock }})
                                 </option>
                             @endif
                         @endforeach

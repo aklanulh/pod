@@ -273,7 +273,7 @@
                 @endphp
                 <tr>
                     <td class="center-cell">{{ $index + 1 }}</td>
-                    <td class="text-left">{{ $product ? $product->name : 'Unknown Product' }}</td>
+                    <td class="text-left">{{ $product ? $product->name : 'Unknown Product' }}{{ $product && $product->description ? ' - ' . $product->description : '' }}</td>
                     <td class="center-cell">{{ $product && $product->expired_date ? \Carbon\Carbon::parse($product->expired_date)->format('d/m/Y') : '' }}</td>
                     <td class="center-cell">{{ $product ? $product->code : '' }}</td>
                     <td class="center-cell">{{ $product ? $product->lot_number : '' }}</td>

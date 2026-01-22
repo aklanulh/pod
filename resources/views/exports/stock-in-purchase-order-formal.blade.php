@@ -374,7 +374,7 @@
                 @foreach($stockMovements as $index => $movement)
                     <tr>
                         <td class="text-center">{{ $index + 1 }}</td>
-                        <td>{{ $movement->product->name }}</td>
+                        <td>{{ $movement->product->name }}{{ $movement->product->description ? ' - ' . $movement->product->description : '' }}</td>
                         <td class="text-right">Rp {{ number_format($movement->unit_price, 0, ',', '.') }}</td>
                         <td class="text-center">{{ ($movement->discount ?? 0) }}%</td>
                         <td class="text-center">{{ $movement->quantity }} {{ $movement->product->unit }}</td>

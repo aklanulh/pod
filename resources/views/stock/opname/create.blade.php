@@ -55,7 +55,7 @@
                                         <option value="">Pilih Produk</option>
                                         @foreach($products as $prod)
                                             <option value="{{ $prod->id }}" data-stock="{{ $prod->current_stock }}">
-                                                {{ $prod->name }}
+                                                {{ $prod->name }}{{ $prod->description ? ' - ' . $prod->description : '' }}
                                             </option>
                                         @endforeach
                                     </select>

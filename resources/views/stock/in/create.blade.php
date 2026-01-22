@@ -3,7 +3,7 @@
 @section('title', isset($draft) ? 'Edit Draft Stok Masuk' : 'Tambah Stok Masuk')
 
 @section('content')
-<div class="max-w-4xl mx-auto">
+<div class="max-w-6xl mx-auto">
     <div class="flex items-center mb-6">
         <a href="{{ route('stock.in.index') }}" class="text-gray-600 hover:text-gray-900 mr-4">
             <i class="fas fa-arrow-left"></i>
@@ -224,7 +224,7 @@
                                         <div @click="selectProduct(product)"
                                              class="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0">
                                             <div class="font-medium" x-text="product.code + ' - ' + product.name"></div>
-                                            <div class="text-sm text-gray-500" x-text="'Stok: ' + (product.current_stock || 0) + ' ' + product.unit"></div>
+                                            <div class="text-sm text-gray-500" x-text="(product.description ? product.description + ' - ' : '') + 'Stok: ' + (product.current_stock || 0) + ' ' + product.unit"></div>
                                         </div>
                                     </template>
                                 </div>
@@ -393,7 +393,7 @@
                         <template x-for="(item, index) in productCart" :key="index">
                             <div class="flex items-center justify-between bg-white p-3 rounded border">
                                 <div class="flex-1">
-                                    <div class="font-medium" x-text="item.code + ' - ' + item.name"></div>
+                                    <div class="font-medium" x-text="item.code + ' - ' + item.name + (item.description ? ' - ' + item.description : '')"></div>
                                     <div class="text-sm text-gray-500" x-text="'Satuan: ' + item.unit"></div>
                                 </div>
                                 <div class="flex items-center space-x-4">
@@ -787,7 +787,9 @@ function stockInForm() {
                     product_id: product.id,
                     code: product.code,
                     name: product.name,
+                    description: product.description,
                     unit: product.unit,
+                    available_stock: product.current_stock,
                     quantity: parseInt(this.tempQuantity),
                     unit_price: parseFloat(this.tempUnitPrice),
                     discount: parseFloat(this.tempDiscount) || 0
@@ -817,7 +819,7 @@ function stockInForm() {
 
         selectProduct(product) {
             this.selectedProductForCart = product.id;
-            this.productSearch = `${product.code} - ${product.name}`;
+            this.productSearch = `${product.code} - ${product.name}${product.description ? ' - ' + product.description : ''}`;
             this.showProductDropdown = false;
             
             // Auto-focus to quantity field

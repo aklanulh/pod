@@ -336,7 +336,7 @@
                     @endphp
                     <tr>
                         <td class="center-cell">{{ $index + 1 }}</td>
-                        <td class="text-left">{{ $product ? $product->name : 'Unknown Product' }}</td>
+                        <td class="text-left">{{ $product ? $product->name : 'Unknown Product' }}{{ $product && $product->description ? ' - ' . $product->description : '' }}</td>
                         <td class="center-cell">{{ $product ? $product->code : '' }}</td>
                         <td class="currency-cell"><span class="currency-rp">Rp</span><span class="currency-amount">{{ number_format($item['unit_price'], 0, ',', '.') }}</span></td>
                         <td class="center-cell">{{ $item['quantity'] }} {{ $unit }}</td>

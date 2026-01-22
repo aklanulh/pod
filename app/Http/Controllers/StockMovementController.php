@@ -181,7 +181,7 @@ class StockMovementController extends Controller
 
     public function stockInCreate()
     {
-        $products = Product::active()->orderBy('name')->get(['id', 'code', 'name', 'unit', 'current_stock']);
+        $products = Product::active()->orderBy('name')->get(['id', 'code', 'name', 'description', 'unit', 'current_stock']);
         $suppliers = Supplier::active()->orderBy('name')->get();
         $categories = \App\Models\ProductCategory::orderBy('name')->get();
 
@@ -447,7 +447,7 @@ class StockMovementController extends Controller
 
     public function stockOutCreate()
     {
-        $products = Product::where('current_stock', '>', 0)->orderBy('name')->get();
+        $products = Product::where('current_stock', '>', 0)->orderBy('name')->get(['id', 'code', 'name', 'description', 'unit', 'current_stock']);
         $customers = Customer::active()->orderBy('name')->get();
         $categories = ProductCategory::orderBy('name')->get();
 
@@ -1314,7 +1314,7 @@ class StockMovementController extends Controller
     public function editStockInDraft($id)
     {
         $draft = \App\Models\StockInDraft::with('supplier')->findOrFail($id);
-        $products = Product::orderBy('name')->get(['id', 'code', 'name', 'unit', 'current_stock']);
+        $products = Product::orderBy('name')->get(['id', 'code', 'name', 'description', 'unit', 'current_stock']);
         $suppliers = Supplier::orderBy('name')->get();
         $categories = \App\Models\ProductCategory::orderBy('name')->get();
 

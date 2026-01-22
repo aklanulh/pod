@@ -35,7 +35,7 @@ class StockOpnameController extends Controller
         // Hanya ambil produk yang ada stoknya untuk performance
         $products = Product::where('current_stock', '>', 0)
             ->orderBy('name')
-            ->get();
+            ->get(['id', 'code', 'name', 'description', 'unit', 'current_stock']);
 
         return view('stock.opname.create', compact('products'));
     }
@@ -109,7 +109,7 @@ class StockOpnameController extends Controller
         // Hanya ambil produk yang ada stoknya untuk performance
         $products = Product::where('current_stock', '>', 0)
             ->orderBy('name')
-            ->get();
+            ->get(['id', 'code', 'name', 'description', 'unit', 'current_stock']);
 
         // Debug: Log data to see what's actually in the database
         Log::info('Stock Opname Data:', [

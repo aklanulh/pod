@@ -202,13 +202,31 @@
                     <div class="flex space-x-4">
                         <div class="flex-1">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Produk</label>
-                            <select x-model="selectedProductForCart" 
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="">-- Pilih Produk --</option>
-                                <template x-for="product in availableProducts" :key="product.id">
-                                    <option :value="product.id" x-text="product.code + ' - ' + product.name + ' (Stok: ' + product.current_stock + ')'" :data-stock="product.current_stock"></option>
-                                </template>
-                            </select>
+                            <div class="relative">
+                                <input type="text" 
+                                       x-model="productSearch" 
+                                       @input="filterProducts()"
+                                       @focus="showProductDropdown = true"
+                                       @blur="setTimeout(() => showProductDropdown = false, 200)"
+                                       placeholder="Cari produk..."
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                
+                                <!-- Hidden field to store selected product ID -->
+                                <input type="hidden" x-model="selectedProductForCart">
+                                
+                                <!-- Dropdown for search results -->
+                                <div x-show="showProductDropdown && filteredProducts.length > 0" 
+                                     x-transition
+                                     class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                    <template x-for="product in filteredProducts" :key="product.id">
+                                        <div @click="selectProduct(product)"
+                                             class="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0">
+                                            <div class="font-medium" x-text="product.code + ' - ' + product.name"></div>
+                                            <div class="text-sm text-gray-500" x-text="(product.description ? product.description + ' - ' : '') + 'Stok: ' + (product.current_stock || 0) + ' ' + product.unit"></div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
                         </div>
                         <div class="w-32">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Qty</label>
@@ -248,7 +266,7 @@
                         <template x-for="(item, index) in productCart" :key="index">
                             <div class="flex items-center justify-between bg-white p-3 rounded border">
                                 <div class="flex-1">
-                                    <div class="font-medium" x-text="item.code + ' - ' + item.name"></div>
+                                    <div class="font-medium" x-text="item.code + ' - ' + item.name + (item.description ? ' - ' + item.description : '')"></div>
                                     <div class="text-sm text-gray-500" x-text="'Satuan: ' + item.unit + ' | Stok Tersedia: ' + item.available_stock"></div>
                                 </div>
                                 <div class="flex items-center space-x-4">
@@ -509,6 +527,8 @@ function stockOutForm() {
         tempStockWarning: false,
         tempStockMessage: '',
         editingIndex: -1,
+        filteredProducts: @json($products),
+        showProductDropdown: false,
         
         // Draft data
         draftData: @json($draft ?? null),
@@ -631,6 +651,7 @@ function stockOutForm() {
                     product_id: product.id,
                     code: product.code,
                     name: product.name,
+                    description: product.description,
                     unit: product.unit,
                     available_stock: product.current_stock,
                     quantity: parseInt(this.tempQuantity),
@@ -938,6 +959,33 @@ function stockOutForm() {
         getProductName(productId) {
             const product = this.availableProducts.find(p => p.id == productId);
             return product ? product.name : 'Unknown Product';
+        },
+
+        filterProducts() {
+            if (!this.productSearch) {
+                this.filteredProducts = this.availableProducts;
+                return;
+            }
+
+            const searchTerm = this.productSearch.toLowerCase();
+            this.filteredProducts = this.availableProducts.filter(product => 
+                product.code.toLowerCase().includes(searchTerm) ||
+                product.name.toLowerCase().includes(searchTerm)
+            ).slice(0, 50); // Limit to 50 results
+        },
+
+        selectProduct(product) {
+            this.selectedProductForCart = product.id;
+            this.productSearch = `${product.code} - ${product.name}${product.description ? ' - ' + product.description : ''}`;
+            this.showProductDropdown = false;
+            
+            // Auto-focus to quantity field
+            setTimeout(() => {
+                const quantityInput = document.querySelector('input[x-model="tempQuantity"]');
+                if (quantityInput) {
+                    quantityInput.focus();
+                }
+            }, 100);
         },
 
         // Generate invoice number with format: [CV_CODE][RUNNING_NUMBER][MONTH_YEAR]
