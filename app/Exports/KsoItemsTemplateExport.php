@@ -34,7 +34,6 @@ class KsoItemsTemplateExport implements FromArray, WithHeadings, WithTitle
             'kategori',
             'nilai_alat_utama',
             'butuh_komputer',
-            'total_pendukung',
             'keterangan',
             'spesifikasi_teknis',
             'kondisi',
@@ -46,6 +45,8 @@ class KsoItemsTemplateExport implements FromArray, WithHeadings, WithTitle
             'tanggal_deployment',
             'garansi_mulai',
             'garansi_berakhir',
+            'periode_kso_mulai',
+            'periode_kso_berakhir',
             'durasi_kso_bulan',
             'status'
         ];

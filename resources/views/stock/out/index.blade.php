@@ -194,7 +194,8 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($stockOuts as $transaction)
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-gray-100 cursor-pointer transition-colors" 
+                        onclick="toggleDetails('transaction-{{ $loop->index }}')">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ $transaction->order_number ?? '-' }}
                         </td>
@@ -226,18 +227,13 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex space-x-2">
                                 <button type="button" 
-                                        onclick="toggleDetails('transaction-{{ $loop->index }}')"
-                                        class="text-blue-600 hover:text-blue-900">
-                                    <i class="fas fa-eye"></i> Detail
-                                </button>
-                                <button type="button" 
-                                        onclick="openInvoice('{{ $transaction->order_number }}', '{{ $transaction->invoice_number }}', '{{ $transaction->customer->id ?? '' }}', '{{ $transaction->transaction_date->format('Y-m-d') }}')"
+                                        onclick="event.stopPropagation(); openInvoice('{{ $transaction->order_number }}', '{{ $transaction->invoice_number }}', '{{ $transaction->customer->id ?? '' }}', '{{ $transaction->transaction_date->format('Y-m-d') }}')"
                                         class="text-green-600 hover:text-green-900 mr-2"
                                         title="Cetak Faktur">
                                     <i class="fas fa-print"></i> Faktur
                                 </button>
                                 <button type="button" 
-                                        onclick="openDeliveryNote('{{ $transaction->order_number }}', '{{ $transaction->invoice_number }}', '{{ $transaction->customer->id ?? '' }}', '{{ $transaction->transaction_date->format('Y-m-d') }}')"
+                                        onclick="event.stopPropagation(); openDeliveryNote('{{ $transaction->order_number }}', '{{ $transaction->invoice_number }}', '{{ $transaction->customer->id ?? '' }}', '{{ $transaction->transaction_date->format('Y-m-d') }}')"
                                         class="text-purple-600 hover:text-purple-900"
                                         title="Cetak Surat Jalan">
                                     <i class="fas fa-truck"></i> Surat Jalan
@@ -247,7 +243,7 @@
                     </tr>
                     <!-- Detail Row (Hidden by default) -->
                     <tr id="transaction-{{ $loop->index }}" class="hidden bg-gray-50">
-                        <td colspan="8" class="px-6 py-4">
+                        <td colspan="9" class="px-6 py-4">
                             <div class="bg-white rounded-lg p-4 shadow-sm">
                                 <h4 class="font-semibold text-gray-900 mb-3">Detail Produk Transaksi</h4>
                                 <div class="overflow-x-auto">
@@ -256,6 +252,7 @@
                                             <tr>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">No. Referensi</th>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Produk</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Deskripsi</th>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Qty</th>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Harga Satuan</th>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Diskon</th>
@@ -267,6 +264,7 @@
                                                 <tr>
                                                     <td class="px-4 py-2 text-sm text-gray-900">{{ $item->reference_number }}</td>
                                                     <td class="px-4 py-2 text-sm text-gray-900">{{ $item->product->name }}</td>
+                                                    <td class="px-4 py-2 text-sm text-gray-600">{{ $item->product->description ?? '-' }}</td>
                                                     <td class="px-4 py-2 text-sm text-gray-900">{{ $item->quantity }}</td>
                                                     <td class="px-4 py-2 text-sm text-gray-900">Rp {{ number_format($item->unit_price, 0, ',', '.') }}</td>
                                                     <td class="px-4 py-2 text-sm text-gray-900">
@@ -295,22 +293,6 @@
                                         <p class="text-sm text-gray-700"><strong>Catatan:</strong> {{ $transaction->notes }}</p>
                                     </div>
                                 @endif
-                                
-                                <!-- Action buttons in detail -->
-                                <div class="mt-4 flex justify-end space-x-2">
-                                    <button type="button" 
-                                            onclick="openInvoice('{{ $transaction->order_number }}', '{{ $transaction->invoice_number }}', '{{ $transaction->customer->id ?? '' }}', '{{ $transaction->transaction_date->format('Y-m-d') }}')"
-                                            class="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 mr-2">
-                                        <i class="fas fa-print mr-2"></i>
-                                        Cetak Faktur
-                                    </button>
-                                    <button type="button" 
-                                            onclick="openDeliveryNote('{{ $transaction->order_number }}', '{{ $transaction->invoice_number }}', '{{ $transaction->customer->id ?? '' }}', '{{ $transaction->transaction_date->format('Y-m-d') }}')"
-                                            class="inline-flex items-center px-3 py-2 bg-purple-600 text-white text-sm font-medium rounded-md hover:bg-purple-700">
-                                        <i class="fas fa-truck mr-2"></i>
-                                        Cetak Surat Jalan
-                                    </button>
-                                </div>
                             </div>
                         </td>
                     </tr>
@@ -335,17 +317,11 @@
 <script>
 function toggleDetails(rowId) {
     const detailRow = document.getElementById(rowId);
-    const button = event.target.closest('button');
-    const icon = button.querySelector('i');
     
     if (detailRow.classList.contains('hidden')) {
         detailRow.classList.remove('hidden');
-        icon.className = 'fas fa-eye-slash';
-        button.innerHTML = '<i class="fas fa-eye-slash"></i> Tutup';
     } else {
         detailRow.classList.add('hidden');
-        icon.className = 'fas fa-eye';
-        button.innerHTML = '<i class="fas fa-eye"></i> Detail';
     }
 }
 
@@ -417,7 +393,7 @@ function openDeliveryNote(orderNumber, invoiceNumber, customerId, transactionDat
     const deliveryInput = document.createElement('input');
     deliveryInput.type = 'hidden';
     deliveryInput.name = 'delivery_number';
-    deliveryInput.value = orderNumber ? 'SJ/' + orderNumber.replace(/[^0-9]/g, '') + '/IX/MSA/25' : '';
+    deliveryInput.value = orderNumber ? 'SJ/' + orderNumber.replace(/[^0-9]/g, '') + '/IX/MSA/25' : 'SJ/DELIVERY/' + new Date().getTime() + '/IX/MSA/25';
     form.appendChild(deliveryInput);
     
     // Add customer ID

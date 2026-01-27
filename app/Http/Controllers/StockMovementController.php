@@ -778,7 +778,7 @@ class StockMovementController extends Controller
             $sheet->getPageSetup()->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_PORTRAIT);
 
             // Add logo
-            $logoPath = public_path('images/logo.png');
+            $logoPath = public_path('public/images/logo.png');
             if (file_exists($logoPath)) {
                 $drawing = new Drawing();
                 $drawing->setName('Logo');
@@ -792,7 +792,7 @@ class StockMovementController extends Controller
             // Company Header (offset to make room for logo)
             $sheet->setCellValue('B1', 'PT. MITRAJAYA SELARAS ABADI');
             $sheet->setCellValue('A2', 'LABORATORY & MEDICAL EQUIPMENT');
-            $sheet->setCellValue('A3', 'Ruko Maison Avenue MA 10, Kota Wisata, Cibubur');
+            $sheet->setCellValue('A3', 'Ruko Maison Avenue MA 19, Kota Wisata, Cibubur');
             $sheet->setCellValue('A4', 'Telp. / Fax : 82482412 , WA. 08119466470');
 
             // Customer info (right side) with date
@@ -1189,8 +1189,20 @@ class StockMovementController extends Controller
                 $customerId = $request->input('customer_id');
                 $transactionDate = $request->input('transaction_date');
 
-                if (!$deliveryNumber || !$customerId || !$transactionDate) {
-                    return response()->json(['error' => 'Parameter tidak lengkap'], 400);
+                // Debug logging
+                Log::info('Delivery Note Export Parameters:', [
+                    'delivery_number' => $deliveryNumber,
+                    'customer_id' => $customerId,
+                    'transaction_date' => $transactionDate,
+                    'all_request_data' => $request->all()
+                ]);
+
+                if (empty($deliveryNumber) || empty($customerId) || empty($transactionDate)) {
+                    $missingParams = [];
+                    if (empty($deliveryNumber)) $missingParams[] = 'delivery_number';
+                    if (empty($customerId)) $missingParams[] = 'customer_id';
+                    if (empty($transactionDate)) $missingParams[] = 'transaction_date';
+                    return response()->json(['error' => 'Parameter tidak lengkap: ' . implode(', ', $missingParams)], 400);
                 }
 
                 // Get stock movements for this transaction

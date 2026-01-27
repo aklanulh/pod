@@ -65,7 +65,6 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Quantity</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Nilai</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -76,7 +75,12 @@
                             return $movement->quantity * ($movement->unit_price ?? 0);
                         });
                     @endphp
-                    <tr>
+                    @if($customer->stock_movements_count > 0)
+                        <tr class="hover:bg-gray-100 cursor-pointer transition-colors" 
+                            onclick="window.location.href='{{ route('reports.customer.detail', $customer->id) }}'">
+                    @else
+                        <tr class="opacity-75">
+                    @endif
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-medium text-gray-900">{{ $customer->name }}</div>
                             <div class="text-sm text-gray-500">{{ $customer->address ?? '-' }}</div>
@@ -103,17 +107,6 @@
                                 <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
                                     Belum Transaksi
                                 </span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            @if($customer->stock_movements_count > 0)
-                                <a href="{{ route('reports.customer.detail', $customer->id) }}" 
-                                   class="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-md transition-colors">
-                                    <i class="fas fa-eye mr-1"></i>
-                                    Detail
-                                </a>
-                            @else
-                                <span class="text-gray-400 text-xs">Tidak ada transaksi</span>
                             @endif
                         </td>
                     </tr>

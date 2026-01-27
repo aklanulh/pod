@@ -311,13 +311,13 @@
         <!-- Letterhead -->
         <div class="letterhead">
             <div class="company-logo">
-                <img src="{{ asset('images/logo.png') }}" alt="PT. MITRAJAYA SELARAS ABADI" style="max-height: 80px;">
+                <img src="{{ asset('public/images/logo.png') }}" alt="PT. MITRAJAYA SELARAS ABADI" style="max-height: 80px;">
             </div>
             <div class="company-info">
                 <div class="company-name">PT. MITRAJAYA SELARAS ABADI</div>
                 <div class="company-tagline">Laboratory & Medical Equipment</div>
                 <div class="company-address">
-                    Ruko Maison Avenue MA 10, Kota Wisata, Cibubur<br>
+                    Ruko Maison Avenue MA 19, Kota Wisata, Cibubur<br>
                     Telp: 82482412 | WA: 08119466470<br>
                     Email: info@mitrajayaselarasabadi.com
                 </div>
@@ -422,7 +422,7 @@
         <!-- Footer -->
         <div class="footer">
             <div>PT. MITRAJAYA SELARAS ABADI</div>
-            <div>Ruko Maison Avenue MA 10, Kota Wisata, Cibubur</div>
+            <div>Ruko Maison Avenue MA 19, Kota Wisata, Cibubur</div>
             <div>Dicetak pada {{ $currentDate }}</div>
         </div>
     </div>

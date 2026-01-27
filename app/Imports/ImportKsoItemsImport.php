@@ -49,7 +49,8 @@ class ImportKsoItemsImport implements ToModel, WithHeadingRow, WithValidation, S
         try {
             // Handle Excel serial number format
             if (is_numeric($value) && $value > 25569) {
-                return Carbon::createFromFormat('Y-m-d', Carbon::createFromTimestamp(($value - 25569) * 86400)->format('Y-m-d'))->toDateString();
+                $date = Carbon::createFromTimestamp(($value - 25569) * 86400);
+                return $date->format('Y-m-d');
             }
 
             // Handle string date formats
@@ -61,7 +62,7 @@ class ImportKsoItemsImport implements ToModel, WithHeadingRow, WithValidation, S
 
                 foreach ($formats as $format) {
                     try {
-                        return Carbon::createFromFormat($format, $value)->toDateString();
+                        return Carbon::createFromFormat($format, $value)->format('Y-m-d');
                     } catch (\Exception $e) {
                         continue;
                     }
@@ -69,7 +70,7 @@ class ImportKsoItemsImport implements ToModel, WithHeadingRow, WithValidation, S
 
                 // Try Carbon's flexible parser
                 try {
-                    return Carbon::parse($value)->toDateString();
+                    return Carbon::parse($value)->format('Y-m-d');
                 } catch (\Exception $e) {
                     return null;
                 }
@@ -77,7 +78,7 @@ class ImportKsoItemsImport implements ToModel, WithHeadingRow, WithValidation, S
 
             return $value;
         } catch (\Exception $e) {
-            Log::warning('Date parsing failed for value: ' . $value);
+            Log::warning('Date parsing failed for value: ' . $value . ' - ' . $e->getMessage());
             return null;
         }
     }
@@ -143,44 +144,53 @@ class ImportKsoItemsImport implements ToModel, WithHeadingRow, WithValidation, S
         try {
             $this->rowCount++;
 
+            // Debug: Log the raw row data
+            Log::info('Processing row ' . $this->rowCount . ': ' . json_encode($row));
+
             // Skip if it's a support item row (handled separately)
             if (isset($row['item_type']) && strtolower($row['item_type']) === 'support') {
+                Log::info('Row identified as support item, storing for later processing');
                 $this->storeSupportItem($row);
                 return null;
             }
 
-            // Find customer
-            $customer = Customer::where('name', $row['customer_name'])->first();
-            if (!$customer) {
-                Log::warning('Customer not found: ' . $row['customer_name']);
+            // Check if customer_name is empty for main items
+            if (empty($row['customer_name'])) {
+                Log::warning('Customer name is empty for main item at row ' . $this->rowCount);
                 $this->skippedRows++;
                 return null;
             }
 
-            // Calculate contract end date
-            $deploymentDate = $this->parseDate($row['tanggal_deployment'] ?? $row['tanggal_install']);
-            $durationMonths = (int) ($row['durasi_kso_bulan'] ?? 12);
-            $contractEndDate = null;
+            // Find customer - use flexible search
+            $customerName = trim($row['customer_name'] ?? '');
+            $customer = Customer::where('name', $customerName)
+                ->orWhere('name', 'LIKE', '%' . $customerName . '%')
+                ->first();
 
-            if ($deploymentDate) {
-                $contractEndDate = Carbon::parse($deploymentDate)->addMonths($durationMonths)->toDateString();
+            if (!$customer) {
+                Log::warning('Customer not found: "' . $customerName . '" at row ' . $this->rowCount);
+                $this->skippedRows++;
+                return null;
             }
 
             // Parse financial values
             $nilaiAlatUtama = $this->parseDecimal($row['nilai_alat_utama'] ?? 0);
-            $totalPendukung = $this->parseDecimal($row['total_pendukung'] ?? 0);
-            $totalInvestasi = $nilaiAlatUtama + $totalPendukung;
 
             // Parse dates dengan fallback yang aman
             $deploymentDate = $this->parseDate($row['tanggal_deployment'] ?? $row['tanggal_install'] ?? null);
             $investmentDate = $this->parseDate($row['tanggal_investasi'] ?? $deploymentDate);
 
-            // Calculate contract end date dengan validasi
-            $durationMonths = (int) ($row['durasi_kso_bulan'] ?? 36); // Default 36 bulan
-            $contractEndDate = null;
-            if ($deploymentDate) {
-                $contractEndDate = Carbon::parse($deploymentDate)->copy()->addMonths($durationMonths);
+            // Parse KSO period dates
+            $periodeKsoMulai = $this->parseDate($row['periode_kso_mulai'] ?? $deploymentDate);
+            $periodeKsoBerakhir = $this->parseDate($row['periode_kso_berakhir']);
+
+            // If periode_kso_berakhir is not provided but durasi_kso_bulan is provided, calculate it
+            if (!$periodeKsoBerakhir && $periodeKsoMulai && isset($row['durasi_kso_bulan'])) {
+                $durationMonths = (int) ($row['durasi_kso_bulan'] ?? 36);
+                $periodeKsoBerakhir = Carbon::parse($periodeKsoMulai)->addMonths($durationMonths)->toDateString();
             }
+
+            Log::info('Creating KSO item for customer: ' . $customer->name . ' at row ' . $this->rowCount);
 
             return new KsoItem([
                 'customer_id' => $customer->id,
@@ -192,8 +202,8 @@ class ImportKsoItemsImport implements ToModel, WithHeadingRow, WithValidation, S
                 'kategori' => $this->cleanFormula($row['kategori'] ?? ''),
                 'nilai_alat_utama' => $nilaiAlatUtama,
                 'butuh_komputer' => $this->parseBoolean($row['butuh_komputer'] ?? false),
-                'total_pendukung' => $totalPendukung,
-                'total_investasi' => $totalInvestasi,
+                'total_pendukung' => 0, // Will be calculated after support items are imported
+                'total_investasi' => $nilaiAlatUtama, // Will be updated after support items are imported
                 'keterangan' => $this->cleanFormula($row['keterangan'] ?? ''),
                 'spesifikasi_teknis' => $this->cleanFormula($row['spesifikasi_teknis'] ?? ''),
                 'kondisi' => $this->cleanFormula($row['kondisi'] ?? 'baik'),
@@ -204,14 +214,15 @@ class ImportKsoItemsImport implements ToModel, WithHeadingRow, WithValidation, S
                 'tanggal_install' => $deploymentDate,
                 'garansi_mulai' => $this->parseDate($row['garansi_mulai'] ?? ''),
                 'garansi_berakhir' => $this->parseDate($row['garansi_berakhir'] ?? ''),
-                'periode_kso_mulai' => $deploymentDate,
-                'periode_kso_berakhir' => $contractEndDate ? $contractEndDate->toDateString() : null,
-                'durasi_kso_bulan' => $durationMonths,
+                'periode_kso_mulai' => $periodeKsoMulai,
+                'periode_kso_berakhir' => $periodeKsoBerakhir,
+                'durasi_kso_bulan' => (int) ($row['durasi_kso_bulan'] ?? 36),
                 'status' => $this->parseStatus($row['status'] ?? 'active'),
             ]);
         } catch (\Exception $e) {
-            Log::error('Error processing KSO item row: ' . json_encode($row));
+            Log::error('Error processing KSO item row ' . $this->rowCount . ': ' . json_encode($row));
             Log::error('Error message: ' . $e->getMessage());
+            Log::error('Error trace: ' . $e->getTraceAsString());
             $this->skippedRows++;
             return null;
         }
@@ -240,22 +251,22 @@ class ImportKsoItemsImport implements ToModel, WithHeadingRow, WithValidation, S
                     if ($mainItem) {
                         KsoSupportItem::create([
                             'kso_item_id' => $mainItem->id,
-                            'nama_item' => $supportData['nama_item'],
-                            'nilai_item' => $this->parseDecimal($supportData['nilai_item'] ?? 0),
+                            'nama_item' => $supportData['nama_alat'] ?? $supportData['nama_item'] ?? '',
+                            'nilai_item' => $this->parseDecimal($supportData['nilai_alat_utama'] ?? $supportData['nilai_item'] ?? 0),
                             'brand' => $this->cleanFormula($supportData['brand'] ?? ''),
                             'model' => $this->cleanFormula($supportData['model'] ?? ''),
                             'serial_number' => $this->cleanFormula($supportData['serial_number'] ?? ''),
                             'no_registrasi' => $this->cleanFormula($supportData['no_registrasi'] ?? ''),
                             'garansi_berakhir' => $this->parseDate($supportData['garansi_berakhir'] ?? ''),
-                            'kondisi' => $this->cleanFormula($supportData['kondisi'] ?? 'excellent'),
+                            'kondisi' => $this->cleanFormula($supportData['kondisi'] ?? 'baik'),
                             'status' => $this->parseStatus($supportData['status'] ?? 'active'),
-                            'spesifikasi' => $this->cleanFormula($supportData['spesifikasi'] ?? ''),
+                            'spesifikasi' => $this->cleanFormula($supportData['spesifikasi_teknis'] ?? ''),
                         ]);
                     } else {
-                        Log::warning("Main item with no_registrasi '{$mainItemNoRegistrasi}' not found for support item: {$supportData['nama_item']}");
+                        Log::warning("Main item with no_registrasi '{$mainItemNoRegistrasi}' not found for support item: " . ($supportData['nama_alat'] ?? $supportData['nama_item'] ?? 'Unknown'));
                     }
                 } else {
-                    Log::warning("Support item '{$supportData['nama_item']}' has no main_item_no_registrasi specified");
+                    Log::warning("Support item '" . ($supportData['nama_alat'] ?? $supportData['nama_item'] ?? 'Unknown') . "' has no main_item_no_registrasi specified");
                 }
             }
         } catch (\Exception $e) {
@@ -271,7 +282,7 @@ class ImportKsoItemsImport implements ToModel, WithHeadingRow, WithValidation, S
         return [
             'item_type' => 'required|in:main,support',
             'main_item_no_registrasi' => 'nullable|string|max:255',
-            'customer_name' => 'required_if:item_type,main|nullable|string|max:255',
+            'customer_name' => 'required_if:item_type,main|string|max:255',
             'nama_alat' => 'required|string|max:255',
             'brand' => 'nullable|string|max:255',
             'model' => 'nullable|string|max:255',
@@ -279,19 +290,20 @@ class ImportKsoItemsImport implements ToModel, WithHeadingRow, WithValidation, S
             'no_registrasi' => 'nullable|string|max:255',
             'kategori' => 'nullable|string|max:255',
             'nilai_alat_utama' => 'nullable|numeric|min:0',
-            'butuh_komputer' => 'nullable|boolean',
-            'total_pendukung' => 'nullable|numeric|min:0',
+            'butuh_komputer' => 'nullable',
             'keterangan' => 'nullable|string',
             'spesifikasi_teknis' => 'nullable|string',
             'kondisi' => 'nullable|string|max:255',
             'lokasi_penempatan' => 'nullable|string|max:255',
             'pic_customer' => 'nullable|string|max:255',
             'pic_msa' => 'nullable|string|max:255',
-            'tanggal_investasi' => 'nullable|date',
-            'tanggal_install' => 'nullable|date',
-            'tanggal_deployment' => 'nullable|date',
-            'garansi_mulai' => 'nullable|date',
-            'garansi_berakhir' => 'nullable|date',
+            'tanggal_investasi' => 'nullable',
+            'tanggal_install' => 'nullable',
+            'tanggal_deployment' => 'nullable',
+            'garansi_mulai' => 'nullable',
+            'garansi_berakhir' => 'nullable',
+            'periode_kso_mulai' => 'nullable',
+            'periode_kso_berakhir' => 'nullable',
             'durasi_kso_bulan' => 'nullable|integer|min:1',
             'status' => 'nullable|in:active,inactive'
         ];
@@ -305,9 +317,7 @@ class ImportKsoItemsImport implements ToModel, WithHeadingRow, WithValidation, S
         return [
             'customer_name.required' => 'Nama customer wajib diisi',
             'nama_alat.required' => 'Nama alat wajib diisi',
-            'nilai_alat_utama.required' => 'Nilai alat utama wajib diisi',
             'nilai_alat_utama.numeric' => 'Nilai alat utama harus berupa angka',
-            'tanggal_investasi.required' => 'Tanggal investasi wajib diisi',
             'tanggal_investasi.date' => 'Format tanggal investasi tidak valid',
             'durasi_kso_bulan.min' => 'Durasi KSO minimal 1 bulan',
             'status.in' => 'Status harus berupa: active atau inactive',
@@ -330,11 +340,21 @@ class ImportKsoItemsImport implements ToModel, WithHeadingRow, WithValidation, S
     {
         foreach ($failures as $failure) {
             $this->skippedRows++;
-            Log::error('ImportKsoItemsImport Validation Failure:');
-            Log::error('Row: ' . $failure->row());
+            Log::error('ImportKsoItemsImport Validation Failure at row ' . $failure->row());
             Log::error('Attribute: ' . $failure->attribute());
             Log::error('Errors: ' . implode(', ', $failure->errors()));
             Log::error('Values: ' . json_encode($failure->values()));
+
+            // Check for common issues
+            $values = $failure->values();
+            if (isset($values['item_type']) && $values['item_type'] === 'main') {
+                if (empty($values['customer_name'])) {
+                    Log::error('Main item missing customer_name at row ' . $failure->row());
+                }
+                if (empty($values['nama_alat'])) {
+                    Log::error('Main item missing nama_alat at row ' . $failure->row());
+                }
+            }
         }
     }
 

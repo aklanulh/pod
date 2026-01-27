@@ -398,7 +398,7 @@
                                             <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 002 2z"></path>
                                             </svg>
-                                            Alat Komputer & Pendukung ({{ $item->supportItems->sum('jumlah') }} units)
+                                            Alat Komputer & Pendukung ({{ $item->supportItems->count() }} units)
                                         </div>
                                         <svg id="chevron-{{ $item->id }}" class="w-4 h-4 text-gray-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -409,28 +409,27 @@
                                 <div id="support-items-{{ $item->id }}" class="hidden">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         @foreach($item->supportItems as $support)
-                                            @for($i = 1; $i <= $support->jumlah; $i++)
-                                                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                                    <!-- Header with Equipment Name and Status -->
-                                                    <div class="flex justify-between items-start mb-3">
-                                                        <div class="flex-1">
-                                                            <h5 class="text-sm font-medium text-gray-900 mb-1">{{ $support->nama_item }}</h5>
-                                                            @if($support->kategori)
-                                                                <span class="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
-                                                                    {{ $support->category_display }}
-                                                                </span>
-                                                            @endif
-                                                        </div>
-                                                        <div class="text-right ml-3">
-                                                            <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
-                                                                {{ ucfirst($support->status ?? 'active') }}
+                                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                                <!-- Header with Equipment Name and Status -->
+                                                <div class="flex justify-between items-start mb-3">
+                                                    <div class="flex-1">
+                                                        <h5 class="text-sm font-medium text-gray-900 mb-1">{{ $support->nama_item }}</h5>
+                                                        @if($support->kategori)
+                                                            <span class="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                                                                {{ $support->category_display }}
                                                             </span>
-                                                            <div class="text-right mt-1">
-                                                                <p class="text-sm font-bold text-green-600">Rp {{ number_format($support->nilai_item, 0, ',', '.') }}</p>
-                                                                <p class="text-xs text-gray-500">{{ $support->kondisi ?? 'excellent' }}</p>
-                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                    <div class="text-right ml-3">
+                                                        <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
+                                                            {{ ucfirst($support->status ?? 'active') }}
+                                                        </span>
+                                                        <div class="text-right mt-1">
+                                                            <p class="text-sm font-bold text-green-600">Rp {{ number_format($support->nilai_item, 0, ',', '.') }}</p>
+                                                            <p class="text-xs text-gray-500">{{ $support->kondisi ?? 'excellent' }}</p>
                                                         </div>
                                                     </div>
+                                                </div>
 
                                                     <!-- Equipment Details in Two Columns -->
                                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
@@ -511,7 +510,6 @@
                                                         </div>
                                                     @endif
                                                 </div>
-                                            @endfor
                                         @endforeach
                                     </div>
                                     

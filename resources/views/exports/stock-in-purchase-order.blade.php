@@ -155,7 +155,7 @@
             <div class="company-name">PT. MITRAJAYA SELARAS ABADI</div>
             <div class="company-address">
                 LABORATORY & MEDICAL EQUIPMENT<br>
-                Ruko Maison Avenue MA 10, Kota Wisata, Cibubur<br>
+                Ruko Maison Avenue MA 19, Kota Wisata, Cibubur<br>
                 Telp. / Fax : 82482412 , WA. 08119466470
             </div>
         </div>

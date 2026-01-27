@@ -194,7 +194,8 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($stockIns as $transaction)
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-gray-100 cursor-pointer transition-colors" 
+                        onclick="toggleDetails('transaction-{{ $loop->index }}')">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ $transaction->order_number ?? '-' }}
                         </td>
@@ -224,24 +225,17 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex space-x-2">
-                                <button type="button" 
-                                        onclick="toggleDetails('transaction-{{ $loop->index }}')"
-                                        class="text-blue-600 hover:text-blue-900">
-                                    <i class="fas fa-eye"></i> Detail
-                                </button>
-                                <button type="button" 
-                                        onclick="printPurchaseOrder('{{ $transaction->order_number }}', '{{ $transaction->invoice_number }}', '{{ $transaction->supplier ? $transaction->supplier->id : '' }}', '{{ $transaction->transaction_date->format('Y-m-d') }}')"
-                                        class="text-green-600 hover:text-green-900"
-                                        title="Cetak Purchase Order">
-                                    <i class="fas fa-print"></i> PO
-                                </button>
-                            </div>
+                            <button type="button" 
+                                    onclick="event.stopPropagation(); printPurchaseOrder('{{ $transaction->order_number }}', '{{ $transaction->invoice_number }}', '{{ $transaction->supplier ? $transaction->supplier->id : '' }}', '{{ $transaction->transaction_date->format('Y-m-d') }}')"
+                                    class="text-green-600 hover:text-green-900"
+                                    title="Cetak Purchase Order">
+                                <i class="fas fa-print"></i> PO
+                            </button>
                         </td>
                     </tr>
                     <!-- Detail Row (Hidden by default) -->
                     <tr id="transaction-{{ $loop->index }}" class="hidden bg-gray-50">
-                        <td colspan="8" class="px-6 py-4">
+                        <td colspan="9" class="px-6 py-4">
                             <div class="bg-white rounded-lg p-4 shadow-sm">
                                 <h4 class="font-semibold text-gray-900 mb-3">Detail Produk Transaksi</h4>
                                 <div class="overflow-x-auto">
@@ -250,6 +244,7 @@
                                             <tr>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">No. Referensi</th>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Produk</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Deskripsi</th>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Qty</th>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Harga Satuan</th>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Subtotal</th>
@@ -263,6 +258,7 @@
                                                         <div class="font-medium">{{ $item->product->name }}</div>
                                                         <div class="text-gray-500 text-xs">{{ $item->product->code }}</div>
                                                     </td>
+                                                    <td class="px-4 py-2 text-sm text-gray-600">{{ $item->product->description ?? '-' }}</td>
                                                     <td class="px-4 py-2 text-sm text-gray-900">{{ $item->quantity }} {{ $item->product->unit }}</td>
                                                     <td class="px-4 py-2 text-sm text-gray-900">Rp {{ number_format($item->unit_price, 0, ',', '.') }}</td>
                                                     <td class="px-4 py-2 text-sm text-gray-900">
@@ -305,17 +301,11 @@
 <script>
 function toggleDetails(rowId) {
     const detailRow = document.getElementById(rowId);
-    const button = event.target.closest('button');
-    const icon = button.querySelector('i');
     
     if (detailRow.classList.contains('hidden')) {
         detailRow.classList.remove('hidden');
-        icon.className = 'fas fa-eye-slash';
-        button.innerHTML = '<i class="fas fa-eye-slash"></i> Tutup';
     } else {
         detailRow.classList.add('hidden');
-        icon.className = 'fas fa-eye';
-        button.innerHTML = '<i class="fas fa-eye"></i> Detail';
     }
 }
 

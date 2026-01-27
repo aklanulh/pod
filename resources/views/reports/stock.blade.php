@@ -100,12 +100,12 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Minimum Stok</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($products as $product)
-                    <tr>
+                    <tr class="hover:bg-gray-100 cursor-pointer transition-colors" 
+                        onclick="window.location.href='{{ route('reports.stock.detail', $product->id) }}'">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-medium text-gray-900">{{ $product->name }}</div>
                             <div class="text-sm text-gray-500">{{ $product->code }}</div>
@@ -132,13 +132,6 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             Rp {{ number_format($product->price, 0, ',', '.') }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="{{ route('reports.stock.detail', $product->id) }}" 
-                               class="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-md transition-colors">
-                                <i class="fas fa-eye mr-1"></i>
-                                Detail
-                            </a>
                         </td>
                     </tr>
                 @empty
