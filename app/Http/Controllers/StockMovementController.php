@@ -440,7 +440,7 @@ class StockMovementController extends Controller
         $draftCount = \App\Models\StockOutDraft::count();
 
         // Get all customers for filter dropdown
-        $customers = \App\Models\Customer::active()->orderBy('name')->get();
+        $customers = \App\Models\Customer::orderBy('name')->get();
 
         return view('stock.out.index', compact('stockOuts', 'draftCount', 'customers', 'sortBy', 'sortOrder'));
     }
@@ -448,7 +448,7 @@ class StockMovementController extends Controller
     public function stockOutCreate()
     {
         $products = Product::where('current_stock', '>', 0)->orderBy('name')->get(['id', 'code', 'name', 'description', 'unit', 'current_stock']);
-        $customers = Customer::active()->orderBy('name')->get();
+        $customers = Customer::orderBy('name')->get();
         $categories = ProductCategory::orderBy('name')->get();
 
         return view('stock.out.create', compact('products', 'customers', 'categories'));

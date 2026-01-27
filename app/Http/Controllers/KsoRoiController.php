@@ -112,7 +112,7 @@ class KsoRoiController extends Controller
      */
     public function createKsoItem()
     {
-        $customers = Customer::active()->orderBy('name')->get();
+        $customers = Customer::orderBy('name')->get();
         return view('kso-roi.create-kso-item', compact('customers'));
     }
 
