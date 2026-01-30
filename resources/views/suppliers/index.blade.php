@@ -56,6 +56,12 @@
             <i class="fas fa-plus mr-2"></i>
             Tambah Supplier
         </a>
+        @if(auth()->user()->role === 'super_admin')
+        <a href="{{ route('supplier-merge.index') }}" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center">
+            <i class="fas fa-compress-arrows-alt mr-2"></i>
+            Merge Supplier
+        </a>
+        @endif
     </div>
 </div>
 
@@ -76,7 +82,12 @@
                 @forelse($suppliers as $supplier)
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ $supplier->name }}</div>
+                            <div class="flex items-center">
+                                <div class="text-sm font-medium text-gray-900">{{ $supplier->name }}</div>
+                                <span class="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium @if($supplier->is_active) bg-green-100 text-green-800 @else bg-red-100 text-red-800 @endif">
+                                    @if($supplier->is_active) Aktif @else Inaktif @endif
+                                </span>
+                            </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             <div class="space-y-1">

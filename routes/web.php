@@ -15,6 +15,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminHistoryController;
 use App\Http\Controllers\CustomerScheduleController;
 use App\Http\Controllers\CustomerMergeController;
+use App\Http\Controllers\SupplierMergeController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\KsoRoiController;
 use App\Http\Controllers\DataImportController;
@@ -166,6 +167,15 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
         Route::post('/merge', [CustomerMergeController::class, 'merge'])->name('merge');
         Route::get('/search-similar', [CustomerMergeController::class, 'searchSimilar'])->name('search-similar');
         Route::post('/preview', [CustomerMergeController::class, 'preview'])->name('preview');
+    });
+
+    // Supplier Merge Routes - Super Admin Only
+    Route::prefix('supplier-merge')->name('supplier-merge.')->group(function () {
+        Route::get('/', [SupplierMergeController::class, 'index'])->name('index');
+        Route::get('/create', [SupplierMergeController::class, 'create'])->name('create');
+        Route::post('/merge', [SupplierMergeController::class, 'merge'])->name('merge');
+        Route::get('/search', [SupplierMergeController::class, 'searchSimilar'])->name('search');
+        Route::post('/preview', [SupplierMergeController::class, 'preview'])->name('preview');
     });
 
     // Customer Schedules - Super Admin Only
