@@ -10,67 +10,55 @@
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
     <!-- Stock Report -->
-    <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+    <a href="{{ route('reports.stock') }}" class="block bg-white rounded-lg shadow p-6 hover:shadow-lg transition-all hover:scale-105 cursor-pointer group">
         <div class="flex items-center mb-4">
-            <div class="p-3 rounded-full bg-blue-100 text-blue-500">
+            <div class="p-3 rounded-full bg-blue-100 text-blue-500 group-hover:bg-blue-200 transition-colors">
                 <i class="fas fa-boxes text-2xl"></i>
             </div>
             <div class="ml-4">
-                <h3 class="text-lg font-semibold text-gray-900">Laporan Stok</h3>
+                <h3 class="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Lihat Stok</h3>
                 <p class="text-sm text-gray-600">Stok produk saat ini</p>
             </div>
         </div>
-        <a href="{{ route('reports.stock') }}" class="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-2 rounded-md">
-            Lihat Laporan
-        </a>
-    </div>
+    </a>
 
     <!-- Movement Report -->
-    <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+    <a href="{{ route('reports.movement') }}" class="block bg-white rounded-lg shadow p-6 hover:shadow-lg transition-all hover:scale-105 cursor-pointer group">
         <div class="flex items-center mb-4">
-            <div class="p-3 rounded-full bg-green-100 text-green-500">
+            <div class="p-3 rounded-full bg-green-100 text-green-500 group-hover:bg-green-200 transition-colors">
                 <i class="fas fa-exchange-alt text-2xl"></i>
             </div>
             <div class="ml-4">
-                <h3 class="text-lg font-semibold text-gray-900">Pergerakan Stok</h3>
+                <h3 class="text-lg font-semibold text-gray-900 group-hover:text-green-600 transition-colors">Lihat Pergerakan</h3>
                 <p class="text-sm text-gray-600">Riwayat masuk/keluar</p>
             </div>
         </div>
-        <a href="{{ route('reports.movement') }}" class="block w-full bg-green-600 hover:bg-green-700 text-white text-center py-2 rounded-md">
-            Lihat Laporan
-        </a>
-    </div>
+    </a>
 
     <!-- Supplier Report -->
-    <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+    <a href="{{ route('reports.supplier') }}" class="block bg-white rounded-lg shadow p-6 hover:shadow-lg transition-all hover:scale-105 cursor-pointer group">
         <div class="flex items-center mb-4">
-            <div class="p-3 rounded-full bg-purple-100 text-purple-500">
+            <div class="p-3 rounded-full bg-purple-100 text-purple-500 group-hover:bg-purple-200 transition-colors">
                 <i class="fas fa-truck text-2xl"></i>
             </div>
             <div class="ml-4">
-                <h3 class="text-lg font-semibold text-gray-900">Laporan Distributor</h3>
+                <h3 class="text-lg font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">Lihat Distributor</h3>
                 <p class="text-sm text-gray-600">Data distributor</p>
             </div>
         </div>
-        <a href="{{ route('reports.supplier') }}" class="block w-full bg-purple-600 hover:bg-purple-700 text-white text-center py-2 rounded-md">
-            Lihat Laporan
-        </a>
-    </div>
+    </a>
 
     <!-- Customer Report -->
-    <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+    <a href="{{ route('reports.customer') }}" class="block bg-white rounded-lg shadow p-6 hover:shadow-lg transition-all hover:scale-105 cursor-pointer group">
         <div class="flex items-center mb-4">
-            <div class="p-3 rounded-full bg-orange-100 text-orange-500">
+            <div class="p-3 rounded-full bg-orange-100 text-orange-500 group-hover:bg-orange-200 transition-colors">
                 <i class="fas fa-users text-2xl"></i>
             </div>
             <div class="ml-4">
-                <h3 class="text-lg font-semibold text-gray-900">Laporan Customer</h3>
+                <h3 class="text-lg font-semibold text-gray-900 group-hover:text-orange-600 transition-colors">Lihat Customer</h3>
                 <p class="text-sm text-gray-600">Data customer</p>
             </div>
         </div>
-        <a href="{{ route('reports.customer') }}" class="block w-full bg-orange-600 hover:bg-orange-700 text-white text-center py-2 rounded-md">
-            Lihat Laporan
-        </a>
-    </div>
+    </a>
 </div>
 @endsection

@@ -90,6 +90,21 @@
                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">{{ old('address', $customer->address) }}</textarea>
             </div>
 
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Status Customer</label>
+                <div class="flex items-center">
+                    <input type="checkbox" name="is_active" id="is_active" value="1" 
+                           {{ old('is_active', $customer->is_active) ? 'checked' : '' }}
+                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <label for="is_active" class="ml-2 block text-sm text-gray-900">
+                        Aktif
+                    </label>
+                </div>
+                <p class="mt-1 text-xs text-gray-500">
+                    Customer aktif akan ditampilkan di sistem dan dapat digunakan untuk transaksi
+                </p>
+            </div>
+
             <div class="flex justify-end space-x-4">
                 <a href="{{ route('customers.index') }}" 
                    class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">

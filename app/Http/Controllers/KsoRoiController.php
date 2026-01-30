@@ -112,7 +112,7 @@ class KsoRoiController extends Controller
      */
     public function createKsoItem()
     {
-        $customers = Customer::orderBy('name')->get();
+        $customers = Customer::active()->orderBy('name')->get();
         return view('kso-roi.create-kso-item', compact('customers'));
     }
 
@@ -428,6 +428,30 @@ class KsoRoiController extends Controller
             'selectedYear',
             'availableYears'
         ));
+    }
+
+    /**
+     * Update customer information
+     */
+    public function updateCustomer(Request $request, Customer $customer)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'code' => 'nullable|string|max:255',
+            'type' => 'nullable|in:regular,premium,vip',
+            'status' => 'required|in:active,inactive',
+            'email' => 'nullable|email|max:255|unique:customers,email,' . $customer->id,
+            'phone' => 'nullable|string|max:255',
+            'contact_person' => 'nullable|string|max:255',
+            'tax_number' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:1000',
+            'city' => 'nullable|string|max:255'
+        ]);
+
+        $customer->update($request->all());
+
+        return redirect()->route('kso-roi.customer-detail', $customer->id)
+            ->with('success', 'Data customer berhasil diperbarui');
     }
 
     /**

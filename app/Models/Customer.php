@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Customer extends Model
 {
@@ -46,6 +47,11 @@ class Customer extends Model
     public function ksoItems()
     {
         return $this->hasMany(KsoItem::class);
+    }
+
+    public function stockOutDrafts()
+    {
+        return $this->hasMany(StockOutDraft::class);
     }
 
     /**
@@ -110,5 +116,128 @@ class Customer extends Model
             'type' => $difference >= 0 ? 'profit' : 'kurang',
             'percentage_diff' => $roiPercentage - 100
         ];
+    }
+
+    /**
+     * Get customers that can be merged (potential duplicates)
+     */
+    public static function getPotentialDuplicates()
+    {
+        // Find customers with similar names (case insensitive)
+        $duplicates = collect();
+
+        // Get all customers and group by similar names
+        $customers = self::orderBy('name')->get();
+        $groupedByName = [];
+
+        foreach ($customers as $customer) {
+            $normalizedName = strtolower(trim($customer->name));
+            $groupedByName[$normalizedName][] = $customer;
+        }
+
+        // Filter groups with more than 1 customer
+        foreach ($groupedByName as $group) {
+            if (count($group) > 1) {
+                $duplicates->push([
+                    'group_type' => 'exact_match',
+                    'customers' => collect($group),
+                    'reason' => 'Nama customer identik (case insensitive)'
+                ]);
+            }
+        }
+
+        // Find customers with similar phone numbers
+        $groupedByPhone = [];
+        foreach ($customers as $customer) {
+            if ($customer->phone && !empty(trim($customer->phone))) {
+                $normalizedPhone = preg_replace('/[^0-9]/', '', trim($customer->phone));
+                if (!empty($normalizedPhone)) {
+                    $groupedByPhone[$normalizedPhone][] = $customer;
+                }
+            }
+        }
+
+        // Filter phone groups with more than 1 customer
+        foreach ($groupedByPhone as $phone => $group) {
+            if (count($group) > 1) {
+                $duplicates->push([
+                    'group_type' => 'similar_phone',
+                    'customers' => collect($group),
+                    'reason' => "Nomor telepon sama: {$phone}"
+                ]);
+            }
+        }
+
+        return $duplicates;
+    }
+
+    /**
+     * Merge this customer into target customer
+     */
+    public function mergeInto(Customer $targetCustomer, string $reason = null, $mergedBy = null)
+    {
+        if ($this->id === $targetCustomer->id) {
+            throw new \Exception('Cannot merge customer into itself');
+        }
+
+        DB::transaction(function () use ($targetCustomer, $reason, $mergedBy) {
+            // 1. Move KSO Items
+            DB::table('kso_items')
+                ->where('customer_id', $this->id)
+                ->update(['customer_id' => $targetCustomer->id]);
+
+            // 2. Move Stock Movements
+            DB::table('stock_movements')
+                ->where('customer_id', $this->id)
+                ->update([
+                    'customer_id' => $targetCustomer->id,
+                    'customer_name' => $targetCustomer->name
+                ]);
+
+            // 3. Move Customer Schedules
+            DB::table('customer_schedules')
+                ->where('customer_id', $this->id)
+                ->update(['customer_id' => $targetCustomer->id]);
+
+            // 4. Move Stock Out Drafts
+            DB::table('stock_out_drafts')
+                ->where('customer_id', $this->id)
+                ->update([
+                    'customer_id' => $targetCustomer->id,
+                    'customer_name' => $targetCustomer->name
+                ]);
+
+            // 5. Record the merge
+            CustomerMerge::create([
+                'source_customer_id' => $this->id,
+                'target_customer_id' => $targetCustomer->id,
+                'reason' => $reason,
+                'merged_by' => $mergedBy?->id ?? auth()->id(),
+            ]);
+
+            // 6. Delete the source customer
+            $this->delete();
+        });
+
+        return $targetCustomer;
+    }
+
+    /**
+     * Get merge history
+     */
+    public function mergeHistory()
+    {
+        return $this->hasMany(CustomerMerge::class, 'source_customer_id')
+            ->orWhere('target_customer_id', $this->id)
+            ->with(['sourceCustomer', 'targetCustomer', 'mergedBy'])
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Check if customer can be merged (not already merged)
+     */
+    public function canBeMerged(): bool
+    {
+        return !$this->mergeHistory()->exists();
     }
 }

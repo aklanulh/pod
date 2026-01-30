@@ -14,6 +14,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminHistoryController;
 use App\Http\Controllers\CustomerScheduleController;
+use App\Http\Controllers\CustomerMergeController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\KsoRoiController;
 use App\Http\Controllers\DataImportController;
@@ -158,6 +159,15 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
     Route::resource('customers', CustomerController::class);
     Route::post('customers/ajax', [CustomerController::class, 'store'])->name('customers.ajax.store');
 
+    // Customer Merge Routes - Super Admin Only
+    Route::prefix('customer-merge')->name('customer-merge.')->group(function () {
+        Route::get('/', [CustomerMergeController::class, 'index'])->name('index');
+        Route::get('/create', [CustomerMergeController::class, 'create'])->name('create');
+        Route::post('/merge', [CustomerMergeController::class, 'merge'])->name('merge');
+        Route::get('/search-similar', [CustomerMergeController::class, 'searchSimilar'])->name('search-similar');
+        Route::post('/preview', [CustomerMergeController::class, 'preview'])->name('preview');
+    });
+
     // Customer Schedules - Super Admin Only
     Route::resource('customer-schedules', CustomerScheduleController::class);
     Route::get('customers/{customer}/last-purchases', [CustomerScheduleController::class, 'getCustomerLastPurchases'])->name('customers.last-purchases');
@@ -183,6 +193,7 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
         Route::put('/kso-items/{ksoItem}', [KsoRoiController::class, 'updateKsoItem'])->name('update-kso-item');
         Route::delete('/kso-items/{ksoItem}', [KsoRoiController::class, 'destroyKsoItem'])->name('destroy-kso-item');
         Route::get('/customer/{customer}', [KsoRoiController::class, 'customerDetail'])->name('customer-detail');
+        Route::put('/customer/{customer}', [KsoRoiController::class, 'updateCustomer'])->name('customer.update');
         Route::get('/analytics', [KsoRoiController::class, 'analytics'])->name('analytics');
 
         // Dashboard Teknisi - KSO Management

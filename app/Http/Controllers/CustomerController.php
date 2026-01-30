@@ -104,10 +104,22 @@ class CustomerController extends Controller
             'phone_2' => 'nullable',
             'phone_3' => 'nullable',
             'email' => 'nullable|email|unique:customers,email,' . $customer->id,
-            'address' => 'nullable'
+            'address' => 'nullable',
+            'is_active' => 'nullable|boolean'
         ]);
 
-        $customer->update($request->all());
+        $customer->update([
+            'name' => $request->name,
+            'contact_person' => $request->contact_person,
+            'contact_person_2' => $request->contact_person_2,
+            'contact_person_3' => $request->contact_person_3,
+            'phone' => $request->phone,
+            'phone_2' => $request->phone_2,
+            'phone_3' => $request->phone_3,
+            'email' => $request->email,
+            'address' => $request->address,
+            'is_active' => $request->has('is_active') ? 1 : 0
+        ]);
 
         return redirect()->route('customers.index')
             ->with('success', 'Customer berhasil diupdate');
