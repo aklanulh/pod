@@ -133,7 +133,7 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" colspan="2">Equipment Details</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" colspan="2">Detail Peralatan</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Investasi</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ROI</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Selisih</th>
@@ -227,7 +227,7 @@
                                 </a>
                             </td>
                         </tr>
-                        <!-- Equipment Details Row (Hidden by default) -->
+                        <!-- Baris Detail Peralatan (Tersembunyi secara default) -->
                         <tr id="equipment-{{ $customer->id }}" class="hidden bg-gray-50">
                             <td colspan="7" class="px-6 py-4">
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">

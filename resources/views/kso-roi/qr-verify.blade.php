@@ -95,7 +95,7 @@
                         type="submit"
                         class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95"
                     >
-                        Verifikasi & Lihat Detail
+                        Verifikasi & Lihat Rincian
                     </button>
                 </form>
 

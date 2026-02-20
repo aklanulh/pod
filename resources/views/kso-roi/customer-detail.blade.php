@@ -9,6 +9,12 @@
             <p class="text-gray-600">{{ $customer->name }}</p>
         </div>
         <div class="flex gap-3">
+            <a href="{{ route('kso-roi.create-kso-item') }}?customer_id={{ $customer->id }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Tambah KSO Item
+            </a>
             <button onclick="openEditCustomerModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -207,7 +213,15 @@
 
     <!-- KSO Items -->
     <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-        <h2 class="text-xl font-bold text-gray-900 mb-4">KSO Items</h2>
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-gray-900">KSO Items</h2>
+            <a href="{{ route('kso-roi.create-kso-item') }}?customer_id={{ $customer->id }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Tambah KSO Item
+            </a>
+        </div>
         <div class="space-y-4">
             @forelse($customer->ksoItems as $item)
                     <div class="bg-white border border-gray-200 rounded-lg p-6 mb-4 shadow-sm">
@@ -222,6 +236,14 @@
                                 @endif
                             </div>
                             <div class="flex flex-col items-end gap-2">
+                                <div class="flex gap-2">
+                                    <a href="{{ route('kso-roi.edit-kso-item', $item->id) }}" class="inline-flex items-center px-3 py-1.5 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm font-medium">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                        Edit
+                                    </a>
+                                </div>
                                 <span class="px-3 py-2 rounded-full text-sm font-medium {{ $item->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
                                     {{ ucfirst($item->status) }}
                                 </span>
@@ -259,7 +281,7 @@
                                     <div class="w-full text-center">
                                         <p class="text-xs text-gray-600 mb-3">
                                             <i class="fas fa-info-circle mr-1"></i>
-                                            Scan QR Code dengan smartphone untuk melihat detail lengkap
+                                            Pindai QR Code dengan smartphone untuk melihat detail lengkap
                                         </p>
 
                                         <!-- Manual Access Code -->

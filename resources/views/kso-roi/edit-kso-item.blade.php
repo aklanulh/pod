@@ -129,7 +129,7 @@
                         <option value="baik" {{ old('kondisi', $ksoItem->kondisi) == 'baik' ? 'selected' : '' }}>Baik</option>
                         <option value="rusak ringan" {{ old('kondisi', $ksoItem->kondisi) == 'rusak ringan' ? 'selected' : '' }}>Rusak Ringan</option>
                         <option value="rusak berat" {{ old('kondisi', $ksoItem->kondisi) == 'rusak berat' ? 'selected' : '' }}>Rusak Berat</option>
-                        <option value="maintenance" {{ old('kondisi', $ksoItem->kondisi) == 'maintenance' ? 'selected' : '' }}>Maintenance</option>
+                        <option value="maintenance" {{ old('kondisi', $ksoItem->kondisi) == 'maintenance' ? 'selected' : '' }}>Dalam Maintenance</option>
                     </select>
                     <p class="text-xs text-gray-500 mt-1">Baik = berfungsi normal, Rusak Ringan = masih bisa digunakan, Rusak Berat = tidak berfungsi</p>
                     @error('kondisi')
@@ -244,7 +244,7 @@
                         <span class="text-xs text-gray-400 ml-1">(Contact Person di customer)</span>
                     </label>
                     <input type="text" name="pic_customer" id="pic_customer" value="{{ old('pic_customer', $ksoItem->pic_customer) }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Nama PIC Customer">
-                    <p class="text-xs text-gray-500 mt-1">Orang yang bertanggung jawab di pihak customer (untuk koordinasi service dan maintenance)</p>
+                    <p class="text-xs text-gray-500 mt-1">Orang yang bertanggung jawab di pihak customer (untuk koordinasi service dan perawatan)</p>
                     @error('pic_customer')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
@@ -371,9 +371,9 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                                     <select name="support_items[{{ $loop->index }}][status]" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                        <option value="active" {{ $supportItem->status == 'active' ? 'selected' : '' }}>Active</option>
-                                        <option value="inactive" {{ $supportItem->status == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                                        <option value="maintenance" {{ $supportItem->status == 'maintenance' ? 'selected' : '' }}>Maintenance</option>
+                                        <option value="active" {{ $supportItem->status == 'active' ? 'selected' : '' }}>Aktif</option>
+                                        <option value="inactive" {{ $supportItem->status == 'inactive' ? 'selected' : '' }}>Tidak Aktif</option>
+                                        <option value="maintenance" {{ $supportItem->status == 'maintenance' ? 'selected' : '' }}>Dalam Maintenance</option>
                                     </select>
                                 </div>
                             </div>
@@ -449,9 +449,9 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select name="support_items[][status]" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="maintenance">Maintenance</option>
+                    <option value="active">Aktif</option>
+                    <option value="inactive">Tidak Aktif</option>
+                    <option value="maintenance">Dalam Maintenance</option>
                 </select>
             </div>
         </div>

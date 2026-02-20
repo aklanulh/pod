@@ -66,4 +66,12 @@ class User extends Authenticatable
     {
         return $this->role === self::ROLE_ADMIN;
     }
+
+    /**
+     * Check if user is either admin or super admin
+     */
+    public function isAdminOrSuper(): bool
+    {
+        return $this->role === self::ROLE_ADMIN || $this->role === self::ROLE_SUPER_ADMIN;
+    }
 }

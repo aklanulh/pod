@@ -727,10 +727,202 @@ class KsoRoiController extends Controller
      */
     public function technicianDashboard(Request $request)
     {
-        // Coming Soon - Dashboard Teknisi dalam pengembangan
+        // Get all KSO items with relationships
+        $ksoItems = KsoItem::with(['customer', 'supportItems', 'qcRecords', 'maintenanceSchedules'])
+            ->where('status', 'active')
+            ->get();
+
+        // Calculate statistics
+        $stats = [
+            'total_equipment' => $ksoItems->count(),
+            'overdue_qc' => 0,
+            'overdue_calibration' => 0,
+            'qc_due_this_month' => 0,
+            'calibration_due_this_month' => 0,
+        ];
+
+        $now = now();
+        $thisMonth = $now->copy()->startOfMonth();
+        $nextMonth = $now->copy()->addMonth()->startOfMonth();
+
+        foreach ($ksoItems as $item) {
+            // Check QC records
+            $qcRecords = $item->qcRecords;
+            if ($qcRecords->isEmpty()) {
+                // No QC records, check if overdue (6 months from install)
+                $installDate = Carbon::parse($item->tanggal_install);
+                $nextQcDue = $installDate->copy()->addMonths(6);
+
+                if ($nextQcDue->isPast()) {
+                    $stats['overdue_qc']++;
+                } elseif ($nextQcDue->between($thisMonth, $nextMonth)) {
+                    $stats['qc_due_this_month']++;
+                }
+            } else {
+                // Check latest QC record
+                $latestQc = $qcRecords->sortByDesc('created_at')->first();
+                $nextQcDue = Carbon::parse($latestQc->created_at)->addMonths(6);
+
+                if ($nextQcDue->isPast()) {
+                    $stats['overdue_qc']++;
+                } elseif ($nextQcDue->between($thisMonth, $nextMonth)) {
+                    $stats['qc_due_this_month']++;
+                }
+            }
+
+            // Check calibration (assuming calibration is a type of QC)
+            $calibrationRecords = $qcRecords->where('type', 'calibration');
+            if ($calibrationRecords->isEmpty()) {
+                // No calibration records, check if overdue (12 months from install)
+                $installDate = Carbon::parse($item->tanggal_install);
+                $nextCalibrationDue = $installDate->copy()->addMonths(12);
+
+                if ($nextCalibrationDue->isPast()) {
+                    $stats['overdue_calibration']++;
+                } elseif ($nextCalibrationDue->between($thisMonth, $nextMonth)) {
+                    $stats['calibration_due_this_month']++;
+                }
+            } else {
+                // Check latest calibration record
+                $latestCalibration = $calibrationRecords->sortByDesc('created_at')->first();
+                $nextCalibrationDue = Carbon::parse($latestCalibration->created_at)->addMonths(12);
+
+                if ($nextCalibrationDue->isPast()) {
+                    $stats['overdue_calibration']++;
+                } elseif ($nextCalibrationDue->between($thisMonth, $nextMonth)) {
+                    $stats['calibration_due_this_month']++;
+                }
+            }
+        }
+
+        // Prepare data for table
+        $tableData = [];
+        foreach ($ksoItems as $item) {
+            $maintenanceSchedules = $item->maintenanceSchedules;
+            $lastMaintenance = $maintenanceSchedules->sortByDesc('created_at')->first();
+            $nextMaintenance = $maintenanceSchedules->where('next_maintenance_date', '>=', now())
+                ->sortBy('next_maintenance_date')
+                ->first();
+
+            $qcRecords = $item->qcRecords;
+            $lastQc = $qcRecords->sortByDesc('created_at')->first();
+            $lastCalibration = $qcRecords->where('type', 'calibration')->sortByDesc('created_at')->first();
+
+            // Calculate QC status
+            $qcStatus = 'ok';
+            $qcStatusColor = 'green';
+            $qcStatusText = 'OK';
+            $qcDaysOverdue = 0;
+            $nextQcDue = null;
+
+            if ($lastQc) {
+                $nextQcDue = Carbon::parse($lastQc->created_at)->addMonths(6);
+                if ($nextQcDue->isPast()) {
+                    $qcStatus = 'terlambat';
+                    $qcStatusColor = 'red';
+                    $qcStatusText = 'Terlambat';
+                    $qcDaysOverdue = $nextQcDue->startOfDay()->diffInDays(now()->startOfDay());
+                } elseif ($nextQcDue->startOfDay()->diffInDays(now()->startOfDay()) <= 30) {
+                    $qcStatus = 'due';
+                    $qcStatusColor = 'yellow';
+                    $qcStatusText = 'Akan Jatuh Tempo';
+                }
+            } else {
+                $installDate = Carbon::parse($item->tanggal_install);
+                $nextQcDue = $installDate->copy()->addMonths(6);
+                if ($nextQcDue->isPast()) {
+                    $qcStatus = 'terlambat';
+                    $qcStatusColor = 'red';
+                    $qcStatusText = 'Belum QC - Terlambat';
+                    $qcDaysOverdue = $nextQcDue->startOfDay()->diffInDays(now()->startOfDay());
+                } elseif ($nextQcDue->startOfDay()->diffInDays(now()->startOfDay()) <= 30) {
+                    $qcStatus = 'due';
+                    $qcStatusColor = 'yellow';
+                    $qcStatusText = 'Belum QC - Akan Jatuh Tempo';
+                }
+            }
+
+            // Calculate Calibration status
+            $calibrationStatus = 'ok';
+            $calibrationStatusColor = 'green';
+            $calibrationStatusText = 'Baik';
+            $calibrationDaysOverdue = 0;
+            $nextCalibrationDue = null;
+
+            if ($lastCalibration) {
+                $nextCalibrationDue = Carbon::parse($lastCalibration->created_at)->addMonths(12);
+                if ($nextCalibrationDue->isPast()) {
+                    $calibrationStatus = 'terlambat';
+                    $calibrationStatusColor = 'red';
+                    $calibrationStatusText = 'Terlambat';
+                    $calibrationDaysOverdue = $nextCalibrationDue->startOfDay()->diffInDays(now()->startOfDay());
+                } elseif ($nextCalibrationDue->startOfDay()->diffInDays(now()->startOfDay()) <= 30) {
+                    $calibrationStatus = 'due';
+                    $calibrationStatusColor = 'yellow';
+                    $calibrationStatusText = 'Akan Jatuh Tempo';
+                }
+            } else {
+                $installDate = Carbon::parse($item->tanggal_install);
+                $nextCalibrationDue = $installDate->copy()->addMonths(12);
+                if ($nextCalibrationDue->isPast()) {
+                    $calibrationStatus = 'terlambat';
+                    $calibrationStatusColor = 'red';
+                    $calibrationStatusText = 'Belum Kalibrasi - Terlambat';
+                    $calibrationDaysOverdue = $nextCalibrationDue->startOfDay()->diffInDays(now()->startOfDay());
+                } elseif ($nextCalibrationDue->startOfDay()->diffInDays(now()->startOfDay()) <= 30) {
+                    $calibrationStatus = 'due';
+                    $calibrationStatusColor = 'yellow';
+                    $calibrationStatusText = 'Belum Kalibrasi - Akan Jatuh Tempo';
+                }
+            }
+
+            $tableData[] = [
+                'id' => $item->id,
+                'unique_id' => $item->unique_id,
+                'nama_alat' => $item->nama_alat,
+                'brand' => $item->brand,
+                'model' => $item->model,
+                'serial_number' => $item->serial_number,
+                'customer' => $item->customer->name,
+                'lokasi_penempatan' => $item->lokasi_penempatan,
+                'last_maintenance' => $lastMaintenance ? $lastMaintenance->next_maintenance_date : null,
+                'next_maintenance' => $nextMaintenance ? $nextMaintenance->next_maintenance_date : null,
+                'maintenance' => $nextMaintenance,
+                'last_qc' => $lastQc ? $lastQc->created_at : null,
+                'last_qc_record' => $lastQc,
+                'last_calibration' => $lastCalibration ? $lastCalibration->created_at : null,
+                'qc_status' => $qcStatus,
+                'qc_status_color' => $qcStatusColor,
+                'qc_status_text' => $qcStatusText,
+                'qc_days_overdue' => $qcDaysOverdue,
+                'next_qc_due' => $nextQcDue,
+                'calibration_status' => $calibrationStatus,
+                'calibration_status_color' => $calibrationStatusColor,
+                'calibration_status_text' => $calibrationStatusText,
+                'calibration_days_overdue' => $calibrationDaysOverdue,
+                'next_calibration_due' => $nextCalibrationDue,
+                'status' => $item->status,
+            ];
+        }
+
+        // Filter overdue items
+        $overdueQc = collect($tableData)->filter(function ($item) {
+            return $item['qc_status'] === 'terlambat';
+        });
+
+        $overdueCalibration = collect($tableData)->filter(function ($item) {
+            return $item['calibration_status'] === 'terlambat';
+        });
+
         return view('kso-roi.technician-dashboard', [
-            'comingSoon' => true,
-            'title' => 'Dashboard Teknisi - Coming Soon'
+            'stats' => $stats,
+            'ksoItems' => $tableData,
+            'todaySchedule' => collect([]), // Empty collection for now
+            'weeklySchedule' => collect([]), // Empty collection for now
+            'recentQcRecords' => collect([]), // Empty collection for now
+            'overdueQc' => $overdueQc,
+            'overdueCalibration' => $overdueCalibration,
+            'title' => 'Dashboard Teknisi - Monitoring QC & Kalibrasi Semua Alat'
         ]);
     }
 
@@ -799,14 +991,14 @@ class KsoRoiController extends Controller
         $daysUntil = now()->diffInDays($maintenanceDate, false);
 
         if ($daysUntil < 0) {
-            return 'overdue';
+            return 'terlambat';
         } elseif ($daysUntil <= 7) {
-            return 'urgent';
+            return 'penting';
         } elseif ($daysUntil <= 30) {
-            return 'scheduled';
+            return 'dijadwalkan';
         }
 
-        return 'planned';
+        return 'direncanakan';
     }
 
     /**

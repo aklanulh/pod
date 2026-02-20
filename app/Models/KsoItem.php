@@ -86,6 +86,22 @@ class KsoItem extends Model
     }
 
     /**
+     * Get the QC/Calibration records for the KSO item
+     */
+    public function qcRecords(): HasMany
+    {
+        return $this->hasMany(QcRecord::class);
+    }
+
+    /**
+     * Get the maintenance schedules for the KSO item
+     */
+    public function maintenanceSchedules(): HasMany
+    {
+        return $this->hasMany(MaintenanceSchedule::class);
+    }
+
+    /**
      * Calculate total support items value
      */
     public function calculateTotalPendukung(): float

@@ -479,6 +479,169 @@
                             </a>
                         </div>
                     </div>
+
+                    <!-- QC & Kalibrasi Records Section -->
+                    <div class="lg:col-span-3 space-y-6">
+                        <!-- Maintenance Records -->
+                        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                            <div class="bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-4">
+                                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                    <i class="fas fa-wrench"></i>
+                                    Riwayat Maintenance
+                                </h2>
+                            </div>
+                            <div class="p-6">
+                                @if($ksoItem->maintenanceSchedules && $ksoItem->maintenanceSchedules->count() > 0)
+                                    <div class="space-y-3">
+                                        @foreach($ksoItem->maintenanceSchedules->take(5) as $maintenance)
+                                            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                                                <div class="flex items-start justify-between mb-2">
+                                                    <div>
+                                                        <h3 class="font-bold text-gray-900">
+                                                            {{ $maintenance->equipment_name ?? $maintenance->maintenance_type ?? 'Maintenance' }}
+                                                        </h3>
+                                                        <p class="text-sm text-gray-600">
+                                                            @if($maintenance->last_maintenance_date)
+                                                                Terakhir: {{ $maintenance->last_maintenance_date->format('d M Y') }}
+                                                            @endif
+                                                            @if($maintenance->next_maintenance_date)
+                                                                <br>Berikutnya: {{ $maintenance->next_maintenance_date->format('d M Y') }}
+                                                            @endif
+                                                        </p>
+                                                    </div>
+                                                    <span class="px-3 py-1 bg-{{ $maintenance->status === 'completed' ? 'green' : ($maintenance->status === 'cancelled' ? 'red' : 'teal') }}-100 text-{{ $maintenance->status === 'completed' ? 'green' : ($maintenance->status === 'cancelled' ? 'red' : 'teal') }}-800 rounded-full text-sm font-semibold">
+                                                        {{ $maintenance->status === 'completed' ? 'Selesai' : ($maintenance->status === 'cancelled' ? 'Dibatalkan' : 'Dijadwalkan') }}
+                                                    </span>
+                                                </div>
+                                                @if($maintenance->description)
+                                                    <p class="text-sm text-gray-700 mb-2">{{ $maintenance->description }}</p>
+                                                @endif
+                                                @if($maintenance->maintenance_type)
+                                                    <p class="text-xs text-gray-500 mb-1">
+                                                        <i class="fas fa-tools text-gray-400 mr-1"></i>
+                                                        Tipe: {{ $maintenance->maintenance_type }}
+                                                    </p>
+                                                @endif
+                                                @if($maintenance->technician)
+                                                    <p class="text-xs text-gray-500 mb-1">
+                                                        <i class="fas fa-user text-gray-400 mr-1"></i>
+                                                        Teknisi: {{ $maintenance->technician }}
+                                                    </p>
+                                                @endif
+                                                @if($maintenance->cost)
+                                                    <p class="text-xs text-gray-500">
+                                                        <i class="fas fa-money-bill text-gray-400 mr-1"></i>
+                                                        Biaya: Rp {{ number_format($maintenance->cost, 0, ',', '.') }}
+                                                    </p>
+                                                @endif
+                                                @if($maintenance->notes)
+                                                    <p class="text-xs text-gray-500 mt-2">
+                                                        <i class="fas fa-sticky-note text-gray-400 mr-1"></i>
+                                                        Catatan: {{ $maintenance->notes }}
+                                                    </p>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="text-center py-8 text-gray-500">
+                                        <i class="fas fa-wrench text-4xl mb-4"></i>
+                                        <p>Belum ada catatan maintenance</p>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- QC Records -->
+                        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+                                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                    <i class="fas fa-clipboard-check"></i>
+                                    Catatan QC
+                                </h2>
+                            </div>
+                            <div class="p-6">
+                                @if($ksoItem->qcRecords && $ksoItem->qcRecords->where('type', 'qc')->count() > 0)
+                                    <div class="space-y-3">
+                                        @foreach($ksoItem->qcRecords->where('type', 'qc')->take(5) as $qc)
+                                            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                                                <div class="flex items-start justify-between mb-2">
+                                                    <div>
+                                                        <h3 class="font-bold text-gray-900">QC #{{ $qc->id }}</h3>
+                                                        <p class="text-sm text-gray-600">
+                                                            {{ $qc->date->format('d M Y') }}
+                                                        </p>
+                                                    </div>
+                                                    <span class="px-3 py-1 bg-{{ $qc->status === 'pass' ? 'green' : 'red' }}-100 text-{{ $qc->status === 'pass' ? 'green' : 'red' }}-800 rounded-full text-sm font-semibold">
+                                                        {{ $qc->status === 'pass' ? 'LOLOS' : 'GAGAL' }}
+                                                    </span>
+                                                </div>
+                                                @if($qc->keterangan)
+                                                    <p class="text-sm text-gray-700">{{ $qc->keterangan }}</p>
+                                                @endif
+                                                @if($qc->next_due_date)
+                                                    <p class="text-xs text-gray-500 mt-2">
+                                                        <i class="fas fa-calendar text-gray-400 mr-1"></i>
+                                                        Berikutnya: {{ $qc->next_due_date->format('d M Y') }}
+                                                    </p>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="text-center py-8 text-gray-500">
+                                        <i class="fas fa-clipboard-check text-4xl mb-4"></i>
+                                        <p>Belum ada catatan QC</p>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Kalibrasi Records -->
+                        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                            <div class="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4">
+                                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                    <i class="fas fa-certificate"></i>
+                                    Catatan Kalibrasi
+                                </h2>
+                            </div>
+                            <div class="p-6">
+                                @if($ksoItem->qcRecords && $ksoItem->qcRecords->where('type', 'calibration')->count() > 0)
+                                    <div class="space-y-3">
+                                        @foreach($ksoItem->qcRecords->where('type', 'calibration')->take(5) as $calibration)
+                                            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                                                <div class="flex items-start justify-between mb-2">
+                                                    <div>
+                                                        <h3 class="font-bold text-gray-900">Kalibrasi #{{ $calibration->id }}</h3>
+                                                        <p class="text-sm text-gray-600">
+                                                            {{ $calibration->date->format('d M Y') }}
+                                                        </p>
+                                                    </div>
+                                                    <span class="px-3 py-1 bg-{{ $calibration->status === 'pass' ? 'green' : 'red' }}-100 text-{{ $calibration->status === 'pass' ? 'green' : 'red' }}-800 rounded-full text-sm font-semibold">
+                                                        {{ $calibration->status === 'pass' ? 'LOLOS' : 'GAGAL' }}
+                                                    </span>
+                                                </div>
+                                                @if($calibration->keterangan)
+                                                    <p class="text-sm text-gray-700">{{ $calibration->keterangan }}</p>
+                                                @endif
+                                                @if($calibration->next_due_date)
+                                                    <p class="text-xs text-gray-500 mt-2">
+                                                        <i class="fas fa-calendar text-gray-400 mr-1"></i>
+                                                        Jatuh Tempo Berikutnya: {{ $calibration->next_due_date->format('d M Y') }}
+                                                    </p>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="text-center py-8 text-gray-500">
+                                        <i class="fas fa-certificate text-4xl mb-4"></i>
+                                        <p>Belum ada catatan kalibrasi</p>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
                 </div>
             @endif
         </div>

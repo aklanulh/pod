@@ -6,7 +6,7 @@
     <div class="flex justify-between items-center mb-8">
         <div>
             <h1 class="text-3xl font-bold text-gray-900 mb-2">Tambah KSO Item</h1>
-            <p class="text-gray-600">Tambahkan Alat Medis & Alat Komputer & Pendukung baru untuk tracking ROI</p>
+            <p class="text-gray-600">Tambahkan Alat Medis & Alat Komputer & Pendukung baru untuk pelacakan ROI</p>
         </div>
         <a href="{{ route('kso-roi.kso-items') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -29,11 +29,17 @@
                     <select name="customer_id" id="customer_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
                         <option value="">Pilih Customer</option>
                         @foreach($customers as $customer)
-                            <option value="{{ $customer->id }}" {{ old('customer_id') == $customer->id ? 'selected' : '' }}>
+                            <option value="{{ $customer->id }}" {{ (old('customer_id', $selectedCustomerId) == $customer->id) ? 'selected' : '' }}>
                                 {{ $customer->name }}
                             </option>
                         @endforeach
                     </select>
+                    @if($selectedCustomerId)
+                        <p class="text-xs text-green-600 mt-1">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            Customer dipilih otomatis dari halaman detail
+                        </p>
+                    @endif
                     @error('customer_id')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
@@ -57,7 +63,7 @@
                         <span class="text-xs text-gray-400 ml-1">(Contoh: Mindray, Roche, Siemens)</span>
                     </label>
                     <input type="text" name="brand" id="brand" value="{{ old('brand') }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Nama merek">
-                    <p class="text-xs text-gray-500 mt-1">Brand produsen alat (penting untuk service dan spare parts)</p>
+                    <p class="text-xs text-gray-500 mt-1">Brand produsen alat (penting untuk layanan dan suku cadang)</p>
                     @error('brand')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
@@ -81,7 +87,7 @@
                         <span class="text-xs text-gray-400 ml-1">(Contoh: SN123456789, ABC-DEF-123)</span>
                     </label>
                     <input type="text" name="serial_number" id="serial_number" value="{{ old('serial_number') }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Nomor seri unik">
-                    <p class="text-xs text-gray-500 mt-1">Nomor seri unik dari pabrik (wajib untuk garansi dan tracking)</p>
+                    <p class="text-xs text-gray-500 mt-1">Nomor seri unik dari pabrik (wajib untuk garansi dan pelacakan)</p>
                     @error('serial_number')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
@@ -93,7 +99,7 @@
                         <span class="text-xs text-gray-400 ml-1">(Contoh: REG-2025-001, INV/LAB/001)</span>
                     </label>
                     <input type="text" name="no_registrasi" id="no_registrasi" value="{{ old('no_registrasi') }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Nomor registrasi internal">
-                    <p class="text-xs text-gray-500 mt-1">Nomor inventaris/internal perusahaan untuk tracking</p>
+                    <p class="text-xs text-gray-500 mt-1">Nomor inventaris/internal perusahaan untuk pelacakan</p>
                     @error('no_registrasi')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
@@ -128,7 +134,7 @@
                         <option value="baik" {{ old('kondisi', 'baik') == 'baik' ? 'selected' : '' }}>Baik</option>
                         <option value="rusak ringan" {{ old('kondisi') == 'rusak ringan' ? 'selected' : '' }}>Rusak Ringan</option>
                         <option value="rusak berat" {{ old('kondisi') == 'rusak berat' ? 'selected' : '' }}>Rusak Berat</option>
-                        <option value="maintenance" {{ old('kondisi') == 'maintenance' ? 'selected' : '' }}>Maintenance</option>
+                        <option value="maintenance" {{ old('kondisi') == 'maintenance' ? 'selected' : '' }}>Dalam Maintenance</option>
                     </select>
                     <p class="text-xs text-gray-500 mt-1">Baik = berfungsi normal, Rusak Ringan = masih bisa digunakan, Rusak Berat = tidak berfungsi</p>
                     @error('kondisi')
@@ -199,10 +205,10 @@
                 <div>
                     <label for="garansi_berakhir" class="block text-sm font-medium text-gray-700 mb-2">
                         Garansi Berakhir
-                        <span class="text-xs text-gray-400 ml-1">(Service gratis dari pabrik)</span>
+                        <span class="text-xs text-gray-400 ml-1">(Layanan gratis dari pabrik)</span>
                     </label>
                     <input type="date" name="garansi_berakhir" id="garansi_berakhir" value="{{ old('garansi_berakhir') }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <p class="text-xs text-gray-500 mt-1">Tanggal berakhirnya garansi dari pabrik (penting untuk planning service)</p>
+                    <p class="text-xs text-gray-500 mt-1">Tanggal berakhirnya garansi dari pabrik (penting untuk perencanaan layanan)</p>
                     @error('garansi_berakhir')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
@@ -241,10 +247,10 @@
                 <div>
                     <label for="pic_customer" class="block text-sm font-medium text-gray-700 mb-2">
                         PIC Customer
-                        <span class="text-xs text-gray-400 ml-1">(Contact Person di customer)</span>
+                        <span class="text-xs text-gray-400 ml-1">(Orang Kontak di customer)</span>
                     </label>
                     <input type="text" name="pic_customer" id="pic_customer" value="{{ old('pic_customer') }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Nama PIC Customer">
-                    <p class="text-xs text-gray-500 mt-1">Orang yang bertanggung jawab di pihak customer (untuk koordinasi service dan maintenance)</p>
+                    <p class="text-xs text-gray-500 mt-1">Orang yang bertanggung jawab di pihak customer (untuk koordinasi layanan dan perawatan)</p>
                     @error('pic_customer')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
@@ -256,7 +262,7 @@
                         <span class="text-xs text-gray-400 ml-1">(Tim MSA yang bertanggung jawab)</span>
                     </label>
                     <input type="text" name="pic_msa" id="pic_msa" value="{{ old('pic_msa') }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Nama PIC MSA">
-                    <p class="text-xs text-gray-500 mt-1">Tim MSA yang bertanggung jawab untuk alat ini (untuk tracking dan support)</p>
+                    <p class="text-xs text-gray-500 mt-1">Tim MSA yang bertanggung jawab untuk alat ini (untuk pelacakan dan dukungan)</p>
                     @error('pic_msa')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
@@ -366,9 +372,9 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select name="support_items[][status]" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="maintenance">Maintenance</option>
+                    <option value="active">Aktif</option>
+                    <option value="inactive">Tidak Aktif</option>
+                    <option value="maintenance">Dalam Maintenance</option>
                 </select>
             </div>
         </div>

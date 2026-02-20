@@ -61,12 +61,12 @@ class LogAdminActivity
     {
         $path = $request->path();
         $method = $request->method();
-        
+
         // Only log important actions - CREATE, UPDATE, DELETE operations
         if (!in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'])) {
             return false;
         }
-        
+
         // Skip certain paths that don't need logging
         $skipPaths = [
             'admin/dashboard',
@@ -77,18 +77,18 @@ class LogAdminActivity
             'up',
             'register'
         ];
-        
+
         foreach ($skipPaths as $skipPath) {
             if (str_starts_with($path, $skipPath)) {
                 return false;
             }
         }
-        
+
         // Always log login/logout activities
         if (str_contains($path, 'login') || str_contains($path, 'logout')) {
             return true;
         }
-        
+
         // Only log specific important operations
         $importantPaths = [
             'stock/in',           // Stock In transactions
@@ -98,16 +98,17 @@ class LogAdminActivity
             'suppliers',          // Supplier CRUD
             'customers',          // Customer CRUD
             'categories',         // Category CRUD
+            'kso-roi',            // KSO ROI operations
             'reports/export',     // Excel export operations
             'export'              // General export operations
         ];
-        
+
         foreach ($importantPaths as $importantPath) {
             if (str_starts_with($path, $importantPath)) {
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -116,7 +117,7 @@ class LogAdminActivity
         if (str_contains($path, 'login')) return 'login';
         if (str_contains($path, 'logout')) return 'logout';
 
-        return match($method) {
+        return match ($method) {
             'GET' => 'view',
             'POST' => 'create',
             'PUT', 'PATCH' => 'update',
@@ -134,6 +135,7 @@ class LogAdminActivity
         if (str_contains($path, 'reports')) return 'reports';
         if (str_contains($path, 'dashboard')) return 'dashboard';
         if (str_contains($path, 'opname')) return 'opname';
+        if (str_contains($path, 'kso-roi')) return 'kso_roi';
 
         return 'system';
     }
@@ -141,22 +143,25 @@ class LogAdminActivity
     private function generateDescription(string $method, string $path, $user): string
     {
         $userName = $user ? $user->name : 'Unknown User';
-        
+        $userRole = $user ? $user->role : 'Unknown';
+
         if (str_contains($path, 'login')) {
-            return "{$userName} melakukan login ke sistem dari halaman login";
+            $roleText = $userRole === 'super_admin' ? 'Super Admin' : 'Admin';
+            return "{$userName} ({$roleText}) melakukan login ke sistem dari halaman login";
         }
-        
+
         if (str_contains($path, 'logout')) {
-            return "{$userName} melakukan logout dari sistem";
+            $roleText = $userRole === 'super_admin' ? 'Super Admin' : 'Admin';
+            return "{$userName} ({$roleText}) melakukan logout dari sistem";
         }
-        
+
         // Get specific action and location details
         $actionDetails = $this->getDetailedAction($method, $path);
         $locationDetails = $this->getLocationDetails($path);
-        
+
         return "{$userName} {$actionDetails['action']} {$actionDetails['target']} di {$locationDetails}";
     }
-    
+
     private function getDetailedAction(string $method, string $path): array
     {
         // Stock operations
@@ -166,20 +171,20 @@ class LogAdminActivity
                 'target' => 'barang'
             ];
         }
-        
+
         if (str_contains($path, 'stock/out')) {
             return [
                 'action' => $method === 'POST' ? 'melakukan transaksi stok keluar' : 'mengakses halaman stok keluar',
                 'target' => 'barang'
             ];
         }
-        
+
         if (str_contains($path, 'stock/opname')) {
             if (str_contains($path, 'complete')) {
                 return ['action' => 'membuat complete stock opname', 'target' => ''];
             }
-            
-            $action = match($method) {
+
+            $action = match ($method) {
                 'POST' => 'membuat stock opname baru',
                 'PUT', 'PATCH' => 'mengupdate stock opname',
                 'DELETE' => 'menghapus stock opname',
@@ -187,10 +192,10 @@ class LogAdminActivity
             };
             return ['action' => $action, 'target' => ''];
         }
-        
+
         // Product operations
         if (str_contains($path, 'products')) {
-            $action = match($method) {
+            $action = match ($method) {
                 'POST' => 'menambah produk baru',
                 'PUT', 'PATCH' => 'mengedit data produk',
                 'DELETE' => 'menghapus produk',
@@ -198,10 +203,10 @@ class LogAdminActivity
             };
             return ['action' => $action, 'target' => ''];
         }
-        
+
         // Supplier operations
         if (str_contains($path, 'suppliers')) {
-            $action = match($method) {
+            $action = match ($method) {
                 'POST' => 'menambah supplier baru',
                 'PUT', 'PATCH' => 'mengedit data supplier',
                 'DELETE' => 'menghapus supplier',
@@ -209,10 +214,10 @@ class LogAdminActivity
             };
             return ['action' => $action, 'target' => ''];
         }
-        
+
         // Customer operations
         if (str_contains($path, 'customers')) {
-            $action = match($method) {
+            $action = match ($method) {
                 'POST' => 'menambah customer baru',
                 'PUT', 'PATCH' => 'mengedit data customer',
                 'DELETE' => 'menghapus customer',
@@ -220,10 +225,10 @@ class LogAdminActivity
             };
             return ['action' => $action, 'target' => ''];
         }
-        
+
         // Category operations
         if (str_contains($path, 'categories')) {
-            $action = match($method) {
+            $action = match ($method) {
                 'POST' => 'menambah kategori baru',
                 'PUT', 'PATCH' => 'mengedit kategori',
                 'DELETE' => 'menghapus kategori',
@@ -231,7 +236,38 @@ class LogAdminActivity
             };
             return ['action' => $action, 'target' => ''];
         }
-        
+
+        // KSO ROI operations
+        if (str_contains($path, 'kso-roi')) {
+            if (str_contains($path, 'kso-items')) {
+                $action = match ($method) {
+                    'POST' => 'menambah KSO item baru',
+                    'PUT', 'PATCH' => 'mengedit data KSO item',
+                    'DELETE' => 'menghapus KSO item',
+                    default => 'melihat daftar KSO items'
+                };
+                return ['action' => $action, 'target' => ''];
+            }
+
+            if (str_contains($path, 'customer')) {
+                $action = match ($method) {
+                    'POST' => 'menambah customer KSO baru',
+                    'PUT', 'PATCH' => 'mengedit data customer KSO',
+                    'DELETE' => 'menghapus customer KSO',
+                    default => 'melihat detail customer KSO'
+                };
+                return ['action' => $action, 'target' => ''];
+            }
+
+            $action = match ($method) {
+                'POST' => 'melakukan operasi KSO ROI',
+                'PUT', 'PATCH' => 'mengupdate data KSO ROI',
+                'DELETE' => 'menghapus data KSO ROI',
+                default => 'mengakses halaman KSO ROI'
+            };
+            return ['action' => $action, 'target' => ''];
+        }
+
         // Export operations
         if (str_contains($path, 'export') || str_contains($path, 'reports/export')) {
             $exportType = 'data';
@@ -244,73 +280,83 @@ class LogAdminActivity
             } elseif (str_contains($path, 'history')) {
                 $exportType = 'history admin';
             }
-            
+
             return ['action' => "mengekspor {$exportType} ke Excel", 'target' => ''];
         }
-        
+
         // Default fallback
-        $action = match($method) {
+        $action = match ($method) {
             'POST' => 'menambah data',
             'PUT', 'PATCH' => 'mengedit data',
             'DELETE' => 'menghapus data',
             default => 'mengakses'
         };
-        
+
         return ['action' => $action, 'target' => ''];
     }
-    
+
     private function getLocationDetails(string $path): string
     {
         if (str_contains($path, 'stock/in')) {
             return 'halaman Stok Masuk';
         }
-        
+
         if (str_contains($path, 'stock/out')) {
             return 'halaman Stok Keluar';
         }
-        
+
         if (str_contains($path, 'stock/opname')) {
             if (str_contains($path, 'complete')) {
                 return 'halaman detail Stock Opname';
             }
             return 'halaman Stock Opname';
         }
-        
+
         if (str_contains($path, 'products')) {
             return 'halaman Master Produk';
         }
-        
+
         if (str_contains($path, 'suppliers')) {
             return 'halaman Master Supplier';
         }
-        
+
         if (str_contains($path, 'customers')) {
             return 'halaman Master Customer';
         }
-        
+
         if (str_contains($path, 'categories')) {
             return 'halaman Master Kategori';
         }
-        
+
+        if (str_contains($path, 'kso-roi')) {
+            if (str_contains($path, 'kso-items')) {
+                return 'halaman KSO Items';
+            }
+            if (str_contains($path, 'customer')) {
+                return 'halaman Detail Customer KSO';
+            }
+            return 'halaman KSO ROI Management';
+        }
+
         if (str_contains($path, 'export') || str_contains($path, 'reports/export')) {
             return 'halaman Export/Download';
         }
-        
+
         if (str_contains($path, 'dashboard')) {
             return 'halaman Dashboard';
         }
-        
+
         if (str_contains($path, 'reports')) {
             return 'halaman Laporan';
         }
-        
+
         return 'sistem';
     }
 
     private function sanitizeRequestData(Request $request): array
     {
         $data = $request->except(['password', 'password_confirmation', '_token']);
-        
+
         // Limit data size to prevent large logs
         if (count($data) > 20) {
             $data = array_slice($data, 0, 20);

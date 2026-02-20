@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\AdminActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -51,7 +52,7 @@ class UserManagementController extends Controller
                 'max:255',
                 Rule::unique('users')->ignore($user->id),
             ],
-            'role' => 'required|in:super_admin,admin,user',
+            'role' => 'required|in:super_admin,admin',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
 
@@ -64,6 +65,20 @@ class UserManagementController extends Controller
         }
 
         $user->save();
+
+        // Log activity
+        AdminActivityLog::logActivity(
+            'update',
+            'user',
+            "Memperbarui user '{$user->name}' ({$user->email})",
+            [
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'password_changed' => $request->filled('password')
+            ]
+        );
 
         return redirect()->route('users.index')
             ->with('success', 'User berhasil diperbarui.');
@@ -80,6 +95,19 @@ class UserManagementController extends Controller
         }
 
         $user->delete();
+
+        // Log activity
+        AdminActivityLog::logActivity(
+            'delete',
+            'user',
+            "Menghapus user '{$user->name}' ({$user->email})",
+            [
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role
+            ]
+        );
 
         return redirect()->route('users.index')
             ->with('success', 'User berhasil dihapus.');

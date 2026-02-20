@@ -26,7 +26,7 @@
                     <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
                         <i class="fas fa-exclamation-circle text-red-600 mt-0.5 flex-shrink-0"></i>
                         <div>
-                            <p class="text-red-800 font-medium">Error</p>
+                            <p class="text-red-800 font-medium">Kesalahan</p>
                             <p class="text-red-700 text-sm">{{ $error }}</p>
                         </div>
                     </div>
@@ -93,7 +93,7 @@
                 <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                     <p class="text-xs text-gray-600">
                         <i class="fas fa-shield-alt text-gray-500 mr-2"></i>
-                        <span class="font-medium">Keamanan:</span> Password diperlukan untuk mengakses informasi detail KSO Item ini.
+                        <span class="font-medium">Keamanan:</span> Password diperlukan untuk mengakses informasi rincian KSO Item ini.
                     </p>
                 </div>
             </div>

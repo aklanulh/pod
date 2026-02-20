@@ -49,7 +49,8 @@
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">Pilih KSO Item</option>
                         @foreach($ksoItems as $ksoItem)
-                            <option value="{{ $ksoItem->id }}" {{ old('kso_item_id') == $ksoItem->id ? 'selected' : '' }}>
+                            <option value="{{ $ksoItem->id }}" 
+                                {{ old('kso_item_id') == $ksoItem->id || $ksoItem->id == $selectedKsoItemId ? 'selected' : '' }}>
                                 {{ $ksoItem->nama_alat }} - {{ $ksoItem->customer->name }}
                             </option>
                         @endforeach
@@ -89,8 +90,23 @@
                 </div>
 
                 <div>
+                    <label for="last_maintenance_date" class="block text-sm font-medium text-gray-700 mb-2">
+                        Tanggal Maintenance Dilakukan
+                    </label>
+                    <input type="date" id="last_maintenance_date" name="last_maintenance_date"
+                           value="{{ old('last_maintenance_date') ?: now()->format('Y-m-d') }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    @error('last_maintenance_date')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            <!-- Next Maintenance Details -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
                     <label for="next_maintenance_date" class="block text-sm font-medium text-gray-700 mb-2">
-                        Tanggal Maintenance <span class="text-red-500">*</span>
+                        Tanggal Maintenance Berikutnya <span class="text-red-500">*</span>
                     </label>
                     <input type="date" id="next_maintenance_date" name="next_maintenance_date" required
                            value="{{ old('next_maintenance_date') }}"
@@ -99,6 +115,32 @@
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
+
+                <div>
+                    <label for="cost" class="block text-sm font-medium text-gray-700 mb-2">
+                        Biaya Maintenance
+                    </label>
+                    <input type="number" id="cost" name="cost" step="0.01" min="0"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="Masukkan biaya maintenance (opsional)"
+                           value="{{ old('cost') }}">
+                    @error('cost')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            <!-- Maintenance Description -->
+            <div class="mb-6">
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                    Deskripsi Maintenance
+                </label>
+                <textarea id="description" name="description" rows="3"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Deskripsi maintenance yang dilakukan (opsional)">{{ old('description') }}</textarea>
+                @error('description')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
             </div>
 
             <!-- Technician -->
@@ -112,26 +154,22 @@
                        value="{{ old('technician') }}">
             </div>
 
-            <!-- Technician Notes -->
+            <!-- Notes -->
             <div class="mb-6">
-                <label for="technician_notes" class="block text-sm font-medium text-gray-700 mb-2">
-                    Keterangan Teknisi
+                <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
+                    Catatan Tambahan
                 </label>
-                <textarea id="technician_notes" name="technician_notes" rows="3"
+                <textarea id="notes" name="notes" rows="3"
                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Masukkan keterangan dari teknisi (opsional)">{{ old('technician_notes') }}</textarea>
-                @error('technician_notes')
+                          placeholder="Catatan tambahan (opsional)">{{ old('notes') }}</textarea>
+                @error('notes')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
 
-            <!-- Hidden fields for auto-fill -->
+            <!-- Hidden fields -->
             <input type="hidden" name="equipment_type" value="main">
-            <input type="hidden" name="status" value="scheduled">
-            <input type="hidden" name="last_maintenance_date" value="">
-            <input type="hidden" name="description" value="">
-            <input type="hidden" name="notes" value="">
-            <input type="hidden" name="cost" value="">
+            <input type="hidden" name="status" value="completed">
 
             <!-- Form Actions -->
             <div class="flex justify-end gap-3">
@@ -177,10 +215,54 @@ function toggleMaintenanceCategory(category) {
 document.addEventListener('DOMContentLoaded', function() {
     // Set minimum date to today
     const today = new Date().toISOString().split('T')[0];
+    document.getElementById('last_maintenance_date').setAttribute('max', today);
     document.getElementById('next_maintenance_date').setAttribute('min', today);
     
     // Initialize with KSO category selected
     toggleMaintenanceCategory('kso');
+    
+    // Auto-fill equipment name when KSO item is selected
+    const ksoItemSelect = document.getElementById('kso_item_id');
+    ksoItemSelect.addEventListener('change', function() {
+        const selectedKsoItemId = this.value;
+        if (selectedKsoItemId) {
+            const selectedItem = ksoItems.find(item => item.id == selectedKsoItemId);
+            if (selectedItem) {
+                // Auto-fill maintenance type if maintenance_type is empty
+                const maintenanceTypeField = document.getElementById('maintenance_type');
+                if (!maintenanceTypeField.value) {
+                    maintenanceTypeField.value = 'Maintenance Rutin - ' + selectedItem.nama_alat;
+                }
+                
+                // Auto-fill equipment name in description if empty
+                const descriptionField = document.getElementById('description');
+                if (!descriptionField.value) {
+                    descriptionField.value = 'Perawatan rutin untuk ' + selectedItem.nama_alat + ' - ' + selectedItem.customer.name;
+                }
+            }
+        }
+    });
+    
+    // Auto-set next maintenance date when last maintenance date is selected
+    const lastMaintenanceDateField = document.getElementById('last_maintenance_date');
+    lastMaintenanceDateField.addEventListener('change', function() {
+        const lastDate = this.value;
+        if (lastDate) {
+            const nextMaintenanceField = document.getElementById('next_maintenance_date');
+            if (!nextMaintenanceField.value) {
+                // Default next maintenance is 30 days from last maintenance
+                const lastDateObj = new Date(lastDate);
+                const nextDate = new Date(lastDateObj);
+                nextDate.setDate(nextDate.getDate() + 30);
+                nextMaintenanceField.value = nextDate.toISOString().split('T')[0];
+            }
+        }
+    });
+    
+    // Trigger change event if there's a pre-selected item
+    if (ksoItemSelect.value) {
+        ksoItemSelect.dispatchEvent(new Event('change'));
+    }
 });
 </script>
 @endsection

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Warehouse Management System') }}</title>
     
     <!-- Favicon -->
@@ -65,18 +66,6 @@
                             Produk
                         </a>
                     </div>
-
-                    <div class="mt-2">
-                        <p class="px-4 py-1 text-xs font-semibold text-blue-300 uppercase tracking-wider">Data Management</p>
-                        <a href="{{ route('data-import.index') }}" class="flex items-center px-4 py-2 text-white hover:bg-blue-700 {{ request()->routeIs('data-import.*') ? 'bg-blue-700' : '' }}">
-                            <i class="fas fa-file-import mr-3"></i>
-                            Data Import
-                        </a>
-                        <a href="{{ route('users.index') }}" class="flex items-center px-4 py-2 text-white hover:bg-blue-700 {{ request()->routeIs('users.*') ? 'bg-blue-700' : '' }}">
-                            <i class="fas fa-users mr-3"></i>
-                            Manajemen User
-                        </a>
-                                            </div>
                 @else
                     <a href="{{ route('admin.dashboard') }}" class="flex items-center px-4 py-2 text-white hover:bg-blue-700 {{ request()->routeIs('admin.dashboard') ? 'bg-blue-700' : '' }}">
                         <i class="fas fa-tachometer-alt mr-3"></i>
@@ -137,7 +126,6 @@
                         <a href="{{ route('kso-roi.technician-dashboard') }}" class="flex items-center px-4 py-2 text-white hover:bg-blue-700 {{ request()->routeIs('kso-roi.technician-dashboard') ? 'bg-blue-700' : '' }}">
                             <i class="fas fa-tools mr-3"></i>
                             Dashboard Teknisi
-                            <span class="ml-auto text-xs bg-yellow-500 text-yellow-900 px-2 py-1 rounded-full">Coming Soon</span>
                         </a>
                     </div>
 
@@ -154,6 +142,18 @@
                         <a href="{{ route('admin.history.index') }}" class="flex items-center px-4 py-2 text-white hover:bg-blue-700 {{ request()->routeIs('admin.history.*') ? 'bg-blue-700' : '' }}">
                             <i class="fas fa-history mr-3"></i>
                             Log Aktivitas
+                        </a>
+                    </div>
+
+                    <div class="mt-2">
+                        <p class="px-4 py-1 text-xs font-semibold text-blue-300 uppercase tracking-wider">Data Management</p>
+                        <a href="{{ route('data-import.index') }}" class="flex items-center px-4 py-2 text-white hover:bg-blue-700 {{ request()->routeIs('data-import.*') ? 'bg-blue-700' : '' }}">
+                            <i class="fas fa-file-import mr-3"></i>
+                            Data Import
+                        </a>
+                        <a href="{{ route('users.index') }}" class="flex items-center px-4 py-2 text-white hover:bg-blue-700 {{ request()->routeIs('users.*') ? 'bg-blue-700' : '' }}">
+                            <i class="fas fa-users mr-3"></i>
+                            Manajemen User
                         </a>
                     </div>
                 @endif

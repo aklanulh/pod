@@ -18,6 +18,7 @@ use App\Http\Controllers\CustomerMergeController;
 use App\Http\Controllers\SupplierMergeController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\KsoRoiController;
+use App\Http\Controllers\QcController;
 use App\Http\Controllers\DataImportController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\PasswordResetController;
@@ -211,12 +212,28 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
 
         // Maintenance Schedule Management
         Route::prefix('maintenance-schedules')->name('maintenance-schedules.')->group(function () {
-            Route::get('/create', [KsoRoiController::class, 'createMaintenanceSchedule'])->name('create');
+            Route::get('/create/{kso_item_id?}', [KsoRoiController::class, 'createMaintenanceSchedule'])->name('create');
             Route::post('/', [KsoRoiController::class, 'storeMaintenanceSchedule'])->name('store');
             Route::get('/{maintenanceSchedule}/edit', [KsoRoiController::class, 'editMaintenanceSchedule'])->name('edit');
             Route::put('/{maintenanceSchedule}', [KsoRoiController::class, 'updateMaintenanceSchedule'])->name('update');
             Route::delete('/{maintenanceSchedule}', [KsoRoiController::class, 'destroyMaintenanceSchedule'])->name('destroy');
         });
+
+        // QC & Calibration Routes
+        Route::prefix('qc')->name('qc.')->group(function () {
+            Route::get('/calendar-data', [QcController::class, 'calendarData'])->name('calendar.data');
+            Route::get('/{ksoItem}/{type}/create', [QcController::class, 'create'])->name('create');
+            Route::post('/{ksoItem}/{type}', [QcController::class, 'store'])->name('store');
+            Route::get('/{qcRecord}', [QcController::class, 'show'])->name('show');
+            Route::get('/{qcRecord}/edit', [QcController::class, 'edit'])->name('edit');
+            Route::put('/{qcRecord}', [QcController::class, 'update'])->name('update');
+        });
+
+        // Dummy Data Routes (for testing)
+        Route::post('/create-dummy-schedule', [KsoRoiController::class, 'createDummySchedule']);
+        Route::post('/create-dummy-qc', [KsoRoiController::class, 'createDummyQC']);
+        Route::post('/create-dummy-calibration', [KsoRoiController::class, 'createDummyCalibration']);
+        Route::post('/create-dummy-kso', [KsoRoiController::class, 'createDummyKSO']);
     });
 });
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\StockMovement;
+use App\Models\AdminActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -117,6 +118,20 @@ class ProductController extends Controller
         }
 
         $product = Product::create($data);
+
+        // Log activity
+        AdminActivityLog::logActivity(
+            'create',
+            'product',
+            "Menambah produk '{$product->name}' (Kode: {$product->code})",
+            [
+                'product_id' => $product->id,
+                'code' => $product->code,
+                'name' => $product->name,
+                'category_id' => $product->category_id,
+                'price' => $product->price
+            ]
+        );
 
         // Handle AJAX request
         if ($request->expectsJson()) {

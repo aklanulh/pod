@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Models\AdminActivityLog;
 use Illuminate\Http\Request;
 
 class CustomerController extends Controller
@@ -69,6 +70,19 @@ class CustomerController extends Controller
 
         $customer = Customer::create($request->all());
 
+        // Log activity
+        AdminActivityLog::logActivity(
+            'create',
+            'customer',
+            "Menambah customer '{$customer->name}'",
+            [
+                'customer_id' => $customer->id,
+                'name' => $customer->name,
+                'phone' => $customer->phone,
+                'email' => $customer->email
+            ]
+        );
+
         if ($request->expectsJson()) {
             return response()->json([
                 'id' => $customer->id,
@@ -121,6 +135,19 @@ class CustomerController extends Controller
             'is_active' => $request->has('is_active') ? 1 : 0
         ]);
 
+        // Log activity
+        AdminActivityLog::logActivity(
+            'update',
+            'customer',
+            "Memperbarui customer '{$customer->name}'",
+            [
+                'customer_id' => $customer->id,
+                'name' => $customer->name,
+                'is_active' => $customer->is_active,
+                'changes' => $request->only(['name', 'phone', 'email', 'is_active'])
+            ]
+        );
+
         return redirect()->route('customers.index')
             ->with('success', 'Customer berhasil diupdate');
     }
@@ -133,6 +160,18 @@ class CustomerController extends Controller
         }
 
         $customer->delete();
+
+        // Log activity
+        AdminActivityLog::logActivity(
+            'delete',
+            'customer',
+            "Menghapus customer '{$customer->name}'",
+            [
+                'customer_id' => $customer->id,
+                'name' => $customer->name,
+                'phone' => $customer->phone
+            ]
+        );
 
         return redirect()->route('customers.index')
             ->with('success', 'Customer berhasil dihapus');
